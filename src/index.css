@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #f1f2f4;
+  color: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* ---------- Leaflet ince ayarları ---------- */
+.leaflet-container {
+  font-family: inherit;
+  background: #eef0f2;
+}
+.leaflet-control-attribution {
+  font-size: 9px !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 8px 0 0 0;
+}
+.picking .leaflet-container {
+  cursor: crosshair;
+}
+
+/* ---------- Tuvalet pini (Sarı-Beyaz) ---------- */
+.tn-pin {
+  position: relative;
+  width: 44px;
+  height: 54px;
+  transition: transform 0.2s ease;
+  transform-origin: 50% 100%;
+}
+.tn-pin-body {
+  position: absolute;
+  left: 4px;
+  top: 2px;
+  width: 36px;
+  height: 36px;
+  background: #ffd60a;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 6px 14px -4px rgba(26, 26, 26, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tn-pin-inner {
+  transform: rotate(45deg);
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a1a;
+}
+.tn-pin-inner svg {
+  width: 14px;
+  height: 14px;
+}
+.tn-pin-shadow {
+  position: absolute;
+  left: 15px;
+  bottom: 0;
+  width: 14px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(26, 26, 26, 0.25);
+  filter: blur(1px);
+}
+.tn-pin-free {
+  position: absolute;
+  top: -6px;
+  left: 26px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 14px;
+  letter-spacing: 0.02em;
+  border: 2px solid #fff;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.tn-pin.is-selected {
+  transform: scale(1.25);
+}
+.tn-pin.is-selected .tn-pin-body {
+  background: #1a1a1a;
+}
+.tn-pin.is-selected .tn-pin-inner {
+  background: #ffd60a;
+}
+.tn-pin.is-emergency .tn-pin-body {
+  background: #ef4444;
+  animation: tn-bounce 1s ease-in-out infinite;
+}
+.tn-pin.is-emergency .tn-pin-inner {
+  background: #fff;
+  color: #ef4444;
+}
+.tn-pin.is-new .tn-pin-body {
+  background: #1a1a1a;
+}
+.tn-pin.is-new .tn-pin-inner {
+  background: #ffd60a;
+}
+@keyframes tn-bounce {
+  0%,
+  100% {
+    margin-top: 0;
+  }
+  50% {
+    margin-top: -6px;
+  }
+}
+
+/* ---------- Kullanıcı konumu (mavi yanıp sönen nokta) ---------- */
+.tn-user {
+  position: relative;
+  width: 24px;
+  height: 24px;
+}
+.tn-user-dot {
+  position: absolute;
+  inset: 4px;
+  border-radius: 999px;
+  background: #2563eb;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.6);
+}
+.tn-user-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.35);
+  animation: tn-pulse 1.8s ease-out infinite;
+}
+@keyframes tn-pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* ---------- ACİL butonu nabız efekti ---------- */
+.sos-ring {
+  animation: sos-ring 1.6s ease-out infinite;
+}
+@keyframes sos-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 14px rgba(239, 68, 68, 0);
+  }
+}
