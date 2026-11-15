@@ -1,0 +1,62 @@
+/* Tuvaletim Nerede? — basit service worker
+ * Uygulama kabuğu: network-first (çevrimdışıyken önbellekten)
+ * Harita karoları: cache-first (gezilen bölgeler çevrimdışı da görünür) */
+const APP_CACHE = 'tn-app-v1';
+const TILE_CACHE = 'tn-tiles-v1';
+const MAX_TILES = 400;
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icon.svg'])));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => ![APP_CACHE, TILE_CACHE].includes(k)).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
+  );
+});
+
+async function trimTiles() {
+  const cache = await caches.open(TILE_CACHE);
+  const keys = await cache.keys();
+  for (let i = 0; i < keys.length - MAX_TILES; i++) await cache.delete(keys[i]);
+}
+
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+
+  if (/basemaps\.cartocdn\.com|tile\.openstreetmap\.org/.test(url.hostname)) {
+    event.respondWith(
+      caches.open(TILE_CACHE).then(async (cache) => {
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        const res = await fetch(request);
+        if (res.ok || res.type === 'opaque') {
+          cache.put(request, res.clone());
+          trimTiles();
+        }
+        return res;
+      }),
+    );
+    return;
+  }
+
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(APP_CACHE).then((c) => c.put(request, copy));
+          }
+          return res;
+        })
+        .catch(async () => (await caches.match(request)) || (await caches.match('/'))),
+    );
+  }
+});
