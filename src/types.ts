@@ -1,31 +1,81 @@
 export type ToiletCategory = 'avm' | 'kafe' | 'belediye' | 'park' | 'diger';
 
+/** free: herkese ücretsiz · customers: müşteriye ücretsiz · paid: ücretli */
+export type FeeType = 'free' | 'customers' | 'paid';
+
 export interface LatLng {
   lat: number;
   lng: number;
 }
 
-export interface Toilet extends LatLng {
-  id: string;
+/** Ortak mekan alanları (places + pending_submissions) */
+export interface PlaceBase extends LatLng {
   name: string;
   category: ToiletCategory;
+  city?: string;
+  district?: string;
   address?: string;
-  photo: string;
-  /** 1-5 */
-  cleanliness: number;
-  /** 1-5 */
-  comfort: number;
-  isFree: boolean;
+  /** base64 data URL; yoksa temsili görsel üretilir */
+  photo?: string;
+  fee: FeeType;
   price?: string;
   hours?: string;
   accessible?: boolean;
   babyChanging?: boolean;
-  createdAt: string;
-  /** Kullanıcı tarafından eklendiyse true */
-  userAdded?: boolean;
 }
 
-export type ToiletWithDistance = Toilet & { distance: number };
+/** `places` tablosu */
+export interface Place extends PlaceBase {
+  id: string;
+  cleanlinessTotal: number;
+  comfortTotal: number;
+  ratingCount: number;
+  source: 'seed' | 'user';
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** `reviews` tablosu */
+export interface Review {
+  id?: number;
+  placeId: string;
+  cleanliness: number;
+  comfort: number;
+  comment?: string;
+  voterId: string;
+  createdAt: string;
+}
+
+/** `pending_submissions` tablosu */
+export interface PendingSubmission extends PlaceBase {
+  id: string;
+  cleanliness: number;
+  comfort: number;
+  comment?: string;
+  voterId: string;
+  submittedAt: string;
+}
+
+/** `admin_users` tablosu */
+export interface AdminUser {
+  id?: number;
+  username: string;
+  passwordHash: string;
+  salt: string;
+  role: 'admin';
+  createdAt: string;
+  lastLoginAt?: string;
+  sessionToken?: string;
+  sessionExpires?: number;
+}
+
+/** Arayüzde kullanılan, puan ortalamaları ve mesafesi hesaplanmış mekan */
+export interface PlaceView extends Place {
+  cleanliness: number;
+  comfort: number;
+  rating: number;
+  distance: number;
+}
 
 export type SortMode = 'distance' | 'cleanliness';
 
@@ -34,15 +84,12 @@ export interface Filters {
   freeOnly: boolean;
 }
 
-export type MapStyle = 'voyager' | 'positron' | 'osm';
-
 export interface Settings {
-  mapStyle: MapStyle;
   forceDemoLocation: boolean;
 }
 
 export interface EmergencyState {
-  toiletId: string;
+  placeId: string;
   route: LatLng[];
   approximate: boolean;
   routeDistance?: number;

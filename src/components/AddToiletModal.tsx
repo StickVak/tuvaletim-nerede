@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Baby, Camera, Crosshair, ImagePlus, LocateFixed, MapPin, Send, Trash2, X } from 'lucide-react';
-import type { LatLng, Toilet, ToiletCategory } from '../types';
-import { CATEGORIES, CATEGORY_ORDER, placeholderPhoto } from '../lib/categories';
+import type { FeeType, LatLng, PlaceBase, ToiletCategory } from '../types';
+import { CATEGORIES, CATEGORY_ORDER, FEE_LABELS } from '../lib/categories';
 import { readImageAsDataUrl } from '../lib/image';
 import StarRating from './StarRating';
 
@@ -11,8 +11,11 @@ interface Props {
   onRequestPick: () => void;
   onUseMyLocation: () => void;
   onClose: () => void;
-  onSubmit: (t: Toilet) => void;
+  desktop: boolean;
+  onSubmit: (draft: PlaceBase & { cleanliness: number; comfort: number }) => Promise<void> | void;
 }
+
+export type PlaceDraft = PlaceBase & { cleanliness: number; comfort: number };
 
 export default function AddToiletModal({
   visible,
@@ -21,10 +24,14 @@ export default function AddToiletModal({
   onUseMyLocation,
   onClose,
   onSubmit,
+  desktop,
 }: Props) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ToiletCategory>('kafe');
-  const [isFree, setIsFree] = useState(true);
+  const [fee, setFee] = useState<FeeType>('free');
+  const [city, setCity] = useState('');
+  const [address, setAddress] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [price, setPrice] = useState('');
   const [cleanliness, setCleanliness] = useState(0);
   const [comfort, setComfort] = useState(0);
@@ -57,7 +64,7 @@ export default function AddToiletModal({
     }
   };
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
     if (name.trim().length < 3) errs.name = 'Mekan adı en az 3 karakter olmalı.';
@@ -67,23 +74,27 @@ export default function AddToiletModal({
     setErrors(errs);
     if (Object.values(errs).some(Boolean) || !location) return;
 
-    onSubmit({
-      id: `user-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-      name: name.trim(),
-      category,
-      lat: location.lat,
-      lng: location.lng,
-      photo: photo ?? placeholderPhoto(category),
-      cleanliness,
-      comfort,
-      isFree,
-      price: isFree ? undefined : price.trim() || undefined,
-      hours: hours.trim() || undefined,
-      accessible,
-      babyChanging,
-      createdAt: new Date().toISOString(),
-      userAdded: true,
-    });
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        name: name.trim(),
+        category,
+        lat: location.lat,
+        lng: location.lng,
+        city: city.trim() || undefined,
+        address: address.trim() || undefined,
+        photo: photo ?? undefined,
+        cleanliness,
+        comfort,
+        fee,
+        price: fee === 'paid' ? price.trim() || undefined : undefined,
+        hours: hours.trim() || undefined,
+        accessible,
+        babyChanging,
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -92,12 +103,16 @@ export default function AddToiletModal({
       <form
         onSubmit={submit}
         noValidate
-        className="absolute inset-x-0 bottom-0 flex max-h-[92%] animate-sheet-in flex-col rounded-t-[32px] bg-white shadow-sheet"
+        className={
+          desktop
+            ? 'absolute left-1/2 top-1/2 flex max-h-[90%] w-[520px] -translate-x-1/2 -translate-y-1/2 animate-fade-in flex-col rounded-[32px] bg-white shadow-2xl'
+            : 'absolute inset-x-0 bottom-0 flex max-h-[92%] animate-sheet-in flex-col rounded-t-[32px] bg-white shadow-sheet'
+        }
       >
         <header className="flex items-center justify-between px-5 pb-3 pt-5">
           <div>
             <h2 className="text-xl font-extrabold">Tuvalet Ekle</h2>
-            <p className="text-xs font-medium text-ink-muted">Onaylandıktan sonra haritada görünür.</p>
+            <p className="text-xs font-medium text-ink-muted">İncelendikten sonra haritada yayınlanır.</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-gray-100">
             <X size={18} />
@@ -209,6 +224,23 @@ export default function AddToiletModal({
             {errors.name && <p className="mt-1 text-xs font-semibold text-red-600">{errors.name}</p>}
           </label>
 
+          <div className="grid grid-cols-[2fr_3fr] gap-2">
+            <input
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              placeholder="Şehir"
+              maxLength={30}
+              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
+            />
+            <input
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Adres / ilçe (isteğe bağlı)"
+              maxLength={80}
+              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
+            />
+          </div>
+
           {/* Kategori */}
           <div>
             <span className="mb-1.5 block text-sm font-bold">Mekan türü</span>
@@ -235,24 +267,27 @@ export default function AddToiletModal({
           {/* Ücret */}
           <div>
             <span className="mb-1.5 block text-sm font-bold">Ücret durumu</span>
-            <div className="grid grid-cols-2 gap-1 rounded-2xl bg-card p-1">
-              {[
-                { v: true, l: 'Ücretsiz' },
-                { v: false, l: 'Ücretli' },
-              ].map((o) => (
+            <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1">
+              {(['free', 'customers', 'paid'] as FeeType[]).map((v) => (
                 <button
-                  key={o.l}
+                  key={v}
                   type="button"
-                  onClick={() => setIsFree(o.v)}
-                  className={`rounded-xl py-2.5 text-sm font-bold transition ${
-                    isFree === o.v ? (o.v ? 'bg-green-500 text-white shadow' : 'bg-brand text-ink shadow') : 'text-ink-muted'
+                  onClick={() => setFee(v)}
+                  className={`rounded-xl px-1 py-2.5 text-[13px] font-bold leading-tight transition ${
+                    fee === v
+                      ? v === 'free'
+                        ? 'bg-green-500 text-white shadow'
+                        : v === 'customers'
+                          ? 'bg-amber-400 text-ink shadow'
+                          : 'bg-brand text-ink shadow'
+                      : 'text-ink-muted'
                   }`}
                 >
-                  {o.l}
+                  {FEE_LABELS[v]}
                 </button>
               ))}
             </div>
-            {!isFree && (
+            {fee === 'paid' && (
               <input
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
@@ -314,7 +349,7 @@ export default function AddToiletModal({
         <footer className="border-t border-gray-100 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
           <button
             type="submit"
-            disabled={photoLoading}
+            disabled={photoLoading || submitting}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-base font-extrabold text-ink shadow-float transition hover:bg-brand-dark active:scale-[.98] disabled:opacity-60"
           >
             <Send size={18} /> Onaya Gönder
