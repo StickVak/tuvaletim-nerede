@@ -34,8 +34,12 @@ body {
   background: rgba(255, 255, 255, 0.7) !important;
   border-radius: 8px 0 0 0;
 }
-.picking .leaflet-container {
+.picking .leaflet-container,
+.picking .leaflet-marker-icon {
   cursor: crosshair;
+}
+.picking .tn-pin:not(.is-new) {
+  opacity: 0.45;
 }
 
 /* ---------- Tuvalet pini (Sarı-Beyaz) ---------- */

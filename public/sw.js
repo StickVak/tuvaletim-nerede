@@ -1,8 +1,8 @@
 /* Tuvaletim Nerede? — basit service worker
  * Uygulama kabuğu: network-first (çevrimdışıyken önbellekten)
  * Harita karoları: cache-first (gezilen bölgeler çevrimdışı da görünür) */
-const APP_CACHE = 'tn-app-v1';
-const TILE_CACHE = 'tn-tiles-v1';
+const APP_CACHE = 'tn-app-v2';
+const TILE_CACHE = 'tn-tiles-v2';
 const MAX_TILES = 400;
 
 self.addEventListener('install', (event) => {
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  if (/basemaps\.cartocdn\.com|tile\.openstreetmap\.org/.test(url.hostname)) {
+  if (/tile\.openstreetmap\.org/.test(url.hostname)) {
     event.respondWith(
       caches.open(TILE_CACHE).then(async (cache) => {
         const hit = await cache.match(request);
