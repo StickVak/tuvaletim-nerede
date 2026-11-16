@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { hashPassword, publicUser, requireUser, verifyPassword } from '../auth.js';
 import { PHOTO_RE } from '../validate.js';
+import { contributionsOf } from './places.js';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const EXT = { jpeg: 'jpg', png: 'png', webp: 'webp', gif: 'gif' };
@@ -76,6 +77,7 @@ export function profileRoutes(db, { avatarDir, writeLimit }) {
         ...counts(db, id),
         pending: db.get('SELECT COUNT(*) AS n FROM pending_places WHERE user_id = ?', [id]).n,
         favorites: db.get('SELECT COUNT(*) AS n FROM favorites WHERE user_id = ?', [id]).n,
+        contributions: contributionsOf(db, id),
       },
       activity,
     });

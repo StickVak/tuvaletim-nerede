@@ -68,7 +68,7 @@ test('GET /api/profile returns stats and activity', async () => {
   await srv.req('POST', '/api/pending', { name: 'Yeni Yer WC', category: 'park', lat: 38.4, lng: 27.1, vote: { cleanliness: 3, comfort: 3, isPaid: false } }, me.token);
   const r = await srv.req('GET', '/api/profile', null, me.token);
   assert.equal(r.status, 200);
-  assert.deepEqual(r.body.stats, { votes: 1, comments: 1, placesAdded: 0, pending: 1, favorites: 1 });
+  assert.deepEqual(r.body.stats, { votes: 1, comments: 1, placesAdded: 0, pending: 1, favorites: 1, contributions: 2 }); // 1 oy + 1 bildirim
   const kinds = r.body.activity.map((a) => a.kind).sort();
   assert.deepEqual(kinds, ['favorite', 'pending', 'report', 'vote']);
   assert.equal(r.body.user.email, undefined);

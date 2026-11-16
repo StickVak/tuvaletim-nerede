@@ -47,6 +47,32 @@ function placeJson(row, votes, reports, userId, favorite) {
 }
 
 const since = () => new Date(Date.now() - STATUS_WINDOW_MS).toISOString();
+
+/** Aynı kullanıcının aynı türdeki bildirimi 3 saat içinde tekrar sayılmaz */
+function addReport(db, placeId, userId, type) {
+  const dup = db.get(
+    'SELECT 1 FROM status_reports WHERE place_id = ? AND user_id = ? AND report_type = ? AND created_at >= ?',
+    [placeId, userId, type, since()],
+  );
+  if (!dup) {
+    db.run('INSERT INTO status_reports (place_id, user_id, report_type, created_at) VALUES (?, ?, ?, ?)', [placeId, userId, type, new Date().toISOString()]);
+  }
+}
+
+const UPSERT_VOTE = `INSERT INTO votes (place_id, user_id, cleanliness, comfort, is_paid, price_amount, comment, toilet_type, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT (user_id, place_id) DO UPDATE SET
+         cleanliness = excluded.cleanliness, comfort = excluded.comfort, is_paid = excluded.is_paid,
+         price_amount = excluded.price_amount, comment = excluded.comment, toilet_type = excluded.toilet_type,
+         updated_at = excluded.updated_at`;
+
+/** Katkı = verdiği oy sayısı + gönderdiği durum bildirimi sayısı */
+export function contributionsOf(db, userId) {
+  return (
+    db.get('SELECT COUNT(*) AS n FROM votes WHERE user_id = ?', [userId]).n +
+    db.get('SELECT COUNT(*) AS n FROM status_reports WHERE user_id = ?', [userId]).n
+  );
+}
 const group = (rows) => {
   const m = new Map();
   for (const r of rows) {
@@ -143,15 +169,7 @@ export function placeRoutes(db, writeLimit) {
     const v = parseVote(req.body);
     if (typeof v === 'string') return res.status(400).json({ error: v });
     const now = new Date().toISOString();
-    db.run(
-      `INSERT INTO votes (place_id, user_id, cleanliness, comfort, is_paid, price_amount, comment, toilet_type, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-       ON CONFLICT (user_id, place_id) DO UPDATE SET
-         cleanliness = excluded.cleanliness, comfort = excluded.comfort, is_paid = excluded.is_paid,
-         price_amount = excluded.price_amount, comment = excluded.comment, toilet_type = excluded.toilet_type,
-         updated_at = excluded.updated_at`,
-      [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, v.comment, v.toiletType, now, now],
-    );
+    db.run(UPSERT_VOTE, [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, v.comment, v.toiletType, now, now]);
     res.json(getPlace(db, req.params.id, req.user.id));
   });
 
@@ -160,16 +178,32 @@ export function placeRoutes(db, writeLimit) {
     if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
     const type = req.body?.type;
     if (!REPORT_TYPES.includes(type)) return res.status(400).json({ error: 'Geçersiz bildirim türü.' });
-    const dup = db.get(
-      'SELECT 1 FROM status_reports WHERE place_id = ? AND user_id = ? AND report_type = ? AND created_at >= ?',
-      [req.params.id, req.user.id, type, since()],
-    );
-    if (!dup) {
-      db.run('INSERT INTO status_reports (place_id, user_id, report_type, created_at) VALUES (?, ?, ?, ?)', [
-        req.params.id, req.user.id, type, new Date().toISOString(),
-      ]);
-    }
+    addReport(db, req.params.id, req.user.id, type);
     res.json(getPlace(db, req.params.id, req.user.id));
+  });
+
+  /**
+   * Yolculuk sonu değerlendirmesi. Açıksa oy (upsert) + "open" bildirimi; kapalıysa yalnızca "closed".
+   * Kağıt yoksa "no_supplies". Hepsi tek işlemde.
+   */
+  r.post('/:id/arrival', writeLimit, requireUser, (req, res) => {
+    if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+    const { wasOpen, hadPaper = null } = req.body ?? {};
+    if (typeof wasOpen !== 'boolean') return res.status(400).json({ error: '“Açık mıydı?” sorusunu yanıtlayın.' });
+    if (hadPaper !== null && typeof hadPaper !== 'boolean') return res.status(400).json({ error: 'Geçersiz “Kağıt var mıydı?” yanıtı.' });
+    const v = wasOpen ? parseVote({ ...req.body, comment: null, toiletType: null }) : null;
+    if (typeof v === 'string') return res.status(400).json({ error: v });
+    const now = new Date().toISOString();
+    db.tx(() => {
+      if (v) {
+        // Var olan oydaki yorum ve tuvalet tipi korunur
+        const prev = db.get('SELECT comment, toilet_type FROM votes WHERE place_id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        db.run(UPSERT_VOTE, [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, prev?.comment ?? null, prev?.toilet_type ?? null, now, now]);
+      }
+      addReport(db, req.params.id, req.user.id, wasOpen ? 'open' : 'closed');
+      if (wasOpen && hadPaper === false) addReport(db, req.params.id, req.user.id, 'no_supplies');
+    });
+    res.json({ place: getPlace(db, req.params.id, req.user.id), contributions: contributionsOf(db, req.user.id) });
   });
 
   return r;
