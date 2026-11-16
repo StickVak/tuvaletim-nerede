@@ -22,8 +22,10 @@ puan ve ücret bilgisi yalnızca gerçek kullanıcı oylarından gelsin, konum g
 6. Backend: Node.js + Express + **sql.js** (saf WASM, Windows'ta derleme gerektirmez). Dosya: `server/data/tuvaletim.db`, her yazmada kaydedilir.
    Tablolar: `users`, `places`, `votes` (cleanliness, comfort, is_paid, price_amount, comment, user_id, place_id, UNIQUE(user_id, place_id)),
    `pending_places`. Şifre: Node `crypto.scrypt`. Oturum: HMAC imzalı belirteç (Bearer), sır `.env`'den.
-7. Seed (yalnızca İzmir, veritabanı boşsa): AVM'ler, Starbucks/kafeler, belediye WC'leri — kullanıcının listesi. Koordinatlar **Nominatim
-   (OpenStreetMap)** ile doğrulanır; bulunamayan nokta için en yakın doğrulanabilir OSM nesnesi kullanılır ve raporlanır.
+7. Seed (yalnızca İzmir, veritabanı boşsa): **tüm İzmir ili genelinde** AVM'ler, Starbucks şubeleri ve kamuya açık tuvaletler
+   (güncelleme 2026-11-16: kullanıcı "verileri tüm İzmir geneli yap" dedi). Kullanıcının adını verdiği 24 nokta mutlaka yer alır.
+   Kaynak **Nominatim (OpenStreetMap)**: adlandırılmış noktalar isimle; il geneli tarama bölge bölge (`mall`, `Starbucks`, `toilets`).
+   OSM kimliğine göre tekilleştirilir. Bulunamayan nokta için en yakın doğrulanabilir OSM nesnesi kullanılır ve raporlanır.
 8. `npm run dev` → `concurrently` ile Express (`node --watch`) + Vite (`/api` proxy).
 9. `/admin`: `users.role = 'admin'` ile giriş (admin hesabı `.env`'den, sunucuda oluşturulur). Genel bakış, başvurular (onay/red),
    mekanlar (düzenle/sil), oylar/yorumlar (sil) yeni API ve oylama/ücret yapısıyla.
