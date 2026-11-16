@@ -29,8 +29,9 @@ Veritabanını sıfırlamak için sunucuyu durdurup `server/data/` klasörünü 
 Diğer komutlar:
 
 ```bash
-npm test          # sunucu (node:test) + Acil algoritması ve rota testleri
+npm test          # sunucu (node:test) + Acil, rota, filtre testleri
 npm run build     # üretim derlemesi (dist/)
+npm run seed:demo # mevcut veritabanına örnek kullanıcı + yorum ekler (sunucu kapalıyken)
 ```
 
 ### Ortam değişkenleri (`.env`, yalnızca sunucu okur)
@@ -40,13 +41,21 @@ npm run build     # üretim derlemesi (dist/)
 | `AUTH_SECRET` | Oturum belirteçlerini imzalayan gizli anahtar. Tanımlı değilse ya da `.env.example`'daki örnek değer bırakılmışsa sunucu rastgele bir anahtar üretip `server/data/.auth-secret`'e kaydeder. | otomatik üretilir |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Yönetici hesabı; sunucu her açılışta bu hesabı oluşturur veya şifresini eşitler | `admin` / `admin123` |
 | `PORT` | API portu | `3001` |
+| `SEED_DEMO_DATA` | `false` ise yeni veritabanına örnek kullanıcı ve yorum eklenmez | `true` |
 
 ## Özellikler
 
 - **Gerçek konum:** Açılışta tarayıcının konum izni istenir ve harita GPS konumunuza odaklanır. İzin verilmezse veya konum alınamazsa üstte bir uyarı çıkar; haritada bulunduğunuz noktaya dokunarak konumunuzu işaretlersiniz (yalnızca o oturum için). Konum yokken harita İzmir merkezli açılır.
 - **Acil:** 2 km içindeki **ücretsiz** tuvaletler arasından yakınlık (%70) ve puan (%30) ağırlıklı en uygununu seçer; oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz tuvalet yoksa en yakın tuvaleti gösterir. “Hemen Git” uygulama içi yol tarifine geçer.
 - **Uygulama içi yol tarifi:** Liste kartındaki, detay penceresindeki “Yol Tarifi” ve Acil'deki “Hemen Git” kullanıcıyı dışarı yönlendirmez; konumunuzdan tuvalete sokaklara oturan yaya rotası haritada çizilir. Üstteki kartta yürüme mesafesi, tahmini süre ve **Rotayı Bitir** bulunur. Rota motoru OSRM'dir ([`src/lib/route.ts`](src/lib/route.ts)): önce gerçek yaya profili olan `routing.openstreetmap.de`, yanıt vermezse `router.project-osrm.org` denenir. Genel demo sunucusu yalnızca araç profili çalıştırdığından orada süre yürüme hızından (4,8 km/sa) hesaplanır. İkisi de yanıt vermezse kesikli kuş uçuşu çizgi çizilir.
-- **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek ve puan vermek için giriş gerekir.
+- **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek, puan vermek, favori ve durum bildirimi için giriş gerekir.
+- **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
+- **Herkese açık profiller:** Yorumlardaki ada/avatara tıklayınca kullanıcının fotoğrafı, adı, biyografisi, katılım tarihi, katkı sayıları ve tüm değerlendirmeleri görünür. Şifre, e-posta ve rol asla dönmez.
+- **Filtreler ve sıralama:** Birlikte seçilebilen çipler — Ücretsiz, Engelli Erişimi, Bebek Bakımı, Şu An Açık, Şifresiz / Herkese Açık, Alafranga, Alaturka, Favorilerim — ve En Yakın / En Temiz / En Ucuz-Ücretsiz / En Çok Oylanan sıralaması.
+- **Canlı durum:** Mekan detayından tek tıkla “Temizlik / Tadilat Nedeniyle Kapalı”, “Kağıt / Sabun Yok”, “Çok Kalabalık” bildirimi. Son 3 saatte en az 2 farklı kullanıcı kapalı bildirirse kartta, detayda ve pinde **Geçici Olarak Kapalı Bildirildi** rozeti çıkar ve Acil o mekanı atlar.
+- **Favoriler:** Kart ve detaydaki kalp ikonu.
+- **Harita kümeleme:** `leaflet.markercluster`; uzaklaşınca yakın pinler sarı-siyah sayı baloncuklarında toplanır (koyu temada ters renkler). Seçili mekan ve rota hedefi kümeye girmez.
+- **Örnek veriler:** İlk kurulumda 6 kurgusal İzmirli kullanıcı (çizim avatarlı) ve 9 popüler mekanda 18 gerçekçi oy/yorum eklenir. Bu profiller arayüzde **Örnek profil** olarak işaretlidir; şifreleri rastgele olduğundan bu hesaplarla giriş yapılamaz. Diğer mekanlar oysuz kalır.
 - **Kitle kaynaklı puan ve ücret:**
   - Başlangıç verisinde hiç puan yoktur (`Henüz puanlanmadı · 0 oy`).
   - Puanlama: Temizlik ★1-5, Konfor ★1-5, altında **Ücretli / Ücretsiz**; Ücretli seçilince **Ücret Tutarı (₺)** alanı açılır. İsteğe bağlı kısa yorum.
@@ -65,8 +74,12 @@ npm run build     # üretim derlemesi (dist/)
 |---|---|
 | `users` | id, username, email, password_hash (scrypt), role (`user` / `admin`), created_at |
 | `places` | Onaylı mekanlar: ad, tür, ilçe, adres, konum, fotoğraf, saatler, engelli erişimi, bebek bakım, kaynak (`seed` / `user`) |
-| `votes` | cleanliness, comfort, is_paid, price_amount, comment, user_id, place_id — `UNIQUE(user_id, place_id)` |
+| `votes` | cleanliness, comfort, is_paid, price_amount, comment, toilet_type, user_id, place_id — `UNIQUE(user_id, place_id)` |
 | `pending_places` | `+` ile gönderilen, onay bekleyen mekanlar ve ekleyenin ilk oyu (onayda `votes`'a yazılır) |
+| `favorites` | user_id, place_id, created_at — birincil anahtar `(user_id, place_id)` |
+| `status_reports` | place_id, user_id, report_type (`closed` / `no_supplies` / `crowded`), created_at |
+
+`users` ayrıca display_name, avatar_url, bio, is_demo; `places` ayrıca toilet_type, public_access, added_by içerir. Bu sütunlar eski veritabanlarına açılışta `ALTER TABLE` ile eklenir.
 
 Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stats.js`](server/stats.js)).
 
@@ -96,7 +109,14 @@ Seed verisi yalnızca veritabanı boşken yüklenir.
 | GET | `/api/auth/me` | kullanıcı | Oturumdaki kullanıcı |
 | GET | `/api/places` | — | Mekanlar + `stats` (+ girişliyse `myVote`) |
 | GET | `/api/places/:id/photo` | — | Mekan fotoğrafı (liste yanıtında yalnızca `hasPhoto` bulunur) |
-| GET | `/api/places/:id/reviews` | — | Yorumlu son 20 oy |
+| GET | `/api/places/:id/reviews` | — | Yorumlu son 20 oy (yazarın görünen adı ve avatarıyla) |
+| POST | `/api/places/:id/reports` | kullanıcı | `{ type: 'closed' \| 'no_supplies' \| 'crowded' }` canlı durum bildirimi |
+| PUT / DELETE | `/api/favorites/:placeId` | kullanıcı | Favoriye ekle / çıkar |
+| GET / PATCH | `/api/profile` | kullanıcı | Profilim (istatistik + etkinlik) / ad ve biyografi |
+| POST | `/api/profile/password` | kullanıcı | `{ currentPassword, newPassword }` |
+| PUT / DELETE | `/api/profile/avatar` | kullanıcı | `{ image: dataURL }` profil fotoğrafı yükle / kaldır |
+| GET | `/api/users/:id` | — | Herkese açık profil |
+| GET | `/api/avatars/:file` | — | Profil fotoğrafı (`nosniff`) |
 | PUT | `/api/places/:id/vote` | kullanıcı | `{ cleanliness, comfort, isPaid, priceAmount?, comment? }` — oy ekler/günceller |
 | POST | `/api/pending` | kullanıcı | Yeni mekan başvurusu (+ ilk oy) |
 | GET | `/api/admin/stats` | admin | Özet sayılar |
@@ -113,7 +133,9 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 - Örnek (herkese açık) anahtar asla kullanılmaz; yoksa rastgele üretilir.
 - Fotoğraflar yalnızca JPEG / PNG / WebP / GIF olabilir (SVG reddedilir) ve `X-Content-Type-Options: nosniff` ile sunulur.
 - Yönetici bilgileri yalnızca sunucudadır, tarayıcıya gönderilen JS paketinde bulunmaz.
-- Giriş denemelerinde hız sınırı (rate limit) yoktur ve HTTPS kurulumu bu projenin kapsamında değildir. İnternete açmadan önce bir ters vekil sunucu (reverse proxy) ve hız sınırı ekleyin.
+- **Hız sınırı (IP başına, bellek içi):** giriş + kayıt 15 dakikada 20 istek; oy, bildirim, favori, başvuru ve profil yazma dakikada 60 istek. Aşılınca `429` ve `Retry-After`. Sunucu yalnızca kendi makinesindeki (loopback) vekilin `X-Forwarded-For` başlığına güvenir.
+- Profil fotoğrafları içerik baytları kontrol edilerek kabul edilir, rastgele adla `server/data/avatars/` altında tutulur.
+- HTTPS kurulumu bu projenin kapsamında değildir; internete açmadan önce bir ters vekil sunucu (reverse proxy) ile HTTPS ekleyin.
 - Telefonda gerçek GPS için tarayıcılar HTTPS ister (`localhost` hariç).
 
 ## Proje yapısı
