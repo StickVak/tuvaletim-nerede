@@ -1,10 +1,6 @@
-import { ArrowDownWideNarrow, Check, Navigation, Sparkles } from 'lucide-react';
-import type { Filters, SortMode } from '../types';
-
-const SORTS: { value: SortMode; label: string; icon: typeof Navigation }[] = [
-  { value: 'distance', label: 'Yakınlığa göre', icon: Navigation },
-  { value: 'cleanliness', label: 'Temizlik puanına göre', icon: Sparkles },
-];
+import { ArrowDownWideNarrow, Check } from 'lucide-react';
+import type { FilterChip, Filters, SortMode } from '../types';
+import { CHIP_LABELS, SORT_LABELS } from '../lib/filters';
 
 export function Toggle({ on, tone = 'green' }: { on: boolean; tone?: 'green' | 'ink' }) {
   return (
@@ -14,40 +10,51 @@ export function Toggle({ on, tone = 'green' }: { on: boolean; tone?: 'green' | '
   );
 }
 
-export default function FilterPanel({ filters, onChange }: { filters: Filters; onChange: (f: Filters) => void }) {
+export default function FilterPanel({ filters, onChange, compact }: { filters: Filters; onChange: (f: Filters) => void; compact?: boolean }) {
+  const toggle = (c: FilterChip) =>
+    onChange({ ...filters, chips: filters.chips.includes(c) ? filters.chips.filter((x) => x !== c) : [...filters.chips, c] });
   return (
     <div>
-      <p className="flex items-center gap-1.5 px-2 pb-2 pt-1 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
-        <ArrowDownWideNarrow size={13} /> Sıralama
-      </p>
-      {SORTS.map((s) => {
-        const selected = filters.sort === s.value;
-        return (
-          <button
-            key={s.value}
-            type="button"
-            onClick={() => onChange({ ...filters, sort: s.value })}
-            className={`flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left text-sm font-semibold transition ${
-              selected ? 'bg-brand-soft text-ink' : 'text-ink-soft hover:bg-card'
-            }`}
-          >
-            <s.icon size={17} />
-            <span className="flex-1">{s.label}</span>
-            {selected && <Check size={16} />}
-          </button>
-        );
-      })}
-      <div className="my-2 h-px bg-gray-100" />
-      <label className="flex cursor-pointer items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-semibold text-ink hover:bg-card">
-        <span className="flex-1">Sadece ücretsizler</span>
-        <Toggle on={filters.freeOnly} />
-        <input
-          type="checkbox"
-          className="sr-only"
-          checked={filters.freeOnly}
-          onChange={(e) => onChange({ ...filters, freeOnly: e.target.checked })}
-        />
+      <label className="flex items-center gap-2 rounded-2xl bg-card px-3 py-2 text-sm font-semibold text-ink">
+        <ArrowDownWideNarrow size={16} className="shrink-0 text-ink-muted" />
+        <span className="sr-only">Sıralama</span>
+        <select
+          value={filters.sort}
+          onChange={(e) => onChange({ ...filters, sort: e.target.value as SortMode })}
+          aria-label="Sıralama"
+          className="w-full cursor-pointer bg-transparent font-bold text-ink outline-none"
+        >
+          {(Object.keys(SORT_LABELS) as SortMode[]).map((s) => (
+            <option key={s} value={s} className="bg-surface text-ink">
+              {SORT_LABELS[s]}
+            </option>
+          ))}
+        </select>
       </label>
+      <div className={`mt-2 flex flex-wrap gap-1.5 ${compact ? '' : 'px-0.5'}`} role="group" aria-label="Filtreler">
+        {(Object.keys(CHIP_LABELS) as FilterChip[]).map((c) => {
+          const on = filters.chips.includes(c);
+          return (
+            <button
+              key={c}
+              type="button"
+              aria-pressed={on}
+              onClick={() => toggle(c)}
+              className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-bold transition ${
+                on ? 'bg-brand text-onbrand' : 'bg-card text-ink-soft ring-1 ring-line hover:text-ink'
+              }`}
+            >
+              {on && <Check size={12} strokeWidth={3} />}
+              {CHIP_LABELS[c]}
+            </button>
+          );
+        })}
+      </div>
+      {filters.chips.length > 0 && (
+        <button type="button" onClick={() => onChange({ ...filters, chips: [] })} className="mt-2 text-xs font-bold text-ink-muted hover:text-ink">
+          Filtreleri temizle ({filters.chips.length})
+        </button>
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Baby, Camera, Crosshair, ImagePlus, LocateFixed, MapPin, Send, Trash2, X } from 'lucide-react';
-import type { LatLng, PlaceDraft, ToiletCategory } from '../types';
+import type { LatLng, PlaceDraft, ToiletCategory, ToiletType } from '../types';
 import { CATEGORIES, CATEGORY_ORDER } from '../lib/categories';
 import FeeVoteInput, { parsePrice } from './FeeVoteInput';
 import { readImageAsDataUrl } from '../lib/image';
@@ -29,6 +29,7 @@ export default function AddToiletModal({
   const [category, setCategory] = useState<ToiletCategory>('kafe');
   const [isPaid, setIsPaid] = useState<boolean | null>(null);
   const [district, setDistrict] = useState('');
+  const [toiletType, setToiletType] = useState<ToiletType | null>(null);
   const [address, setAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [price, setPrice] = useState('');
@@ -87,7 +88,7 @@ export default function AddToiletModal({
         hours: hours.trim() || undefined,
         accessible,
         babyChanging,
-        vote: { cleanliness, comfort, isPaid, priceAmount: isPaid ? parsePrice(price) : null, comment: null },
+        vote: { cleanliness, comfort, isPaid, priceAmount: isPaid ? parsePrice(price) : null, comment: null, toiletType },
       });
     } finally {
       setSubmitting(false);
@@ -281,6 +282,24 @@ export default function AddToiletModal({
             <FeeVoteInput isPaid={isPaid} price={price} onChange={(p, v) => { setIsPaid(p); setPrice(v); }} />
           </div>
           {errors.fee && <p className="-mt-3 text-xs font-semibold text-red-600">{errors.fee}</p>}
+
+          <div role="radiogroup" aria-label="Tuvalet tipi">
+            <span className="mb-1.5 block text-sm font-bold">Tuvalet tipi <span className="font-medium text-ink-muted">(isteğe bağlı)</span></span>
+            <div className="flex flex-wrap gap-2">
+              {([['alafranga', 'Alafranga'], ['alaturka', 'Alaturka'], ['ikisi', 'İkisi de']] as [ToiletType, string][]).map(([t, l]) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="radio"
+                  aria-checked={toiletType === t}
+                  onClick={() => setToiletType(toiletType === t ? null : t)}
+                  className={`rounded-full px-4 py-2 text-sm font-bold ${toiletType === t ? 'bg-night text-white' : 'bg-card text-ink-soft'}`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Ek bilgiler */}
           <div>

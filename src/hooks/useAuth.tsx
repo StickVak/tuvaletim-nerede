@@ -16,6 +16,8 @@ interface AuthState {
   logout: () => void;
   /** Girişli değilse giriş penceresini açar ve false döner */
   requireAuth: () => boolean;
+  /** Profil güncellenince oturumdaki kullanıcıyı yeniler */
+  updateUser: (u: User) => void;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -75,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, ready, authMode, openAuth, closeAuth, login, register, logout, requireAuth }}>
+    <AuthContext.Provider value={{ user, ready, authMode, openAuth, closeAuth, login, register, logout, requireAuth, updateUser: setUser }}>
       {children}
     </AuthContext.Provider>
   );

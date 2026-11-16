@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type L from 'leaflet';
 import { Check, Crosshair, ListFilter, MapPin, Settings as SettingsIcon, Siren, X } from 'lucide-react';
-import type { Filters, LatLng, PlaceDraft, PlaceView, RouteState, ToastMessage } from './types';
+import type { Filters, LatLng, Place, PlaceDraft, PlaceView, ReportType, RouteState, ToastMessage } from './types';
 import { api } from './api';
 import { usePlaces } from './hooks/usePlaces';
 import { useAuth } from './hooks/useAuth';
 import { IZMIR_CENTER, pickEmergency, toView } from './lib/geo';
+import { applyFilters, SORT_LABELS, sortPlaces } from './lib/filters';
 import { fetchWalkingRoute, WALK_SPEED_MPS } from './lib/route';
 import { STORAGE_ERROR_EVENT, usePersistentState } from './hooks/usePersistentState';
 import { useGeolocation } from './hooks/useGeolocation';
@@ -28,8 +29,10 @@ import Logo from './components/Logo';
 import LocationBanner from './components/LocationBanner';
 import AuthModal from './components/AuthModal';
 import AccountButton from './components/AccountButton';
+import ProfileModal from './components/ProfileModal';
+import UserProfileModal from './components/UserProfileModal';
 
-const DEFAULT_FILTERS: Filters = { sort: 'distance', freeOnly: false };
+const DEFAULT_FILTERS: Filters = { sort: 'distance', chips: [] };
 /** Masaüstü: kenar panel (16 + 400 + 16) */
 const SIDEBAR_SPACE = 432;
 const DETAIL_WIDTH = 400;
@@ -54,7 +57,7 @@ export default function App() {
   const loading = places === undefined;
 
   // ---------- Kalıcı tercihler ----------
-  const [filters, setFilters] = usePersistentState<Filters>('tn.filters', DEFAULT_FILTERS);
+  const [filters, setFilters] = usePersistentState<Filters>('tn.filters.v2', DEFAULT_FILTERS);
 
   // ---------- UI durumu ----------
   const [query, setQuery] = useState('');
@@ -62,6 +65,8 @@ export default function App() {
   const [sheetSnap, setSheetSnap] = useState<SheetSnap>('peek');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [viewUserId, setViewUserId] = useState<number | null>(null);
   const [picking, setPicking] = useState(false);
   const [draftLocation, setDraftLocation] = useState<LatLng | null>(null);
   const [route, setRoute] = useState<RouteState | null>(null);
@@ -111,24 +116,17 @@ export default function App() {
 
   const listed = useMemo(() => {
     const q = normalize(query.trim());
-    let items = filters.freeOnly ? views.filter((t) => !t.stats.isPaid) : [...views];
+    let items = applyFilters(views, filters.chips);
     if (q) items = items.filter((t) => normalize([t.name, t.district, t.address].filter(Boolean).join(' ')).includes(q));
-    const byName = (a: PlaceView, b: PlaceView) => a.name.localeCompare(b.name, 'tr');
-    const byDistance = (a: PlaceView, b: PlaceView) => (a.distance !== null && b.distance !== null ? a.distance - b.distance : byName(a, b));
-    items.sort((a, b) =>
-      filters.sort === 'distance'
-        ? byDistance(a, b)
-        : b.stats.cleanliness - a.stats.cleanliness || b.stats.voteCount - a.stats.voteCount || byDistance(a, b),
-    );
-    return items;
+    return sortPlaces(items, filters.sort);
   }, [views, filters, query]);
 
   const markers = useMemo(() => {
-    const base = filters.freeOnly ? views.filter((t) => !t.stats.isPaid) : views;
+    const base = applyFilters(views, filters.chips);
     const ensure = [route?.placeId, selectedId].filter(Boolean) as string[];
     const missing = ensure.filter((id) => !base.some((t) => t.id === id));
     return missing.length ? [...base, ...views.filter((t) => missing.includes(t.id))] : base;
-  }, [views, filters.freeOnly, route, selectedId]);
+  }, [views, filters.chips, route, selectedId]);
 
   const selected = selectedId ? views.find((t) => t.id === selectedId) ?? null : null;
   const routePlace = route ? views.find((t) => t.id === route.placeId) ?? null : null;
@@ -223,6 +221,36 @@ export default function App() {
     if (target) void startRoute(target, 'navigate');
   };
 
+  /** Favori: iyimser güncelleme, hata olursa geri alınır */
+  const toggleFavorite = async (p: Place) => {
+    if (!auth.requireAuth()) return;
+    replacePlace({ ...p, isFavorite: !p.isFavorite });
+    try {
+      await api(`/favorites/${p.id}`, { method: p.isFavorite ? 'DELETE' : 'PUT' });
+    } catch (e) {
+      replacePlace(p);
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  const reportStatus = async (id: string, type: ReportType) => {
+    if (!auth.requireAuth()) return;
+    try {
+      const updated = await api<Place>(`/places/${id}/reports`, { method: 'POST', body: { type } });
+      replacePlace(updated);
+      toast(updated.status.closed && type === 'closed' ? 'Teşekkürler! Mekan geçici olarak kapalı işaretlendi.' : 'Bildiriminiz alındı, teşekkürler!', 'success');
+    } catch (e) {
+      toast((e as Error).message, 'error');
+    }
+  };
+
+  /** Profil pencerelerinden bir mekana geçiş */
+  const openPlaceFromProfile = (id: string) => {
+    setProfileOpen(false);
+    setViewUserId(null);
+    selectPlace(id);
+  };
+
   const closeRoute = () => {
     routeReq.current = 0;
     setRoute(null);
@@ -288,7 +316,7 @@ export default function App() {
     </div>
   );
 
-  const sortLabel = filters.sort === 'distance' ? 'En yakın' : 'En temiz';
+  const sortLabel = SORT_LABELS[filters.sort];
 
   return (
     <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-surface text-ink">
@@ -322,6 +350,8 @@ export default function App() {
           onSelect={selectPlace}
           onEmergency={startEmergency}
           onRoute={navigateTo}
+          onToggleFavorite={toggleFavorite}
+          onOpenProfile={() => setProfileOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
       )}
@@ -341,7 +371,7 @@ export default function App() {
             <Logo size={36} />
           </span>
           <div className="ml-auto">
-            <AccountButton variant="bar" />
+            <AccountButton variant="bar" onOpenProfile={() => setProfileOpen(true)} />
           </div>
         </div>
       )}
@@ -370,7 +400,7 @@ export default function App() {
                 <h2 className="text-lg font-extrabold leading-tight">Yakındaki Tuvaletler</h2>
                 <p className="mt-0.5 text-xs font-medium text-ink-muted">
                   {listed.length} sonuç · {sortLabel}
-                  {filters.freeOnly && ' · Sadece ücretsiz'}
+                  {filters.chips.length > 0 && ` · ${filters.chips.length} filtre`}
                 </p>
               </div>
               <span className="flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-[11px] font-bold text-ink-soft">
@@ -397,7 +427,7 @@ export default function App() {
           ) : (
             <ul className="space-y-2.5 px-4 pb-6">
               {listed.map((t) => (
-                <ToiletListItem key={t.id} place={t} active={t.id === selectedId} onSelect={selectPlace} onRoute={navigateTo} />
+                <ToiletListItem key={t.id} place={t} active={t.id === selectedId} onSelect={selectPlace} onRoute={navigateTo} onToggleFavorite={toggleFavorite} />
               ))}
             </ul>
           )}
@@ -458,7 +488,7 @@ export default function App() {
       )}
 
       {selected && !picking && !addOpen && (
-        <PlaceDetail key={selected.id} place={selected} desktop={desktop} onClose={closeDetail} onVoted={replacePlace} onRoute={navigateTo} onToast={toast} />
+        <PlaceDetail key={selected.id} place={selected} desktop={desktop} onClose={closeDetail} onVoted={replacePlace} onRoute={navigateTo} onToggleFavorite={toggleFavorite} onReport={reportStatus} onOpenUser={setViewUserId} onToast={toast} />
       )}
 
       {markingLocation && !picking && !addOpen && !route && (
@@ -473,6 +503,11 @@ export default function App() {
       <Toasts toasts={toasts} desktop={desktop} />
 
       <AuthModal onWelcome={(name) => toast(`Hoş geldin, ${name}!`, 'success')} />
+
+      {profileOpen && auth.user && (
+        <ProfileModal onClose={() => setProfileOpen(false)} onOpenPlace={openPlaceFromProfile} onOpenPublic={setViewUserId} onToast={toast} />
+      )}
+      {viewUserId !== null && <UserProfileModal userId={viewUserId} onClose={() => setViewUserId(null)} onOpenPlace={openPlaceFromProfile} />}
 
       <SettingsDrawer
         open={settingsOpen}

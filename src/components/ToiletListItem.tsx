@@ -1,4 +1,4 @@
-import { Navigation } from 'lucide-react';
+import { AlertTriangle, Heart, Navigation } from 'lucide-react';
 import type { PlaceView } from '../types';
 import { CATEGORIES, placePhoto } from '../lib/categories';
 import { formatDistance, formatWalk } from '../lib/geo';
@@ -11,9 +11,10 @@ interface Props {
   onSelect: (id: string) => void;
   /** Uygulama içi yol tarifi */
   onRoute: (id: string) => void;
+  onToggleFavorite: (place: PlaceView) => void;
 }
 
-export default function ToiletListItem({ place, active, onSelect, onRoute }: Props) {
+export default function ToiletListItem({ place, active, onSelect, onRoute, onToggleFavorite }: Props) {
   const cat = CATEGORIES[place.category];
   return (
     <li>
@@ -26,12 +27,21 @@ export default function ToiletListItem({ place, active, onSelect, onRoute }: Pro
           active ? 'bg-brand-soft ring-2 ring-brand-dark' : 'bg-card hover:bg-line/60'
         }`}
       >
-        <img
-          src={placePhoto(place)}
-          alt=""
-          loading="lazy"
-          className="h-[76px] w-[76px] shrink-0 rounded-2xl bg-line object-cover"
-        />
+        <div className="relative shrink-0">
+          <img src={placePhoto(place)} alt="" loading="lazy" className="h-[76px] w-[76px] rounded-2xl bg-line object-cover" />
+          <button
+            type="button"
+            aria-label={place.isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+            aria-pressed={place.isFavorite}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleFavorite(place);
+            }}
+            className="absolute -left-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-surface shadow-float"
+          >
+            <Heart size={14} className={place.isFavorite ? 'text-red-500' : 'text-ink-muted'} fill={place.isFavorite ? 'currentColor' : 'none'} />
+          </button>
+        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             <PriceBadge stats={place.stats} />
@@ -42,6 +52,11 @@ export default function ToiletListItem({ place, active, onSelect, onRoute }: Pro
             <FeatureIcons place={place} />
           </div>
           <h3 className="mt-1 truncate text-[15px] font-bold leading-tight text-ink">{place.name}</h3>
+          {place.status.closed && (
+            <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-bold text-white">
+              <AlertTriangle size={11} /> Geçici Olarak Kapalı Bildirildi
+            </p>
+          )}
           <div className="mt-1 flex items-center gap-1.5">
             {place.stats.voteCount > 0 && <StarRating value={place.stats.rating} size={12} />}
             <RatingText stats={place.stats} />

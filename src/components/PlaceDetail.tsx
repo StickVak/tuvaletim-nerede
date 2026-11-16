@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Accessibility, Baby, Clock, LogIn, MapPin, MessageSquareText, Navigation, Send, Sofa, Sparkles, Wallet, X } from 'lucide-react';
-import type { Place, PlaceView, Vote } from '../types';
+import { Accessibility, AlertTriangle, Baby, Clock, Heart, KeyRound, LogIn, MapPin, MessageSquareText, Navigation, PackageX, Send, Sofa, Sparkles, Toilet, Users, Wallet, Wrench, X } from 'lucide-react';
+import type { Place, PlaceView, ReportType, ToiletType, Vote } from '../types';
+import { relTime } from '../lib/time';
+import Avatar from './Avatar';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIES, placePhoto } from '../lib/categories';
@@ -16,20 +18,20 @@ interface Props {
   onVoted: (place: Place) => void;
   /** Uygulama içi yol tarifi */
   onRoute: (id: string) => void;
+  onToggleFavorite: (place: PlaceView) => void;
+  onReport: (id: string, type: ReportType) => void;
+  onOpenUser: (userId: number) => void;
   onToast: (text: string, tone?: 'success' | 'info' | 'error') => void;
 }
 
-type Review = Vote & { username: string; updatedAt: string };
+type Review = Vote & { userId: number; username: string; displayName: string; avatarUrl: string | null; isDemo: boolean; updatedAt: string };
 
-function relTime(iso: string) {
-  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (m < 1) return 'az önce';
-  if (m < 60) return `${m} dk önce`;
-  const h = Math.round(m / 60);
-  if (h < 24) return `${h} sa önce`;
-  const d = Math.round(h / 24);
-  return d < 30 ? `${d} gün önce` : new Date(iso).toLocaleDateString('tr-TR');
-}
+const TOILET_TYPE_LABEL: Record<ToiletType, string> = { alafranga: 'Alafranga', alaturka: 'Alaturka', ikisi: 'Alafranga + Alaturka' };
+const REPORTS: { type: ReportType; label: string; icon: typeof Wrench }[] = [
+  { type: 'closed', label: 'Temizlik / Tadilat Nedeniyle Kapalı', icon: Wrench },
+  { type: 'no_supplies', label: 'Kağıt / Sabun Yok', icon: PackageX },
+  { type: 'crowded', label: 'Çok Kalabalık', icon: Users },
+];
 
 function ScoreBar({ label, icon: Icon, value }: { label: string; icon: typeof Sparkles; value: number }) {
   return (
@@ -45,7 +47,7 @@ function ScoreBar({ label, icon: Icon, value }: { label: string; icon: typeof Sp
   );
 }
 
-export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute, onToast }: Props) {
+export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute, onToggleFavorite, onReport, onOpenUser, onToast }: Props) {
   const auth = useAuth();
   const cat = CATEGORIES[place.category];
   const CatIcon = cat.icon;
@@ -55,6 +57,7 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
   const [isPaid, setIsPaid] = useState<boolean | null>(mine?.isPaid ?? null);
   const [price, setPrice] = useState(mine?.priceAmount != null ? String(mine.priceAmount) : '');
   const [comment, setComment] = useState(mine?.comment ?? '');
+  const [toiletType, setToiletType] = useState<ToiletType | null>(mine?.toiletType ?? null);
   const [sending, setSending] = useState(false);
   const { stats } = place;
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -72,7 +75,7 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
     try {
       const updated = await api<Place>(`/places/${place.id}/vote`, {
         method: 'PUT',
-        body: { cleanliness, comfort, isPaid, priceAmount: isPaid ? parsePrice(price) : null, comment },
+        body: { cleanliness, comfort, isPaid, priceAmount: isPaid ? parsePrice(price) : null, comment, toiletType },
       });
       onVoted(updated);
       loadReviews();
@@ -95,6 +98,15 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
         <div className="no-scrollbar flex-1 overflow-y-auto overscroll-contain">
           <div className="relative">
             <img src={placePhoto(place)} alt={place.name} className="h-48 w-full bg-card object-cover" />
+            <button
+              type="button"
+              onClick={() => onToggleFavorite(place)}
+              aria-label={place.isFavorite ? 'Favorilerden çıkar' : 'Favorilere ekle'}
+              aria-pressed={place.isFavorite}
+              className="absolute right-16 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-float"
+            >
+              <Heart size={19} className={place.isFavorite ? 'text-red-500' : 'text-[#1A1A1A]'} fill={place.isFavorite ? 'currentColor' : 'none'} />
+            </button>
             <button type="button" onClick={onClose} aria-label="Kapat" className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-[#1A1A1A] shadow-float">
               <X size={19} />
             </button>
@@ -123,6 +135,22 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
               </div>
             </div>
 
+            {place.status.closed && (
+              <div role="alert" className="mt-4 flex items-start gap-2.5 rounded-2xl bg-orange-600 p-3 text-sm text-white">
+                <AlertTriangle size={18} className="mt-0.5 shrink-0" />
+                <span>
+                  <b className="block">Geçici Olarak Kapalı Bildirildi</b>
+                  Son 3 saatte {place.status.closedReports} kullanıcı kapalı/arızalı olduğunu bildirdi.
+                </span>
+              </div>
+            )}
+            {(place.status.noSupplies > 0 || place.status.crowded > 0) && (
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                {place.status.noSupplies > 0 && <span className="rounded-full bg-amber-500/15 px-3 py-1.5 text-amber-700 dark:text-amber-300">Kağıt/sabun yok · {place.status.noSupplies} bildirim</span>}
+                {place.status.crowded > 0 && <span className="rounded-full bg-amber-500/15 px-3 py-1.5 text-amber-700 dark:text-amber-300">Çok kalabalık · {place.status.crowded} bildirim</span>}
+              </div>
+            )}
+
             <div className="mt-4 space-y-3 rounded-3xl bg-card p-4">
               {stats.voteCount ? (
                 <>
@@ -143,6 +171,16 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
               <div className="rounded-2xl bg-card p-3">
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted"><Clock size={14} /> Saatler</div>
                 <div className="mt-1.5 text-sm font-bold text-ink">{place.hours ?? 'Bilinmiyor'}</div>
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-card p-3">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted"><Toilet size={14} /> Tuvalet tipi</div>
+                <div className="mt-1.5 text-sm font-bold text-ink">{place.toiletType ? TOILET_TYPE_LABEL[place.toiletType] : 'Bilinmiyor'}</div>
+              </div>
+              <div className="rounded-2xl bg-card p-3">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-ink-muted"><KeyRound size={14} /> Erişim</div>
+                <div className="mt-1.5 text-sm font-bold text-ink">{place.publicAccess ? 'Şifresiz / herkese açık' : 'Müşteriye şifreli'}</div>
               </div>
             </div>
             {(place.accessible || place.babyChanging) && (
@@ -169,6 +207,22 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
               Yol Tarifi{place.distance !== null && ` · ${formatDistance(place.distance)} · ${formatWalk(place.distance)}`}
             </button>
 
+            <section className="mt-5" aria-label="Durum bildir">
+              <h3 className="text-sm font-extrabold text-ink">Şu an durum nasıl?</h3>
+              <div className="mt-2 grid grid-cols-1 gap-1.5">
+                {REPORTS.map((r) => (
+                  <button
+                    key={r.type}
+                    type="button"
+                    onClick={() => onReport(place.id, r.type)}
+                    className="flex items-center gap-2 rounded-2xl bg-card px-3.5 py-2.5 text-left text-sm font-semibold text-ink ring-1 ring-line transition hover:ring-orange-500"
+                  >
+                    <r.icon size={16} className="text-orange-600" /> {r.label}
+                  </button>
+                ))}
+              </div>
+            </section>
+
             <section className="mt-6 rounded-3xl border-2 border-brand bg-brand/10 p-4" aria-label="Puan ver">
               <h3 className="text-base font-extrabold text-ink">{mine ? 'Oyunuz' : 'Bu tuvaleti puanla'}</h3>
               {!auth.user ? (
@@ -189,6 +243,23 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
                   </div>
                   <div className="mt-2">
                     <FeeVoteInput isPaid={isPaid} price={price} onChange={(p, v) => { setIsPaid(p); setPrice(v); }} />
+                  </div>
+                  <div className="mt-2" role="radiogroup" aria-label="Tuvalet tipi">
+                    <span className="mb-1 block text-xs font-bold text-ink-soft">Tuvalet tipi (isteğe bağlı)</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(Object.keys(TOILET_TYPE_LABEL) as ToiletType[]).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          role="radio"
+                          aria-checked={toiletType === t}
+                          onClick={() => setToiletType(toiletType === t ? null : t)}
+                          className={`rounded-full px-3 py-1.5 text-xs font-bold ${toiletType === t ? 'bg-night text-white' : 'bg-surface text-ink-soft ring-1 ring-line'}`}
+                        >
+                          {t === 'ikisi' ? 'İkisi de' : TOILET_TYPE_LABEL[t]}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <textarea
                     value={comment}
@@ -223,12 +294,20 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
               ) : (
                 <ul className="mt-2 space-y-2">
                   {reviews.map((r) => (
-                    <li key={r.username} className="rounded-2xl bg-card p-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-muted">
-                        <span className="font-bold text-ink-soft">@{r.username}</span>
-                        <span>{relTime(r.updatedAt)}</span>
+                    <li key={r.userId} className="rounded-2xl bg-card p-3">
+                      <div className="flex items-center gap-2.5">
+                        <button type="button" onClick={() => onOpenUser(r.userId)} aria-label={`${r.displayName} profili`} className="shrink-0">
+                          <Avatar name={r.displayName} url={r.avatarUrl} size={34} />
+                        </button>
+                        <div className="min-w-0 flex-1">
+                          <button type="button" onClick={() => onOpenUser(r.userId)} className="block truncate text-left text-sm font-bold text-ink hover:underline">
+                            {r.displayName}
+                            {r.isDemo && <span className="ml-1.5 rounded-full bg-surface px-1.5 py-0.5 align-middle text-[9px] font-bold text-ink-muted">Örnek</span>}
+                          </button>
+                          <span className="text-[11px] text-ink-muted">{relTime(r.updatedAt)}</span>
+                        </div>
                       </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
                         <span className="flex items-center gap-1">Temizlik <StarRating value={r.cleanliness} size={10} /></span>
                         <span className="flex items-center gap-1">Konfor <StarRating value={r.comfort} size={10} /></span>
                         <span>{r.isPaid ? `Ücretli${r.priceAmount ? ` · ${r.priceAmount.toLocaleString('tr-TR')} ₺` : ''}` : 'Ücretsiz'}</span>

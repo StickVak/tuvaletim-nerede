@@ -44,7 +44,8 @@ export function toView(p: Place, user: LatLng | null): PlaceView {
  * oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz yoksa en yakın mekanı döner.
  */
 export function pickEmergency(places: PlaceView[], radiusM = 2000): PlaceView | null {
-  const known = places.filter((p) => p.distance !== null).sort((a, b) => a.distance! - b.distance!);
+  // Son 3 saatte kapalı bildirilen mekanlar atlanır
+  const known = places.filter((p) => p.distance !== null && !p.status.closed).sort((a, b) => a.distance! - b.distance!);
   const free = known.filter((p) => !p.stats.isPaid && p.distance! <= radiusM);
   if (free.length === 0) return known[0] ?? null;
   const maxD = Math.max(...free.map((p) => p.distance!), 1);

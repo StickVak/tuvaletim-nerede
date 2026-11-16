@@ -1,10 +1,10 @@
-import { ListFilter, MapPin, Navigation, Settings as SettingsIcon, Siren, Sparkles } from 'lucide-react';
+import { ListFilter, MapPin, Settings as SettingsIcon, Siren } from 'lucide-react';
 import type { Filters, PlaceView } from '../types';
 import ToiletListItem from './ToiletListItem';
 import SearchBox from './SearchBox';
 import Logo from './Logo';
 import AccountButton from './AccountButton';
-import { Toggle } from './FilterPanel';
+import FilterPanel from './FilterPanel';
 
 interface Props {
   places: PlaceView[];
@@ -17,11 +17,13 @@ interface Props {
   onSelect: (id: string) => void;
   onEmergency: () => void;
   onRoute: (id: string) => void;
+  onToggleFavorite: (place: PlaceView) => void;
+  onOpenProfile: () => void;
   onOpenSettings: () => void;
 }
 
 export default function Sidebar({
-  places, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onRoute, onOpenSettings,
+  places, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onRoute, onToggleFavorite, onOpenProfile, onOpenSettings,
 }: Props) {
   return (
     <aside className="absolute bottom-4 left-4 top-4 z-30 flex w-[400px] flex-col overflow-hidden rounded-[28px] bg-surface shadow-float ring-1 ring-line">
@@ -45,7 +47,7 @@ export default function Sidebar({
 
       <div className="px-5">
         <div className="mb-3">
-          <AccountButton variant="sidebar" />
+          <AccountButton variant="sidebar" onOpenProfile={onOpenProfile} />
         </div>
         <button
           type="button"
@@ -60,34 +62,8 @@ export default function Sidebar({
           <SearchBox value={query} onChange={onQueryChange} />
         </div>
 
-        <div className="mt-3 flex items-center gap-2">
-          <div className="grid flex-1 grid-cols-2 gap-1 rounded-2xl bg-card p-1">
-            {[
-              { v: 'distance' as const, l: 'En yakın', i: Navigation },
-              { v: 'cleanliness' as const, l: 'En temiz', i: Sparkles },
-            ].map((o) => (
-              <button
-                key={o.v}
-                type="button"
-                onClick={() => onFiltersChange({ ...filters, sort: o.v })}
-                className={`flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold transition ${
-                  filters.sort === o.v ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
-                }`}
-              >
-                <o.i size={14} /> {o.l}
-              </button>
-            ))}
-          </div>
-          <label className="flex cursor-pointer items-center gap-2 rounded-2xl bg-card px-3 py-2 text-xs font-bold">
-            Ücretsiz
-            <Toggle on={filters.freeOnly} />
-            <input
-              type="checkbox"
-              className="sr-only"
-              checked={filters.freeOnly}
-              onChange={(e) => onFiltersChange({ ...filters, freeOnly: e.target.checked })}
-            />
-          </label>
+        <div className="mt-3">
+          <FilterPanel filters={filters} onChange={onFiltersChange} compact />
         </div>
 
         <p className="mt-4 pb-2 text-xs font-semibold text-ink-muted">{places.length} mekan listeleniyor</p>
@@ -103,7 +79,7 @@ export default function Sidebar({
         ) : (
           <ul className="space-y-2.5">
             {places.map((p) => (
-              <ToiletListItem key={p.id} place={p} active={p.id === selectedId} onSelect={onSelect} onRoute={onRoute} />
+              <ToiletListItem key={p.id} place={p} active={p.id === selectedId} onSelect={onSelect} onRoute={onRoute} onToggleFavorite={onToggleFavorite} />
             ))}
           </ul>
         )}

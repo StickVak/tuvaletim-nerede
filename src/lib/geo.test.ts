@@ -5,8 +5,9 @@ import type { PlaceView } from '../types';
 
 function place(id: string, distance: number | null, opts: { paid?: boolean; votes?: number; rating?: number } = {}): PlaceView {
   return {
-    id, name: id, category: 'kafe', district: null, address: null, lat: 0, lng: 0, photo: null, hours: null,
-    accessible: false, babyChanging: false, source: 'seed', createdAt: '', myVote: null, distance,
+    id, name: id, category: 'kafe', district: null, address: null, lat: 0, lng: 0, hasPhoto: false, hours: null,
+    accessible: false, babyChanging: false, toiletType: null, publicAccess: true, source: 'seed', createdAt: '', myVote: null, distance, isFavorite: false,
+    status: { closed: false, closedReports: 0, noSupplies: 0, crowded: 0 },
     stats: { voteCount: opts.votes ?? 0, cleanliness: opts.rating ?? 0, comfort: opts.rating ?? 0, rating: opts.rating ?? 0, isPaid: opts.paid ?? false, avgPrice: null },
   };
 }

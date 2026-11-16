@@ -181,6 +181,39 @@ body {
   }
 }
 
+/* Geçici kapalı bildirimi */
+.tn-pin-closed {
+  background: #ea580c;
+  left: 22px;
+}
+.tn-pin.is-closed .tn-pin-body {
+  filter: grayscale(0.6);
+}
+
+/* ---------- Kümeler (sarı-siyah sayı baloncukları) ---------- */
+.tn-cluster {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #ffd60a;
+  border: 3px solid #1a1a1a;
+  box-shadow: 0 6px 14px -4px rgba(26, 26, 26, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1a1a1a;
+  font-weight: 800;
+  font-size: 14px;
+}
+.dark .tn-cluster {
+  background: #1a1a1a;
+  border-color: #ffd60a;
+  color: #ffd60a;
+}
+.routing .tn-cluster {
+  opacity: 0.35;
+}
+
 /* ---------- Kullanıcı konumu (mavi yanıp sönen nokta) ---------- */
 .tn-user {
   position: relative;

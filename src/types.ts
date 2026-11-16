@@ -15,12 +15,26 @@ export interface PlaceStats {
   avgPrice: number | null;
 }
 
+export type ToiletType = 'alafranga' | 'alaturka' | 'ikisi';
+
+/** Son 3 saatteki kullanıcı bildirimleri (server/status.js) */
+export interface PlaceStatus {
+  /** En az 2 farklı kullanıcı "kapalı" bildirdi */
+  closed: boolean;
+  closedReports: number;
+  noSupplies: number;
+  crowded: number;
+}
+
+export type ReportType = 'closed' | 'no_supplies' | 'crowded';
+
 export interface Vote {
   cleanliness: number;
   comfort: number;
   isPaid: boolean;
   priceAmount: number | null;
   comment: string | null;
+  toiletType?: ToiletType | null;
 }
 
 export interface Place extends LatLng {
@@ -34,9 +48,15 @@ export interface Place extends LatLng {
   hours: string | null;
   accessible: boolean;
   babyChanging: boolean;
+  /** Oy çoğunluğu, yoksa OSM toilets:position */
+  toiletType: ToiletType | null;
+  /** Şifresiz / herkese açık */
+  publicAccess: boolean;
   source: 'seed' | 'user';
   createdAt: string;
   stats: PlaceStats;
+  status: PlaceStatus;
+  isFavorite: boolean;
   /** Giriş yapan kullanıcının bu mekana verdiği oy */
   myVote: Vote | null;
 }
@@ -50,6 +70,37 @@ export interface User {
   id: number;
   username: string;
   role: 'user' | 'admin';
+  displayName: string;
+  avatarUrl: string | null;
+}
+
+/** GET /api/users/:id — herkese açık profil */
+export interface PublicProfile {
+  id: number;
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  bio: string;
+  createdAt: string;
+  isDemo: boolean;
+  stats: { votes: number; comments: number; placesAdded: number };
+  reviews: (Vote & { placeId: string; placeName: string; updatedAt: string })[];
+}
+
+/** GET /api/profile — kendi profilim */
+export interface MyProfile {
+  user: User & { bio: string; createdAt: string; isDemo: boolean };
+  stats: { votes: number; comments: number; placesAdded: number; pending: number; favorites: number };
+  activity: {
+    kind: 'vote' | 'report' | 'favorite' | 'place' | 'pending';
+    placeId: string;
+    placeName: string;
+    at: string;
+    cleanliness?: number;
+    comfort?: number;
+    comment?: string | null;
+    reportType?: ReportType;
+  }[];
 }
 
 /** POST /api/pending gövdesi */
@@ -65,11 +116,13 @@ export interface PlaceDraft extends LatLng {
   vote: Vote;
 }
 
-export type SortMode = 'distance' | 'cleanliness';
+export type SortMode = 'distance' | 'cleanliness' | 'cheapest' | 'popular';
+
+export type FilterChip = 'free' | 'accessible' | 'baby' | 'open' | 'public' | 'alafranga' | 'alaturka' | 'favorites';
 
 export interface Filters {
   sort: SortMode;
-  freeOnly: boolean;
+  chips: FilterChip[];
 }
 
 /** Uygulama içi yaya rotası (Acil ya da Yol Tarifi) */

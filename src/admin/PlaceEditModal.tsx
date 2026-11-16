@@ -1,12 +1,12 @@
 import { useRef, useState } from 'react';
 import { Camera, Save, Trash2, X } from 'lucide-react';
-import type { Place, ToiletCategory } from '../types';
+import type { Place, ToiletCategory, ToiletType } from '../types';
 import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../lib/categories';
 import { readImageAsDataUrl } from '../lib/image';
 import MiniMap from './MiniMap';
 import { inputCls } from './ui';
 
-type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging'> & {
+type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging' | 'toiletType' | 'publicAccess'> & {
   /** undefined: değişmedi · null: kaldır · string: yeni fotoğraf */
   photo?: string | null;
 };
@@ -16,6 +16,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
     name: place.name, category: place.category, district: place.district, address: place.address,
     lat: place.lat, lng: place.lng, hours: place.hours,
     accessible: place.accessible, babyChanging: place.babyChanging,
+    toiletType: place.toiletType, publicAccess: place.publicAccess,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -70,6 +71,24 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
               <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || null)} maxLength={120} className={inputCls} />
             </label>
             <p className="rounded-xl bg-card px-3 py-2 text-xs text-ink-muted">Ücret durumu ve puanlar kullanıcı oylarıyla belirlenir; buradan düzenlenmez.</p>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-ink-soft">Tuvalet tipi (başlangıç)</span>
+                <select value={form.toiletType ?? ''} onChange={(e) => set('toiletType', (e.target.value || null) as ToiletType | null)} className={inputCls}>
+                  <option value="">Bilinmiyor</option>
+                  <option value="alafranga">Alafranga</option>
+                  <option value="alaturka">Alaturka</option>
+                  <option value="ikisi">İkisi de</option>
+                </select>
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs font-bold text-ink-soft">Erişim</span>
+                <select value={form.publicAccess ? '1' : '0'} onChange={(e) => set('publicAccess', e.target.value === '1')} className={inputCls}>
+                  <option value="1">Şifresiz / herkese açık</option>
+                  <option value="0">Müşteriye şifreli</option>
+                </select>
+              </label>
+            </div>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Çalışma saatleri</span>
               <input value={form.hours ?? ''} onChange={(e) => set('hours', e.target.value || null)} maxLength={60} className={inputCls} />

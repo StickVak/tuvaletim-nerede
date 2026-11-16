@@ -1,5 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import L from 'leaflet';
+import '../lib/leafletGlobal';
+import 'leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
 import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 import type { LatLng, PlaceView } from '../types';
 import { OSM_TILE, toiletIcon, userIcon } from '../lib/mapIcons';
@@ -51,6 +54,50 @@ function Controller({ fly, onReady }: { fly: FlyCommand | null; onReady?: (map: 
   return null;
 }
 
+/** İzmir genelindeki pinleri uzaklaştırınca kümeleyen katman (sarı-siyah sayı baloncukları) */
+function ClusterLayer({ places, picking, onSelect, onPick }: { places: PlaceView[]; picking: boolean; onSelect: (id: string) => void; onPick: (p: LatLng) => void }) {
+  const map = useMap();
+  const group = useRef<L.MarkerClusterGroup | null>(null);
+  // Tıklama işleyicileri her render'da değişir; pinleri yeniden kurmamak için ref ile okunur
+  const handlers = useRef({ picking, onSelect, onPick });
+  handlers.current = { picking, onSelect, onPick };
+
+  useEffect(() => {
+    const g = L.markerClusterGroup({
+      showCoverageOnHover: false,
+      maxClusterRadius: 48,
+      disableClusteringAtZoom: 17,
+      iconCreateFunction: (c) =>
+        L.divIcon({ html: `<div class="tn-cluster"><span>${c.getChildCount()}</span></div>`, className: '', iconSize: [44, 44] }),
+    });
+    map.addLayer(g);
+    group.current = g;
+    return () => {
+      map.removeLayer(g);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    const g = group.current;
+    if (!g) return;
+    g.clearLayers();
+    g.addLayers(
+      places.map((p) => {
+        const m = L.marker([p.lat, p.lng], {
+          icon: toiletIcon(p.category, p.stats.isPaid ? 'paid' : 'free', 'normal', p.status.closed),
+          title: p.name,
+        });
+        m.on('click', (e: L.LeafletMouseEvent) =>
+          handlers.current.picking ? handlers.current.onPick({ lat: e.latlng.lat, lng: e.latlng.lng }) : handlers.current.onSelect(p.id),
+        );
+        return m;
+      }),
+    );
+  }, [places]);
+
+  return null;
+}
+
 function ClickHandler({ onClick }: { onClick: (p: LatLng) => void }) {
   useMapEvents({
     click(e) {
@@ -95,6 +142,9 @@ export default function MapView({
   onMapClick,
   onReady,
 }: Props) {
+  const isHighlighted = (id: string) => id === selectedId || id === routeTargetId;
+  const clustered = useMemo(() => places.filter((p) => !isHighlighted(p.id)), [places, selectedId, routeTargetId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const highlighted = useMemo(() => places.filter((p) => isHighlighted(p.id)), [places, selectedId, routeTargetId]); // eslint-disable-line react-hooks/exhaustive-deps
   const routeLatLngs = useMemo(
     () => (route ? route.map((p) => [p.lat, p.lng] as [number, number]) : null),
     [route],
@@ -124,20 +174,23 @@ export default function MapView({
             </>
           ))}
 
-        {places.map((t) => (
+        <ClusterLayer places={clustered} picking={picking} onSelect={onSelect} onPick={onMapClick} />
+
+        {/* Seçili pin ve rota hedefi kümeye girmez: her zaman görünür */}
+        {highlighted.map((t) => (
           <Marker
             key={t.id}
             position={[t.lat, t.lng]}
             icon={toiletIcon(
               t.category,
               t.stats.isPaid ? 'paid' : 'free',
-              t.id === routeTargetId ? (routeMode === 'emergency' ? 'emergency' : 'selected') : t.id === selectedId ? 'selected' : 'normal',
+              t.id === routeTargetId && routeMode === 'emergency' ? 'emergency' : 'selected',
+              t.status.closed,
             )}
             title={t.name}
-            zIndexOffset={t.id === routeTargetId ? 1000 : t.id === selectedId ? 500 : 0}
+            zIndexOffset={t.id === routeTargetId ? 1000 : 500}
             eventHandlers={{
               click: (e) => {
-                // Konum seçme modunda pine dokunmak da o noktayı seçer
                 if (picking) onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
                 else onSelect(t.id);
               },

@@ -20,7 +20,7 @@ const round = 'flex h-12 w-12 items-center justify-center rounded-full bg-surfac
 export default function FloatingControls({ desktop, filters, onFiltersChange, onLocate, onAdd, onZoom, bottom, hidden }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const active = filters.freeOnly || filters.sort !== 'distance';
+  const active = filters.chips.length > 0 || filters.sort !== 'distance';
 
   useEffect(() => {
     if (!open) return;
@@ -62,7 +62,7 @@ export default function FloatingControls({ desktop, filters, onFiltersChange, on
             {active && !open && <span className="absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-white bg-brand-dark" />}
           </button>
           {open && (
-            <div className="absolute bottom-0 right-14 w-64 animate-fade-in rounded-3xl bg-surface p-3 shadow-float">
+            <div className="absolute bottom-0 right-14 w-72 animate-fade-in rounded-3xl bg-surface p-3 shadow-float">
               <FilterPanel filters={filters} onChange={onFiltersChange} />
             </div>
           )}
