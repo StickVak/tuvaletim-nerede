@@ -51,15 +51,9 @@ export default function Sidebar({
           type="button"
           onClick={onEmergency}
           aria-label="Acil: en uygun tuvaleti bul"
-          className="sos-ring group flex w-full items-center gap-3 rounded-3xl bg-gradient-to-br from-red-500 to-red-600 px-4 py-3.5 text-left text-white transition hover:from-red-600 hover:to-red-700 active:scale-[.99]"
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500 py-3 text-base font-bold text-white transition-colors hover:bg-red-600"
         >
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/20">
-            <Siren size={24} />
-          </span>
-          <span className="flex-1">
-            <span className="block text-xl font-extrabold tracking-wide">ACİL</span>
-            <span className="block text-xs font-medium text-white/85">En yakın ücretsiz & temiz tuvalete git</span>
-          </span>
+          <Siren size={19} /> Acil
         </button>
 
         <div className="mt-4">

@@ -46,8 +46,15 @@ export function googleMapsDirections(from: LatLng | null, to: LatLng): string {
   return `https://www.google.com/maps/dir/?${p.toString()}`;
 }
 
-/** Geçici: Görev 9'da ücretsiz öncelikli algoritmayla değiştirilecek */
-export function pickEmergency(places: PlaceView[]): PlaceView | null {
+/**
+ * ACİL: 2 km içindeki ÜCRETSİZ mekanlar arasından yakınlık (%70) + puan (%30) skoruyla seçer;
+ * oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz yoksa en yakın mekanı döner.
+ */
+export function pickEmergency(places: PlaceView[], radiusM = 2000): PlaceView | null {
   const known = places.filter((p) => p.distance !== null).sort((a, b) => a.distance! - b.distance!);
-  return known[0] ?? null;
+  const free = known.filter((p) => !p.stats.isPaid && p.distance! <= radiusM);
+  if (free.length === 0) return known[0] ?? null;
+  const maxD = Math.max(...free.map((p) => p.distance!), 1);
+  const score = (p: PlaceView) => 0.7 * (1 - p.distance! / maxD) + 0.3 * (p.stats.voteCount ? (p.stats.rating - 1) / 4 : 0.5);
+  return free.reduce((best, p) => (score(p) > score(best) ? p : best));
 }

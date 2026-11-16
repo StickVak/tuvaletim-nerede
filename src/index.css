@@ -181,16 +181,3 @@ body {
     opacity: 0;
   }
 }
-
-/* ---------- ACİL butonu nabız efekti ---------- */
-.sos-ring {
-  animation: sos-ring 1.6s ease-out infinite;
-}
-@keyframes sos-ring {
-  0% {
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.55);
-  }
-  100% {
-    box-shadow: 0 0 0 14px rgba(239, 68, 68, 0);
-  }
-}

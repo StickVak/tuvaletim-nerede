@@ -47,7 +47,7 @@ export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount 
             </h3>
             <ul className="space-y-2 text-sm text-ink-soft">
               <li className="rounded-2xl bg-card p-3.5">
-                <b className="text-ink">ACİL</b> butonu, yakınınızdaki ücretsiz ve puanı yüksek tuvaleti bulup rotayı çizer.
+                <b className="text-ink">Acil</b> butonu, 2 km içindeki ücretsiz tuvaletlerden en yakın ve (oylanmışsa) en iyi puanlıyı bulup rotayı çizer; yoksa en yakın tuvaleti gösterir.
               </li>
               <li className="rounded-2xl bg-card p-3.5">
                 Bir pine dokunarak mekanı <b className="text-ink">puanlayabilir</b> ve yorum bırakabilirsiniz.

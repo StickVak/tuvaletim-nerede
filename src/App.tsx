@@ -363,9 +363,9 @@ export default function App() {
               type="button"
               onClick={startEmergency}
               aria-label="Acil: en uygun tuvaleti bul"
-              className="sos-ring flex h-12 items-center gap-2 rounded-full bg-gradient-to-br from-red-500 to-red-600 pl-3.5 pr-5 text-base font-extrabold tracking-wide text-white ring-4 ring-white transition hover:from-red-600 hover:to-red-700 active:scale-95"
+              className="flex h-11 items-center gap-2 rounded-full bg-red-500 px-4 text-sm font-bold text-white transition-colors hover:bg-red-600"
             >
-              <Siren size={20} /> ACİL
+              <Siren size={18} /> Acil
             </button>
           }
         >

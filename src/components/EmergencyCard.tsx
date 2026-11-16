@@ -22,7 +22,7 @@ export default function EmergencyCard({ place, emergency, user, desktop, onClose
         desktop ? 'left-[432px] top-4 w-[420px]' : 'inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))]'
       }`}
     >
-      <div className="flex items-center justify-between bg-gradient-to-r from-red-500 to-red-600 px-4 py-2.5 text-white">
+      <div className="flex items-center justify-between bg-red-500 px-4 py-2.5 text-white">
         <span className="flex items-center gap-2 text-xs font-extrabold tracking-wider">
           <Siren size={16} /> ACİL · EN UYGUN TUVALET
         </span>
