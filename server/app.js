@@ -3,6 +3,8 @@ import { openDb } from './db.js';
 import { hashPassword, optionalUser, verifyPassword } from './auth.js';
 import { authRoutes } from './routes/auth.js';
 import { placeRoutes } from './routes/places.js';
+import { pendingRoutes } from './routes/pending.js';
+import { adminRoutes } from './routes/admin.js';
 
 /** .env'deki yönetici hesabını oluşturur ya da rolünü/şifresini eşitler. */
 function ensureAdmin(db, username, password) {
@@ -23,6 +25,8 @@ export async function createApp({ dbPath, secret, seedFile, adminUsername, admin
   app.use(optionalUser(db, secret));
   app.use('/api/auth', authRoutes(db, secret));
   app.use('/api/places', placeRoutes(db));
+  app.use('/api/pending', pendingRoutes(db));
+  app.use('/api/admin', adminRoutes(db));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Bulunamadı.' }));
   // eslint-disable-next-line no-unused-vars
   app.use((err, _req, res, _next) => {
