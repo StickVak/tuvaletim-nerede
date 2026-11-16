@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Accessibility, Baby, Clock, LogIn, MapPin, Navigation, Send, Sofa, Sparkles, Wallet, X } from 'lucide-react';
-import type { LatLng, Place, PlaceView } from '../types';
+import { useCallback, useEffect, useState } from 'react';
+import { Accessibility, Baby, Clock, LogIn, MapPin, MessageSquareText, Navigation, Send, Sofa, Sparkles, Wallet, X } from 'lucide-react';
+import type { LatLng, Place, PlaceView, Vote } from '../types';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIES, placePhoto } from '../lib/categories';
@@ -16,6 +16,18 @@ interface Props {
   onClose: () => void;
   onVoted: (place: Place) => void;
   onToast: (text: string, tone?: 'success' | 'info' | 'error') => void;
+}
+
+type Review = Vote & { username: string; updatedAt: string };
+
+function relTime(iso: string) {
+  const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (m < 1) return 'az önce';
+  if (m < 60) return `${m} dk önce`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} sa önce`;
+  const d = Math.round(h / 24);
+  return d < 30 ? `${d} gün önce` : new Date(iso).toLocaleDateString('tr-TR');
 }
 
 function ScoreBar({ label, icon: Icon, value }: { label: string; icon: typeof Sparkles; value: number }) {
@@ -44,6 +56,12 @@ export default function PlaceDetail({ place, user, desktop, onClose, onVoted, on
   const [comment, setComment] = useState(mine?.comment ?? '');
   const [sending, setSending] = useState(false);
   const { stats } = place;
+  const [reviews, setReviews] = useState<Review[]>([]);
+
+  const loadReviews = useCallback(() => {
+    api<Review[]>(`/places/${place.id}/reviews`).then(setReviews).catch(() => setReviews([]));
+  }, [place.id]);
+  useEffect(loadReviews, [loadReviews]);
 
   const send = async () => {
     if (!auth.requireAuth()) return;
@@ -56,6 +74,7 @@ export default function PlaceDetail({ place, user, desktop, onClose, onVoted, on
         body: { cleanliness, comfort, isPaid, priceAmount: isPaid ? parsePrice(price) : null, comment },
       });
       onVoted(updated);
+      loadReviews();
       onToast(mine ? 'Oyunuz güncellendi.' : 'Puanınız kaydedildi. Teşekkürler!', 'success');
     } catch (e) {
       onToast((e as Error).message, 'error');
@@ -191,6 +210,33 @@ export default function PlaceDetail({ place, user, desktop, onClose, onVoted, on
                     </button>
                   </div>
                 </>
+              )}
+            </section>
+
+            <section className="mt-6">
+              <h3 className="flex items-center gap-2 text-sm font-extrabold text-ink">
+                <MessageSquareText size={16} /> Son yorumlar
+                <span className="text-xs font-semibold text-ink-muted">({reviews.length})</span>
+              </h3>
+              {reviews.length === 0 ? (
+                <p className="mt-2 text-sm text-ink-muted">Henüz yorum yok.</p>
+              ) : (
+                <ul className="mt-2 space-y-2">
+                  {reviews.map((r) => (
+                    <li key={r.username} className="rounded-2xl bg-card p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-muted">
+                        <span className="font-bold text-ink-soft">@{r.username}</span>
+                        <span>{relTime(r.updatedAt)}</span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-ink-muted">
+                        <span className="flex items-center gap-1">Temizlik <StarRating value={r.cleanliness} size={10} /></span>
+                        <span className="flex items-center gap-1">Konfor <StarRating value={r.comfort} size={10} /></span>
+                        <span>{r.isPaid ? `Ücretli${r.priceAmount ? ` · ${r.priceAmount.toLocaleString('tr-TR')} ₺` : ''}` : 'Ücretsiz'}</span>
+                      </div>
+                      <p className="mt-1.5 text-sm text-ink">{r.comment}</p>
+                    </li>
+                  ))}
+                </ul>
               )}
             </section>
           </div>

@@ -66,6 +66,17 @@ export function placeRoutes(db) {
 
   r.get('/', (req, res) => res.json(listPlaces(db, req.user?.id)));
 
+  /** Yorumlu son 20 oy (herkese açık) */
+  r.get('/:id/reviews', (req, res) => {
+    if (!db.get('SELECT 1 FROM places WHERE id = ?', [req.params.id])) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+    const rows = db.all(
+      `SELECT v.*, u.username FROM votes v JOIN users u ON u.id = v.user_id
+       WHERE v.place_id = ? AND v.comment IS NOT NULL ORDER BY v.updated_at DESC LIMIT 20`,
+      [req.params.id],
+    );
+    res.json(rows.map((v) => ({ username: v.username, ...voteJson(v), updatedAt: v.updated_at })));
+  });
+
   r.put('/:id/vote', requireUser, (req, res) => {
     if (!db.get('SELECT 1 FROM places WHERE id = ?', [req.params.id])) return res.status(404).json({ error: 'Mekan bulunamadı.' });
     const v = parseVote(req.body);

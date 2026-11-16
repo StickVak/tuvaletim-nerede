@@ -76,3 +76,21 @@ test('empty or non-numeric priceAmount is treated as no amount', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.body.myVote.priceAmount, null);
 });
+
+test('GET /api/places/:id/reviews lists only commented votes, newest first, with username', async () => {
+  const a = await srv.register('yorumcu1');
+  const b = await srv.register('yorumcu2');
+  const c = await srv.register('yorumsuz');
+  await srv.req('PUT', '/api/places/seed-forum/vote', vote({ comment: 'İlk yorum' }), a);
+  await new Promise((r) => setTimeout(r, 5));
+  await srv.req('PUT', '/api/places/seed-forum/vote', vote({ comment: 'İkinci yorum', isPaid: true, priceAmount: 7 }), b);
+  await srv.req('PUT', '/api/places/seed-forum/vote', vote({ comment: '' }), c);
+  const r = await srv.req('GET', '/api/places/seed-forum/reviews');
+  assert.equal(r.status, 200);
+  const mine = r.body.filter((x) => ['yorumcu1', 'yorumcu2', 'yorumsuz'].includes(x.username));
+  assert.deepEqual(mine.map((x) => x.username), ['yorumcu2', 'yorumcu1']);
+  assert.equal(mine[0].comment, 'İkinci yorum');
+  assert.equal(mine[0].priceAmount, 7);
+  assert.equal(mine[0].user_id, undefined);
+  assert.equal((await srv.req('GET', '/api/places/yok/reviews')).status, 404);
+});
