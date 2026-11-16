@@ -23,6 +23,7 @@ import Sidebar from './components/Sidebar';
 import SearchBox from './components/SearchBox';
 import Toasts from './components/Toasts';
 import Logo from './components/Logo';
+import LocationBanner from './components/LocationBanner';
 import AuthModal from './components/AuthModal';
 import AccountButton from './components/AccountButton';
 
@@ -79,17 +80,24 @@ export default function App() {
 
   // ---------- Konum ----------
   const gps = useGeolocation();
-  const userLat = gps.position?.lat;
-  const userLng = gps.position?.lng;
+  // GPS yoksa kullanıcının haritada elle işaretlediği konum (yalnızca bu oturum)
+  const [manualLocation, setManualLocation] = useState<LatLng | null>(null);
+  const [remarking, setRemarking] = useState(false);
+  const located = gps.position ?? manualLocation;
+  const userLat = located?.lat;
+  const userLng = located?.lng;
   const user = useMemo<LatLng | null>(() => (userLat != null && userLng != null ? { lat: userLat, lng: userLng } : null), [userLat, userLng]);
+
+  const gpsUnavailable = !gps.position && (gps.status === 'denied' || gps.status === 'unsupported');
+  const markingLocation = remarking || (gpsUnavailable && !manualLocation);
 
   // İlk GPS konumu gelince haritayı ona odakla
   const focusedRef = useRef(false);
   useEffect(() => {
-    if (!user || focusedRef.current) return;
+    if (!gps.position || focusedRef.current) return;
     focusedRef.current = true;
-    setFly({ key: Date.now(), center: user, zoom: 16, offset: desktop ? [SIDEBAR_SPACE / 2, 0] : [0, -PEEK_HEIGHT / 2] });
-  }, [user, desktop]);
+    setFly({ key: Date.now(), center: gps.position, zoom: 16, offset: desktop ? [SIDEBAR_SPACE / 2, 0] : [0, -PEEK_HEIGHT / 2] });
+  }, [gps.position, desktop]);
 
   useEffect(() => {
     if (placesError) toast(placesError, 'error');
@@ -155,10 +163,12 @@ export default function App() {
   }, [addOpen, picking, settingsOpen]);
 
   const locateMe = () => {
-    if (!user) {
-      toast('Konumunuz henüz bilinmiyor.');
-      return;
+    if (!gps.position) {
+      // GPS yok: izni yeniden dene ve konumu haritada yeniden işaretlet
+      gps.retry();
+      if (manualLocation) setRemarking(true);
     }
+    if (!user) return;
     setFly({
       key: Date.now(),
       center: user,
@@ -218,6 +228,12 @@ export default function App() {
   const handleMapClick = (p: LatLng) => {
     if (picking) {
       setDraftLocation(p);
+      return;
+    }
+    if (markingLocation) {
+      setManualLocation(p);
+      setRemarking(false);
+      toast('Konumunuz işaretlendi.', 'success');
       return;
     }
     if (desktop && selectedId) setSelectedId(null);
@@ -419,6 +435,15 @@ export default function App() {
 
       {selected && !picking && !addOpen && (
         <PlaceDetail key={selected.id} place={selected} user={user} desktop={desktop} onClose={closeDetail} onVoted={replacePlace} onToast={toast} />
+      )}
+
+      {markingLocation && !picking && !addOpen && !emergency && (
+        <LocationBanner
+          desktop={desktop}
+          remarking={remarking}
+          onRetry={gps.retry}
+          onCancel={remarking ? () => setRemarking(false) : undefined}
+        />
       )}
 
       <Toasts toasts={toasts} desktop={desktop} />
