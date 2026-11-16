@@ -30,7 +30,7 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4" role="alertdialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 animate-fade-in bg-black/50" onClick={onCancel} />
       <div className="relative w-full max-w-sm animate-slide-up rounded-3xl bg-surface p-6 shadow-2xl">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500/10 text-red-600">
           <AlertTriangle size={24} />
         </span>
         <h2 className="mt-4 text-lg font-extrabold">{title}</h2>

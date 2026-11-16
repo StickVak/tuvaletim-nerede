@@ -30,7 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setReady(true);
       return;
     }
-    api<{ user: User }>('/auth/me')
+    // Açılış kontrolü sessiz: süresi dolmuş oturum haritanın üstünü kaplamasın
+    api<{ user: User }>('/auth/me', { silent: true })
       .then((r) => setUser(r.user))
       .catch(() => setUser(null))
       .finally(() => setReady(true));

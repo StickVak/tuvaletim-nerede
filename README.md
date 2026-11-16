@@ -37,7 +37,7 @@ npm run build     # üretim derlemesi (dist/)
 
 | Değişken | Açıklama | Varsayılan |
 |---|---|---|
-| `AUTH_SECRET` | Oturum belirteçlerini imzalayan gizli anahtar. **Uzun ve rastgele bir değer girin.** | geliştirme anahtarı (uyarı verir) |
+| `AUTH_SECRET` | Oturum belirteçlerini imzalayan gizli anahtar. Tanımlı değilse ya da `.env.example`'daki örnek değer bırakılmışsa sunucu rastgele bir anahtar üretip `server/data/.auth-secret`'e kaydeder. | otomatik üretilir |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Yönetici hesabı; sunucu her açılışta bu hesabı oluşturur veya şifresini eşitler | `admin` / `admin123` |
 | `PORT` | API portu | `3001` |
 
@@ -75,7 +75,7 @@ Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stat
 
 - Koordinatlar OpenStreetMap / **Nominatim**'den alınmıştır ve gerçek OSM nesnelerine aittir. Her kaydın `osm` alanında OSM kimliği yer alır.
 - Engelli erişimi, bebek bakım ve çalışma saatleri, varsa OSM etiketlerinden gelir. Puan veya oy sayısı **yoktur**.
-- Adı istenen 24 noktanın 22'si doğrudan bir OSM kaydına oturur. Şu ikisinin yakınında OSM'de kayıtlı tuvalet olmadığından referans noktasına **yaklaşık** yerleştirilmiştir (`approximate: true`): *Bornova Merkez Meydan Belediye WC* (Cumhuriyet Meydanı) ve *Karşıyaka İskele / Çarşı Belediye WC* (Karşıyaka Vapur İskelesi). Doğru konum `/admin` → Mekanlar → Düzenle'den haritaya tıklanarak düzeltilebilir.
+- Adı istenen 24 noktanın 22'si doğrudan bir OSM kaydına oturur. Şu ikisinin yakınında OSM'de kayıtlı tuvalet olmadığından referans noktasına **yaklaşık** yerleştirilmiştir (`approximate: true`, adreste “(yaklaşık konum)” yazar): *Bornova Merkez Meydan Belediye WC* (Cumhuriyet Meydanı) ve *Karşıyaka İskele / Çarşı Belediye WC* (Karşıyaka Vapur İskelesi). Doğru konum `/admin` → Mekanlar → Düzenle'den haritaya tıklanarak düzeltilebilir.
 - Operatörü belediye olarak işaretlenmemiş, adsız kamu tuvaletleri “Umumi Tuvalet – ‹mahalle›” adıyla eklenmiştir.
 
 Veriyi yeniden üretmek için (Nominatim kullanım kuralına uygun: saniyede en fazla 1 istek, yanıtlar `scripts/.nominatim-cache.json`'da önbelleğe alınır):
@@ -94,6 +94,7 @@ Seed verisi yalnızca veritabanı boşken yüklenir.
 | POST | `/api/auth/login` | — | `{ username (veya e-posta), password }` → `{ token, user }` |
 | GET | `/api/auth/me` | kullanıcı | Oturumdaki kullanıcı |
 | GET | `/api/places` | — | Mekanlar + `stats` (+ girişliyse `myVote`) |
+| GET | `/api/places/:id/photo` | — | Mekan fotoğrafı (liste yanıtında yalnızca `hasPhoto` bulunur) |
 | GET | `/api/places/:id/reviews` | — | Yorumlu son 20 oy |
 | PUT | `/api/places/:id/vote` | kullanıcı | `{ cleanliness, comfort, isPaid, priceAmount?, comment? }` — oy ekler/günceller |
 | POST | `/api/pending` | kullanıcı | Yeni mekan başvurusu (+ ilk oy) |
@@ -107,7 +108,9 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 
 ## Güvenlik notları
 
-- Şifreler `scrypt` ile tuzlanarak saklanır. Oturum, `AUTH_SECRET` ile HMAC-SHA256 imzalı 7 günlük bir belirteçtir; tarayıcıda `localStorage`'da tutulur.
+- Şifreler `scrypt` ile tuzlanarak saklanır. Oturum, `AUTH_SECRET` ile HMAC-SHA256 imzalı 7 günlük bir belirteçtir; tarayıcıda `localStorage`'da tutulur. Kullanıcının rolü her istekte veritabanından okunur.
+- Örnek (herkese açık) anahtar asla kullanılmaz; yoksa rastgele üretilir.
+- Fotoğraflar yalnızca JPEG / PNG / WebP / GIF olabilir (SVG reddedilir) ve `X-Content-Type-Options: nosniff` ile sunulur.
 - Yönetici bilgileri yalnızca sunucudadır, tarayıcıya gönderilen JS paketinde bulunmaz.
 - Giriş denemelerinde hız sınırı (rate limit) yoktur ve HTTPS kurulumu bu projenin kapsamında değildir. İnternete açmadan önce bir ters vekil sunucu (reverse proxy) ve hız sınırı ekleyin.
 - Telefonda gerçek GPS için tarayıcılar HTTPS ister (`localhost` hariç).

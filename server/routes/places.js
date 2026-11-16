@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { requireUser } from '../auth.js';
 import { computeStats } from '../stats.js';
+import { PHOTO_RE } from '../validate.js';
 
 const voteJson = (v) =>
   v ? { cleanliness: v.cleanliness, comfort: v.comfort, isPaid: !!v.is_paid, priceAmount: v.price_amount, comment: v.comment } : null;
@@ -14,7 +15,7 @@ function placeJson(row, votes, userId) {
     address: row.address,
     lat: row.lat,
     lng: row.lng,
-    photo: row.photo,
+    hasPhoto: Boolean(row.photo),
     hours: row.hours,
     accessible: !!row.accessible,
     babyChanging: !!row.baby_changing,
@@ -65,6 +66,14 @@ export function placeRoutes(db) {
   const r = Router();
 
   r.get('/', (req, res) => res.json(listPlaces(db, req.user?.id)));
+
+  /** Mekan fotoğrafı (liste yanıtını küçük tutmak için ayrı uç nokta) */
+  r.get('/:id/photo', (req, res) => {
+    const row = db.get('SELECT photo FROM places WHERE id = ?', [req.params.id]);
+    if (!row?.photo || !PHOTO_RE.test(row.photo)) return res.status(404).json({ error: 'Fotoğraf yok.' });
+    const [, type] = row.photo.match(/^data:image\/(\w+);/);
+    res.set('X-Content-Type-Options', 'nosniff').type(`image/${type}`).send(Buffer.from(row.photo.split(',')[1], 'base64'));
+  });
 
   /** Yorumlu son 20 oy (herkese açık) */
   r.get('/:id/reviews', (req, res) => {

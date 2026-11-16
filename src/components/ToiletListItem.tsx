@@ -56,7 +56,7 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
           target="_blank"
           rel="noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex shrink-0 flex-col items-center gap-1 self-stretch rounded-2xl bg-ink px-3 py-2 text-[10px] font-bold text-surface transition hover:bg-black active:scale-95"
+          className="flex shrink-0 flex-col items-center gap-1 self-stretch rounded-2xl bg-ink px-3 py-2 text-[10px] font-bold text-surface transition hover:opacity-90 active:scale-95"
           aria-label={`${place.name} için yol tarifi`}
         >
           <span className="flex flex-1 items-center">

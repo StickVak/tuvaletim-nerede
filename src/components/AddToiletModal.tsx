@@ -173,7 +173,7 @@ export default function AddToiletModal({
             <span className="mb-1.5 block text-sm font-bold">Konum</span>
             <div
               className={`rounded-2xl border-2 p-3 ${
-                errors.location ? 'border-red-300 bg-red-50' : location ? 'border-transparent bg-card' : 'border-transparent bg-card'
+                errors.location ? 'border-red-300 bg-red-500/10' : location ? 'border-transparent bg-card' : 'border-transparent bg-card'
               }`}
             >
               <div className="flex items-center gap-2 text-sm">

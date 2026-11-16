@@ -29,7 +29,8 @@ export interface Place extends LatLng {
   category: ToiletCategory;
   district: string | null;
   address: string | null;
-  photo: string | null;
+  /** Fotoğraf /api/places/:id/photo adresinden yüklenir */
+  hasPhoto: boolean;
   hours: string | null;
   accessible: boolean;
   babyChanging: boolean;

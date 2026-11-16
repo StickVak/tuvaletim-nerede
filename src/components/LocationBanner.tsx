@@ -2,14 +2,13 @@ import { LocateOff, RotateCw } from 'lucide-react';
 
 interface Props {
   desktop: boolean;
-  /** Elle konum zaten varken yeniden seçiliyorsa */
-  remarking: boolean;
+  title: string;
   onRetry: () => void;
   onCancel?: () => void;
 }
 
 /** Konum izni yokken: kibar uyarı + haritaya dokunarak konum işaretleme */
-export default function LocationBanner({ desktop, remarking, onRetry, onCancel }: Props) {
+export default function LocationBanner({ desktop, title, onRetry, onCancel }: Props) {
   return (
     <div
       role="status"
@@ -22,7 +21,7 @@ export default function LocationBanner({ desktop, remarking, onRetry, onCancel }
           <LocateOff size={19} />
         </span>
         <p className="flex-1 text-sm">
-          <b className="block">{remarking ? 'Konumunuzu yeniden işaretleyin' : 'Konumunuza erişemedik.'}</b>
+          <b className="block">{title}</b>
           <span className="text-ink-soft">Haritada bulunduğunuz noktaya dokunun.</span>
         </p>
       </div>

@@ -38,16 +38,19 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
     window.setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 3200);
   }, []);
 
-  /** İşlemi çalıştırır, verileri yeniler ve sonucu bildirir */
+  /** İşlemi çalıştırır, verileri yeniler ve sonucu bildirir; başarılıysa true döner */
   const act = useCallback(
     async (fn: () => Promise<unknown>, success: string) => {
+      let ok = false;
       try {
         await fn();
         showToast(success);
+        ok = true;
       } catch (e) {
         showToast((e as Error).message);
       }
       await reload();
+      return ok;
     },
     [reload, showToast],
   );

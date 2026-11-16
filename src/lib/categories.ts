@@ -48,6 +48,8 @@ function hash(s: string) {
 }
 
 /** Mekanın fotoğrafı; yoksa kategoriye göre temsili görsel */
-export function placePhoto(p: Pick<Place, 'photo' | 'category' | 'name'>): string {
-  return p.photo || placeholderPhoto(p.category, hash(p.name));
+export function placePhoto(p: Pick<Place, 'category' | 'name'> & { id?: string; hasPhoto?: boolean; photo?: string | null }): string {
+  if (p.photo) return p.photo;
+  if (p.hasPhoto && p.id) return `/api/places/${encodeURIComponent(p.id)}/photo`;
+  return placeholderPhoto(p.category, hash(p.name));
 }

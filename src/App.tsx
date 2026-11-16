@@ -183,6 +183,8 @@ export default function App() {
 
   const startEmergency = async () => {
     if (!user) {
+      // Konum yok ya da hâlâ bekleniyor: elle işaretleme modunu aç
+      setRemarking(true);
       toast('Önce haritada konumunuzu işaretleyin.', 'error');
       return;
     }
@@ -264,7 +266,7 @@ export default function App() {
             setFilters(DEFAULT_FILTERS);
             setQuery('');
           }}
-          className="mt-3 rounded-full bg-brand px-4 py-2 text-sm font-bold"
+          className="mt-3 rounded-full bg-brand px-4 py-2 text-sm font-bold text-onbrand"
         >
           Filtreleri temizle
         </button>
@@ -442,7 +444,7 @@ export default function App() {
       {markingLocation && !picking && !addOpen && !emergency && (
         <LocationBanner
           desktop={desktop}
-          remarking={remarking}
+          title={manualLocation ? 'Konumunuzu yeniden işaretleyin' : gpsUnavailable ? 'Konumunuza erişemedik.' : 'Konumunuz henüz alınamadı.'}
           onRetry={gps.retry}
           onCancel={remarking ? () => setRemarking(false) : undefined}
         />

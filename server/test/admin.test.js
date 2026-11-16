@@ -100,3 +100,15 @@ test('delete place removes its votes', async () => {
   assert.ok(!votes.body.some((v) => v.placeId === 'seed-forum'));
   assert.ok(!(await srv.req('GET', '/api/places')).body.some((p) => p.id === 'seed-forum'));
 });
+
+test('svg photos are rejected (would be served same-origin) and photo responses are nosniff', async () => {
+  const svg = 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>').toString('base64');
+  assert.equal((await srv.req('POST', '/api/pending', submission({ name: 'SVG Deneme', photo: svg }), user)).status, 400);
+  const jpeg = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xd9]).toString('base64');
+  const sub = await srv.req('POST', '/api/pending', submission({ name: 'JPEG Deneme', photo: jpeg }), user);
+  assert.equal(sub.status, 201);
+  const place = await srv.req('POST', `/api/admin/pending/${sub.body.id}/approve`, null, admin);
+  const res = await fetch(`${srv.url}/api/places/${place.body.id}/photo`);
+  assert.equal(res.headers.get('content-type'), 'image/jpeg');
+  assert.equal(res.headers.get('x-content-type-options'), 'nosniff');
+});

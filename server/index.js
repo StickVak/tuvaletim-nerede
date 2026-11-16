@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { createApp } from './app.js';
+import { resolveSecret } from './secret.js';
 
 try {
   process.loadEnvFile();
@@ -9,8 +10,8 @@ try {
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const PORT = Number(process.env.PORT) || 3001;
-const secret = process.env.AUTH_SECRET || 'dev-secret-degistirin';
-if (!process.env.AUTH_SECRET) console.warn('[api] AUTH_SECRET tanımlı değil; geliştirme anahtarı kullanılıyor (.env dosyasına ekleyin).');
+const { secret, generated } = resolveSecret(process.env.AUTH_SECRET, here('./data'));
+if (generated) console.warn('[api] AUTH_SECRET tanımlı değil (ya da örnek değer); rastgele bir anahtar üretilip server/data/.auth-secret dosyasına kaydedildi.');
 
 const app = await createApp({
   dbPath: here('./data/tuvaletim.db'),

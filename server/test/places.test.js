@@ -94,3 +94,19 @@ test('GET /api/places/:id/reviews lists only commented votes, newest first, with
   assert.equal(mine[0].user_id, undefined);
   assert.equal((await srv.req('GET', '/api/places/yok/reviews')).status, 404);
 });
+
+test('list omits photo data (hasPhoto flag) and photo is served separately as an image', async () => {
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  const admin = await srv.adminToken();
+  assert.equal((await srv.req('PATCH', '/api/admin/places/seed-sb', { photo: png }, admin)).status, 200);
+  const list = (await srv.req('GET', '/api/places')).body;
+  const sb = list.find((p) => p.id === 'seed-sb');
+  assert.equal(sb.photo, undefined);
+  assert.equal(sb.hasPhoto, true);
+  assert.equal(list.find((p) => p.id === 'seed-forum').hasPhoto, false);
+  const res = await fetch(`${srv.url}/api/places/seed-sb/photo`);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('content-type'), 'image/png');
+  assert.equal(Buffer.from(await res.arrayBuffer()).subarray(1, 4).toString(), 'PNG');
+  assert.equal((await fetch(`${srv.url}/api/places/seed-forum/photo`)).status, 404);
+});

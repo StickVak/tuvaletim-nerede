@@ -7,7 +7,7 @@ import StarRating from '../components/StarRating';
 import MiniMap from './MiniMap';
 import { ConfirmDialog, EmptyState, PageHeader, relTime } from './ui';
 
-type Act = (fn: () => Promise<unknown>, success: string) => Promise<void>;
+type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
 
 export default function PendingPage({ pending, act }: { pending: AdminPending[]; act: Act }) {
   const [rejecting, setRejecting] = useState<AdminPending | null>(null);

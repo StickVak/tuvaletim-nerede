@@ -1,5 +1,7 @@
 export const CATEGORIES = ['avm', 'kafe', 'belediye', 'park', 'diger'];
 const MAX_PHOTO_CHARS = 7_000_000; // ~5 MB base64
+/** Yalnızca raster görseller: SVG aynı kökenden sunulunca betik çalıştırabilir */
+export const PHOTO_RE = /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 
 /**
  * Mekan alanlarını doğrular. Hata metni ya da temizlenmiş alanlar döner.
@@ -36,7 +38,7 @@ export function parsePlaceFields(body, { partial = false } = {}) {
     text('hours', 60);
     if (has('photo')) {
       const p = b.photo ?? null;
-      if (p !== null && (typeof p !== 'string' || !p.startsWith('data:image/') || p.length > MAX_PHOTO_CHARS)) throw 'Fotoğraf geçersiz ya da çok büyük.';
+      if (p !== null && (typeof p !== 'string' || p.length > MAX_PHOTO_CHARS || !PHOTO_RE.test(p))) throw 'Fotoğraf JPEG, PNG, WebP ya da GIF olmalı (en fazla 5 MB).';
       out.photo = p;
     }
     for (const k of ['accessible', 'babyChanging']) if (has(k)) out[k] = !!b[k];

@@ -27,8 +27,14 @@ export function setToken(token: string | null) {
   }
 }
 
-/** /api altındaki uç noktalara JSON istek. Hata durumunda sunucunun Türkçe mesajıyla ApiError fırlatır. */
-export async function api<T>(path: string, { method = 'GET', body }: { method?: string; body?: unknown } = {}): Promise<T> {
+/**
+ * /api altındaki uç noktalara JSON istek. Hata durumunda sunucunun Türkçe mesajıyla ApiError fırlatır.
+ * 401'de belirteç silinir; silent değilse giriş penceresi açılsın diye AUTH_EXPIRED_EVENT yayınlanır.
+ */
+export async function api<T>(
+  path: string,
+  { method = 'GET', body, silent = false }: { method?: string; body?: unknown; silent?: boolean } = {},
+): Promise<T> {
   const token = getToken();
   let res: Response;
   try {
@@ -45,7 +51,7 @@ export async function api<T>(path: string, { method = 'GET', body }: { method?: 
   }
   if (res.status === 401 && token) {
     setToken(null);
-    window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
+    if (!silent) window.dispatchEvent(new Event(AUTH_EXPIRED_EVENT));
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => null);

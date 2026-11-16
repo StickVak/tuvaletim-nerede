@@ -6,12 +6,15 @@ import { readImageAsDataUrl } from '../lib/image';
 import MiniMap from './MiniMap';
 import { inputCls } from './ui';
 
-type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'photo' | 'hours' | 'accessible' | 'babyChanging'>;
+type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging'> & {
+  /** undefined: değişmedi · null: kaldır · string: yeni fotoğraf */
+  photo?: string | null;
+};
 
-export default function PlaceEditModal({ place, onClose, onSave }: { place: Place; onClose: () => void; onSave: (changes: EditFields) => Promise<void> }) {
+export default function PlaceEditModal({ place, onClose, onSave }: { place: Place; onClose: () => void; onSave: (changes: EditFields) => Promise<unknown> }) {
   const [form, setForm] = useState<EditFields>({
     name: place.name, category: place.category, district: place.district, address: place.address,
-    lat: place.lat, lng: place.lng, photo: place.photo, hours: place.hours,
+    lat: place.lat, lng: place.lng, hours: place.hours,
     accessible: place.accessible, babyChanging: place.babyChanging,
   });
   const [saving, setSaving] = useState(false);
@@ -60,16 +63,16 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
             </div>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">İlçe</span>
-              <input value={form.district ?? ''} onChange={(e) => set('district', e.target.value || null)} className={inputCls} />
+              <input value={form.district ?? ''} onChange={(e) => set('district', e.target.value || null)} maxLength={60} className={inputCls} />
             </label>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Adres</span>
-              <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || null)} className={inputCls} />
+              <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || null)} maxLength={120} className={inputCls} />
             </label>
             <p className="rounded-xl bg-card px-3 py-2 text-xs text-ink-muted">Ücret durumu ve puanlar kullanıcı oylarıyla belirlenir; buradan düzenlenmez.</p>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Çalışma saatleri</span>
-              <input value={form.hours ?? ''} onChange={(e) => set('hours', e.target.value || null)} className={inputCls} />
+              <input value={form.hours ?? ''} onChange={(e) => set('hours', e.target.value || null)} maxLength={60} className={inputCls} />
             </label>
             <div className="flex gap-4 text-sm font-semibold">
               <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.accessible} onChange={(e) => set('accessible', e.target.checked)} className="h-4 w-4 accent-ink" /> Engelli erişimi</label>
@@ -89,12 +92,12 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
             <div>
               <span className="mb-1 block text-xs font-bold text-ink-soft">Fotoğraf</span>
               <div className="relative overflow-hidden rounded-2xl">
-                <img src={placePhoto(form)} alt="" className="h-36 w-full bg-card object-cover" />
+                <img src={form.photo === undefined ? placePhoto(place) : placePhoto({ ...form, photo: form.photo })} alt="" className="h-36 w-full bg-card object-cover" />
                 <div className="absolute bottom-2 right-2 flex gap-1.5">
                   <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-onbrand shadow">
                     <Camera size={13} /> Değiştir
                   </button>
-                  {form.photo && (
+                  {(form.photo || (form.photo === undefined && place.hasPhoto)) && (
                     <button type="button" onClick={() => set('photo', null)} aria-label="Fotoğrafı kaldır" className="rounded-full bg-white/95 p-1.5 text-red-600 shadow">
                       <Trash2 size={14} />
                     </button>
@@ -114,7 +117,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
           <p className="text-sm font-semibold text-red-600">{error}</p>
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="rounded-xl bg-card px-4 py-2.5 text-sm font-bold">Vazgeç</button>
-            <button type="submit" disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-brand px-5 py-2.5 text-sm font-extrabold hover:bg-brand-dark disabled:opacity-60">
+            <button type="submit" disabled={saving} className="flex items-center gap-1.5 rounded-xl bg-brand px-5 py-2.5 text-sm font-extrabold hover:bg-brand-dark disabled:opacity-60 text-onbrand">
               <Save size={15} /> Kaydet
             </button>
           </div>

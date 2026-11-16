@@ -49,3 +49,12 @@ test('ids and osm ids unique', () => {
 test('category is one of the allowed values', () => {
   for (const p of seed) assert.ok(['avm', 'kafe', 'belediye', 'park', 'diger'].includes(p.category), p.id);
 });
+
+test('approximate places say so in the address and have a district', () => {
+  const approx = seed.filter((p) => p.approximate);
+  assert.ok(approx.length > 0);
+  for (const p of approx) {
+    assert.match(p.address ?? '', /yaklaşık konum/, p.id);
+    assert.ok(p.district, `${p.id} ilçesiz`);
+  }
+});

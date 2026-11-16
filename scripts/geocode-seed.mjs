@@ -101,10 +101,12 @@ const usedOsm = new Set();
 for (const n of NAMED) {
   let chosen = null;
   let landmark = null;
+  let landmarkDistrict = null;
   if (n.near) {
     const lm = (await search({ q: n.near, viewbox: METRO, bounded: '1' })).find((x) => inIzmir(x) && (!n.nearType || x.type === n.nearType));
     if (!lm) throw new Error(`Referans noktası bulunamadı: ${n.near}`);
     landmark = pt(lm);
+    landmarkDistrict = lm.address?.town || lm.address?.city_district || null;
     const hits = (await search({ q: n.q, viewbox: box(landmark.lat, landmark.lng, n.radius), bounded: '1' }))
       .filter((x) => inIzmir(x) && !usedOsm.has(`${x.osm_type}${x.osm_id}`) && (n.q !== 'cafe' || x.name))
       .sort((a, b) => dist(landmark, pt(a)) - dist(landmark, pt(b)));
@@ -120,7 +122,8 @@ for (const n of NAMED) {
     named.push(p);
     log(`✓ ${n.id.padEnd(34)} ${chosen.category}/${chosen.type} "${chosen.name}" ${landmark ? Math.round(dist(landmark, pt(chosen))) + ' m' : ''}  ${chosen.display_name.slice(0, 70)}`);
   } else if (landmark) {
-    named.push({ ...base, district: null, address: n.near, lat: landmark.lat, lng: landmark.lng, hours: null, accessible: false, babyChanging: false, osm: null, approximate: true });
+    // Kullanıcı detayda konumun kesin olmadığını görsün
+    named.push({ ...base, district: landmarkDistrict, address: `${n.near} çevresi (yaklaşık konum)`, lat: landmark.lat, lng: landmark.lng, hours: null, accessible: false, babyChanging: false, osm: null, approximate: true });
     log(`~ ${n.id.padEnd(34)} OSM'de yakında "${n.q}" yok → referans noktası "${n.near}" kullanıldı (YAKLAŞIK)`);
   } else {
     throw new Error(`Bulunamadı: ${n.q}`);

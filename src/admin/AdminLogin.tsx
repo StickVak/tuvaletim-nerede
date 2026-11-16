@@ -78,12 +78,12 @@ export default function AdminLogin() {
             </span>
           </label>
 
-          {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-700" role="alert">{error}</p>}
+          {error && <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-700" role="alert">{error}</p>}
 
           <button
             type="submit"
             disabled={busy}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-base font-bold text-surface transition hover:bg-black disabled:opacity-60"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-base font-bold text-surface transition hover:opacity-90 disabled:opacity-60"
           >
             {busy ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />} Giriş Yap
           </button>

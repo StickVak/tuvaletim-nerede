@@ -6,7 +6,7 @@ import StarRating from '../components/StarRating';
 import { Toggle } from '../components/FilterPanel';
 import { ConfirmDialog, EmptyState, PageHeader, relTime } from './ui';
 
-type Act = (fn: () => Promise<unknown>, success: string) => Promise<void>;
+type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
 
 export default function ReviewsPage({ votes, act }: { votes: AdminVote[]; act: Act }) {
   const [q, setQ] = useState('');

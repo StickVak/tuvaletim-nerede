@@ -9,7 +9,7 @@ import { PriceBadge } from '../components/Badges';
 import PlaceEditModal from './PlaceEditModal';
 import { ConfirmDialog, EmptyState, PageHeader, selectCls } from './ui';
 
-type Act = (fn: () => Promise<unknown>, success: string) => Promise<void>;
+type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
 
 export default function PlacesPage({ places, votes, act }: { places: Place[]; votes: AdminVote[]; act: Act }) {
   const [q, setQ] = useState('');
@@ -115,7 +115,7 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
         <PlaceEditModal
           place={editing}
           onClose={() => setEditing(null)}
-          onSave={(changes) => act(() => api(`/admin/places/${editing.id}`, { method: 'PATCH', body: changes }), 'Mekan güncellendi.').then(() => setEditing(null))}
+          onSave={(changes) => act(() => api(`/admin/places/${editing.id}`, { method: 'PATCH', body: changes }), 'Mekan güncellendi.').then((ok) => ok && setEditing(null))}
         />
       )}
       {deleting && (
