@@ -8,13 +8,15 @@ import { FeatureIcons, PriceBadge, RatingText } from './Badges';
 interface Props {
   place: PlaceView;
   active?: boolean;
+  /** Aktif rotanın 150 m yakınında */
+  onRouteBadge?: boolean;
   onSelect: (id: string) => void;
   /** Uygulama içi yol tarifi */
   onRoute: (id: string) => void;
   onToggleFavorite: (place: PlaceView) => void;
 }
 
-export default function ToiletListItem({ place, active, onSelect, onRoute, onToggleFavorite }: Props) {
+export default function ToiletListItem({ place, active, onRouteBadge, onSelect, onRoute, onToggleFavorite }: Props) {
   const cat = CATEGORIES[place.category];
   return (
     <li>
@@ -52,6 +54,9 @@ export default function ToiletListItem({ place, active, onSelect, onRoute, onTog
             <FeatureIcons place={place} />
           </div>
           <h3 className="mt-1 truncate text-[15px] font-bold leading-tight text-ink">{place.name}</h3>
+          {onRouteBadge && (
+            <p className="mt-1 inline-flex items-center rounded-full bg-blue-600 px-2 py-0.5 text-[10px] font-bold text-white">Rota Üzerinde 📍</p>
+          )}
           {place.status.closed && (
             <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-bold text-white">
               <AlertTriangle size={11} /> Geçici Olarak Kapalı Bildirildi

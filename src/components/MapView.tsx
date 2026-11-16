@@ -55,7 +55,7 @@ function Controller({ fly, onReady }: { fly: FlyCommand | null; onReady?: (map: 
 }
 
 /** İzmir genelindeki pinleri uzaklaştırınca kümeleyen katman (sarı-siyah sayı baloncukları) */
-function ClusterLayer({ places, picking, onSelect, onPick }: { places: PlaceView[]; picking: boolean; onSelect: (id: string) => void; onPick: (p: LatLng) => void }) {
+function ClusterLayer({ places, onRouteIds, picking, onSelect, onPick }: { places: PlaceView[]; onRouteIds: Set<string>; picking: boolean; onSelect: (id: string) => void; onPick: (p: LatLng) => void }) {
   const map = useMap();
   const group = useRef<L.MarkerClusterGroup | null>(null);
   // Tıklama işleyicileri her render'da değişir; pinleri yeniden kurmamak için ref ile okunur
@@ -78,9 +78,11 @@ function ClusterLayer({ places, picking, onSelect, onPick }: { places: PlaceView
   }, [map]);
 
   // Yalnızca pinin görünümünü etkileyen alanlar değişince yeniden kur (konum güncellemesinde değil)
-  const signature = places.map((p) => `${p.id}|${p.category}|${p.stats.isPaid}|${p.status.closed}`).join(',');
+  const signature = places.map((p) => `${p.id}|${p.category}|${p.stats.isPaid}|${p.status.closed}|${onRouteIds.has(p.id)}`).join(',');
   const placesRef = useRef(places);
   placesRef.current = places;
+  const onRouteIdsRef = useRef(onRouteIds);
+  onRouteIdsRef.current = onRouteIds;
 
   useEffect(() => {
     const g = group.current;
@@ -90,7 +92,7 @@ function ClusterLayer({ places, picking, onSelect, onPick }: { places: PlaceView
     g.addLayers(
       places.map((p) => {
         const m = L.marker([p.lat, p.lng], {
-          icon: toiletIcon(p.category, p.stats.isPaid ? 'paid' : 'free', 'normal', p.status.closed),
+          icon: toiletIcon(p.category, p.stats.isPaid ? 'paid' : 'free', 'normal', p.status.closed, onRouteIdsRef.current.has(p.id)),
           title: p.name,
         });
         m.on('click', (e: L.LeafletMouseEvent) =>
@@ -124,6 +126,8 @@ interface Props {
   route: LatLng[] | null;
   /** true: kuş uçuşu (kesikli) çizgi */
   routeApproximate: boolean;
+  /** Rota çizgisine 150 m yakın tuvaletler */
+  onRouteIds: Set<string>;
   picking: boolean;
   pickedLocation: LatLng | null;
   fly: FlyCommand | null;
@@ -141,6 +145,7 @@ export default function MapView({
   routeMode,
   route,
   routeApproximate,
+  onRouteIds,
   picking,
   pickedLocation,
   fly,
@@ -148,9 +153,10 @@ export default function MapView({
   onMapClick,
   onReady,
 }: Props) {
-  const isHighlighted = (id: string) => id === selectedId || id === routeTargetId;
-  const clustered = useMemo(() => places.filter((p) => !isHighlighted(p.id)), [places, selectedId, routeTargetId]); // eslint-disable-line react-hooks/exhaustive-deps
-  const highlighted = useMemo(() => places.filter((p) => isHighlighted(p.id)), [places, selectedId, routeTargetId]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Seçili, rota hedefi ve rota üzerindekiler kümeye girmez: rozetleriyle her zaman görünür
+  const isHighlighted = (id: string) => id === selectedId || id === routeTargetId || onRouteIds.has(id);
+  const clustered = useMemo(() => places.filter((p) => !isHighlighted(p.id)), [places, selectedId, routeTargetId, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  const highlighted = useMemo(() => places.filter((p) => isHighlighted(p.id)), [places, selectedId, routeTargetId, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
   const routeLatLngs = useMemo(
     () => (route ? route.map((p) => [p.lat, p.lng] as [number, number]) : null),
     [route],
@@ -180,7 +186,7 @@ export default function MapView({
             </>
           ))}
 
-        <ClusterLayer places={clustered} picking={picking} onSelect={onSelect} onPick={onMapClick} />
+        <ClusterLayer places={clustered} onRouteIds={onRouteIds} picking={picking} onSelect={onSelect} onPick={onMapClick} />
 
         {/* Seçili pin ve rota hedefi kümeye girmez: her zaman görünür */}
         {highlighted.map((t) => (
@@ -190,11 +196,12 @@ export default function MapView({
             icon={toiletIcon(
               t.category,
               t.stats.isPaid ? 'paid' : 'free',
-              t.id === routeTargetId && routeMode === 'emergency' ? 'emergency' : 'selected',
+              t.id === routeTargetId ? (routeMode === 'emergency' ? 'emergency' : 'selected') : t.id === selectedId ? 'selected' : 'normal',
               t.status.closed,
+              onRouteIds.has(t.id),
             )}
             title={t.name}
-            zIndexOffset={t.id === routeTargetId ? 1000 : 500}
+            zIndexOffset={t.id === routeTargetId ? 1000 : t.id === selectedId ? 500 : 300}
             eventHandlers={{
               click: (e) => {
                 if (picking) onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });

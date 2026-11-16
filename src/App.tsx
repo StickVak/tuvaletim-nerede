@@ -5,8 +5,9 @@ import type { Filters, LatLng, Place, PlaceDraft, PlaceView, ReportType, RouteSt
 import { api } from './api';
 import { usePlaces } from './hooks/usePlaces';
 import { useAuth } from './hooks/useAuth';
-import { IZMIR_CENTER, pickEmergency, toView } from './lib/geo';
+import { distanceMeters, IZMIR_CENTER, pickEmergency, toView } from './lib/geo';
 import { applyFilters, SORT_LABELS, sortPlaces } from './lib/filters';
+import { placesOnRoute } from './lib/corridor';
 import { fetchWalkingRoute, WALK_SPEED_MPS } from './lib/route';
 import { STORAGE_ERROR_EVENT, usePersistentState } from './hooks/usePersistentState';
 import { useGeolocation } from './hooks/useGeolocation';
@@ -20,6 +21,7 @@ import ToiletListItem from './components/ToiletListItem';
 import PlaceDetail from './components/PlaceDetail';
 import EmergencyCard from './components/EmergencyCard';
 import RouteCard from './components/RouteCard';
+import ArrivalModal from './components/ArrivalModal';
 import SettingsDrawer from './components/SettingsDrawer';
 import AddToiletModal from './components/AddToiletModal';
 import Sidebar from './components/Sidebar';
@@ -114,22 +116,43 @@ export default function App() {
   // ---------- Görünüm modeli ----------
   const views: PlaceView[] = useMemo(() => (places ?? []).map((p) => toView(p, user)), [places, user]);
 
+  // Aktif rotaya 150 m yakın diğer tuvaletler ("Rota Üzerinde 📍")
+  const [routeOnly, setRouteOnly] = useState(false);
+  const onRouteIds = useMemo(
+    () => (route && !route.loading ? placesOnRoute(views, route.points, route.placeId) : new Set<string>()),
+    [views, route],
+  );
+  const routeFilter = (items: PlaceView[]) =>
+    route && routeOnly ? items.filter((p) => onRouteIds.has(p.id) || p.id === route.placeId) : items;
+
   const listed = useMemo(() => {
     const q = normalize(query.trim());
-    let items = applyFilters(views, filters.chips);
+    let items = routeFilter(applyFilters(views, filters.chips));
     if (q) items = items.filter((t) => normalize([t.name, t.district, t.address].filter(Boolean).join(' ')).includes(q));
     return sortPlaces(items, filters.sort);
-  }, [views, filters, query]);
+  }, [views, filters, query, route, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markers = useMemo(() => {
-    const base = applyFilters(views, filters.chips);
+    const base = routeFilter(applyFilters(views, filters.chips));
     const ensure = [route?.placeId, selectedId].filter(Boolean) as string[];
     const missing = ensure.filter((id) => !base.some((t) => t.id === id));
     return missing.length ? [...base, ...views.filter((t) => missing.includes(t.id))] : base;
-  }, [views, filters.chips, route, selectedId]);
+  }, [views, filters.chips, route, selectedId, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selected = selectedId ? views.find((t) => t.id === selectedId) ?? null : null;
   const routePlace = route ? views.find((t) => t.id === route.placeId) ?? null : null;
+
+  // Varış ve değerlendirme: GPS hedefe 20 m girince (rota başına bir kez) ya da Rotayı Bitir
+  const [arrivalId, setArrivalId] = useState<string | null>(null);
+  const arrivedFor = useRef(0);
+  useEffect(() => {
+    if (!route || route.loading || !gps.position || !routePlace || arrivedFor.current === routeReq.current) return;
+    if (distanceMeters(gps.position, routePlace) <= 20) {
+      arrivedFor.current = routeReq.current;
+      setArrivalId(route.placeId);
+    }
+  }, [route, routePlace, gps.position]);
+  const arrivalPlace = arrivalId ? views.find((t) => t.id === arrivalId) ?? null : null;
   const H = rootHeight || window.innerHeight;
   const heights = snapHeights(H);
 
@@ -191,6 +214,7 @@ export default function App() {
     if (!user) return promptLocation();
     const req = Date.now();
     routeReq.current = req;
+    setRouteOnly(false);
     setSelectedId(null);
     setSheetSnap('peek');
     const straight = target.distance ?? 0;
@@ -261,6 +285,7 @@ export default function App() {
   const closeRoute = () => {
     routeReq.current = 0;
     setRoute(null);
+    setRouteOnly(false);
   };
 
   const openAdd = () => {
@@ -336,6 +361,7 @@ export default function App() {
         routeMode={route?.mode ?? null}
         route={route?.points ?? null}
         routeApproximate={route?.approximate ?? false}
+        onRouteIds={onRouteIds}
         picking={picking}
         pickedLocation={addOpen ? draftLocation : null}
         fly={fly}
@@ -358,6 +384,7 @@ export default function App() {
           onEmergency={startEmergency}
           onRoute={navigateTo}
           onToggleFavorite={toggleFavorite}
+          onRouteIds={onRouteIds}
           onOpenProfile={() => setProfileOpen(true)}
           onOpenSettings={() => setSettingsOpen(true)}
         />
@@ -434,7 +461,7 @@ export default function App() {
           ) : (
             <ul className="space-y-2.5 px-4 pb-6">
               {listed.map((t) => (
-                <ToiletListItem key={t.id} place={t} active={t.id === selectedId} onSelect={selectPlace} onRoute={navigateTo} onToggleFavorite={toggleFavorite} />
+                <ToiletListItem key={t.id} place={t} active={t.id === selectedId} onSelect={selectPlace} onRoute={navigateTo} onToggleFavorite={toggleFavorite} onRouteBadge={onRouteIds.has(t.id)} />
               ))}
             </ul>
           )}
@@ -491,7 +518,15 @@ export default function App() {
       )}
 
       {route && routePlace && !picking && route.mode === 'navigate' && (
-        <RouteCard place={routePlace} route={route} desktop={desktop} onClose={closeRoute} />
+        <RouteCard
+          place={routePlace}
+          route={route}
+          desktop={desktop}
+          onRouteCount={onRouteIds.size}
+          routeOnly={routeOnly}
+          onToggleRouteOnly={setRouteOnly}
+          onFinish={() => setArrivalId(route.placeId)}
+        />
       )}
 
       {selected && !picking && !addOpen && (
@@ -508,6 +543,23 @@ export default function App() {
       )}
 
       <Toasts toasts={toasts} desktop={desktop} />
+
+      {arrivalPlace && (
+        <ArrivalModal
+          place={arrivalPlace}
+          onSkip={() => {
+            setArrivalId(null);
+            closeRoute();
+          }}
+          onDone={(updated, contributions) => {
+            replacePlace(updated);
+            setArrivalId(null);
+            closeRoute();
+            toast(`Katkın için teşekkürler! 💧 Toplam katkın: ${contributions}`, 'success');
+          }}
+          onError={(msg) => toast(msg, 'error')}
+        />
+      )}
 
       <AuthModal onWelcome={(name) => toast(`Hoş geldin, ${name}!`, 'success')} />
 

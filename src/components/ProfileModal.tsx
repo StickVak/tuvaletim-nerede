@@ -128,7 +128,8 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
               </div>
             ))}
           </div>
-          {p.stats.pending > 0 && <p className="mt-2 text-center text-xs text-ink-muted">{p.stats.pending} eklemeniz incelemede.</p>}
+          <p className="mt-2 text-center text-xs font-semibold text-ink-soft" data-testid="contributions">Toplam katkı: {p.stats.contributions} 💧</p>
+          {p.stats.pending > 0 && <p className="mt-1 text-center text-xs text-ink-muted">{p.stats.pending} eklemeniz incelemede.</p>}
 
           <section className="mt-6 space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-extrabold"><UserRound size={15} /> Profil bilgileri</h3>

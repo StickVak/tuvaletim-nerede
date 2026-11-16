@@ -29,7 +29,7 @@ Veritabanını sıfırlamak için sunucuyu durdurup `server/data/` klasörünü 
 Diğer komutlar:
 
 ```bash
-npm test          # sunucu (node:test) + Acil, rota, filtre testleri
+npm test          # sunucu (node:test) + Acil, rota, koridor, filtre testleri
 npm run build     # üretim derlemesi (dist/)
 npm run seed:demo # mevcut veritabanına örnek kullanıcı + yorum ekler (sunucu kapalıyken)
 ```
@@ -51,6 +51,8 @@ npm run seed:demo # mevcut veritabanına örnek kullanıcı + yorum ekler (sunuc
 - **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek, puan vermek, favori ve durum bildirimi için giriş gerekir.
 - **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
 - **Herkese açık profiller:** Yorumlardaki ada/avatara tıklayınca kullanıcının fotoğrafı, adı, biyografisi, katılım tarihi, katkı sayıları ve tüm değerlendirmeleri görünür. Şifre, e-posta ve rol asla dönmez.
+- **Güzergah üzerinde bul:** Rota çizildiğinde rota çizgisine en fazla **150 m** uzaklıktaki diğer tuvaletler listede ve haritada **Rota Üzerinde 📍** rozetiyle öne çıkar (bu pinler kümeye girmez). Rota kartındaki **Yol Üstündekileri Göster** anahtarı listeyi ve haritayı yalnızca bunlara ve hedefe indirir ([`src/lib/corridor.ts`](src/lib/corridor.ts)).
+- **Varış ve değerlendirme:** Rota aktifken GPS konumu hedefe **20 m** yaklaşınca (rota başına bir kez) ya da **Rotayı Bitir**'e basılınca ekranın ortasında değerlendirme penceresi açılır: Açık mıydı?, Kağıt var mıydı?, Temizlik ★, Konfor ★, Ücretsiz / Ücretli. Gönderince oy ve durum bildirimleri tek seferde kaydedilir, “Katkın için teşekkürler! 💧” mesajıyla toplam katkı sayısı gösterilir ve rota kapanır. “Kapalıydı” yanıtında puan sorulmaz, yalnızca kapalı bildirimi kaydedilir. Katkı = verilen oy sayısı + durum bildirimi sayısı (Profilim'de görünür).
 - **Filtreler ve sıralama:** Birlikte seçilebilen çipler — Ücretsiz, Engelli Erişimi, Bebek Bakımı, Şu An Açık, Şifresiz / Herkese Açık, Alafranga, Alaturka, Favorilerim — ve En Yakın / En Temiz / En Ucuz-Ücretsiz / En Çok Oylanan sıralaması.
 - **Canlı durum:** Mekan detayından tek tıkla “Temizlik / Tadilat Nedeniyle Kapalı”, “Kağıt / Sabun Yok”, “Çok Kalabalık” bildirimi. Son 3 saatte en az 2 farklı kullanıcı kapalı bildirirse kartta, detayda ve pinde **Geçici Olarak Kapalı Bildirildi** rozeti çıkar ve Acil o mekanı atlar.
 - **Favoriler:** Kart ve detaydaki kalp ikonu.
@@ -110,7 +112,8 @@ Seed verisi yalnızca veritabanı boşken yüklenir.
 | GET | `/api/places` | — | Mekanlar + `stats` (+ girişliyse `myVote`) |
 | GET | `/api/places/:id/photo` | — | Mekan fotoğrafı (liste yanıtında yalnızca `hasPhoto` bulunur) |
 | GET | `/api/places/:id/reviews` | — | Yorumlu son 20 oy (yazarın görünen adı ve avatarıyla) |
-| POST | `/api/places/:id/reports` | kullanıcı | `{ type: 'closed' \| 'no_supplies' \| 'crowded' }` canlı durum bildirimi |
+| POST | `/api/places/:id/arrival` | kullanıcı | `{ wasOpen, hadPaper?, cleanliness, comfort, isPaid, priceAmount? }` varış değerlendirmesi → `{ place, contributions }` |
+| POST | `/api/places/:id/reports` | kullanıcı | `{ type: 'closed' \| 'no_supplies' \| 'crowded' \| 'open' }` canlı durum bildirimi |
 | PUT / DELETE | `/api/favorites/:placeId` | kullanıcı | Favoriye ekle / çıkar |
 | GET / PATCH | `/api/profile` | kullanıcı | Profilim (istatistik + etkinlik) / ad ve biyografi |
 | POST | `/api/profile/password` | kullanıcı | `{ currentPassword, newPassword }` |

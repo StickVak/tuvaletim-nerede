@@ -8,8 +8,8 @@ import { CATEGORIES } from './categories';
 export type PinState = 'normal' | 'selected' | 'emergency' | 'new';
 const iconCache = new Map<string, L.DivIcon>();
 
-export function toiletIcon(category: ToiletCategory, fee: FeeType, state: PinState, closed = false) {
-  const key = `${category}-${fee}-${state}-${closed}`;
+export function toiletIcon(category: ToiletCategory, fee: FeeType, state: PinState, closed = false, onRoute = false) {
+  const key = `${category}-${fee}-${state}-${closed}-${onRoute}`;
   const cached = iconCache.get(key);
   if (cached) return cached;
   const Icon = CATEGORIES[category].icon;
@@ -20,10 +20,12 @@ export function toiletIcon(category: ToiletCategory, fee: FeeType, state: PinSta
       ? ''
       : closed
         ? '<span class="tn-pin-free tn-pin-closed">Kapalı</span>'
+        : onRoute
+          ? '<span class="tn-pin-free tn-pin-route">Rota 📍</span>'
         : fee === 'free'
           ? '<span class="tn-pin-free">Ücretsiz</span>'
           : '';
-  const html = `<div class="tn-pin ${state !== 'normal' ? `is-${state}` : ''} ${closed ? 'is-closed' : ''}">
+  const html = `<div class="tn-pin ${state !== 'normal' ? `is-${state}` : ''} ${closed ? 'is-closed' : ''} ${onRoute ? 'is-on-route' : ''}">
     <span class="tn-pin-shadow"></span>
     <div class="tn-pin-body"><div class="tn-pin-inner">${svg}</div></div>
     ${badge}

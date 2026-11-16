@@ -18,12 +18,13 @@ interface Props {
   onEmergency: () => void;
   onRoute: (id: string) => void;
   onToggleFavorite: (place: PlaceView) => void;
+  onRouteIds: Set<string>;
   onOpenProfile: () => void;
   onOpenSettings: () => void;
 }
 
 export default function Sidebar({
-  places, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onRoute, onToggleFavorite, onOpenProfile, onOpenSettings,
+  places, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onRoute, onToggleFavorite, onRouteIds, onOpenProfile, onOpenSettings,
 }: Props) {
   return (
     <aside className="absolute bottom-4 left-4 top-4 z-30 flex w-[400px] flex-col overflow-hidden rounded-[28px] bg-surface shadow-float ring-1 ring-line">
@@ -79,7 +80,7 @@ export default function Sidebar({
         ) : (
           <ul className="space-y-2.5">
             {places.map((p) => (
-              <ToiletListItem key={p.id} place={p} active={p.id === selectedId} onSelect={onSelect} onRoute={onRoute} onToggleFavorite={onToggleFavorite} />
+              <ToiletListItem key={p.id} place={p} active={p.id === selectedId} onSelect={onSelect} onRoute={onRoute} onToggleFavorite={onToggleFavorite} onRouteBadge={onRouteIds.has(p.id)} />
             ))}
           </ul>
         )}

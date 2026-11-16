@@ -1,4 +1,5 @@
-import { Footprints, Info, Loader2, Navigation, X } from 'lucide-react';
+import { Flag, Footprints, Info, Loader2, Navigation } from 'lucide-react';
+import { Toggle } from './FilterPanel';
 import type { PlaceView, RouteState } from '../types';
 import { formatDistance } from '../lib/geo';
 
@@ -6,11 +7,16 @@ interface Props {
   place: PlaceView;
   route: RouteState;
   desktop: boolean;
-  onClose: () => void;
+  /** Rotaya 150 m içindeki diğer tuvaletler */
+  onRouteCount: number;
+  routeOnly: boolean;
+  onToggleRouteOnly: (v: boolean) => void;
+  /** Rotayı Bitir → varış penceresi */
+  onFinish: () => void;
 }
 
 /** Uygulama içi yol tarifi: mesafe, tahmini yürüme süresi, Rotayı Bitir */
-export default function RouteCard({ place, route, desktop, onClose }: Props) {
+export default function RouteCard({ place, route, desktop, onRouteCount, routeOnly, onToggleRouteOnly, onFinish }: Props) {
   const minutes = Math.max(1, Math.round(route.duration / 60));
   return (
     <div
@@ -43,13 +49,23 @@ export default function RouteCard({ place, route, desktop, onClose }: Props) {
           </div>
         </div>
       </div>
+      {!route.loading && (
+        <label className="mx-4 mb-3 flex cursor-pointer items-center gap-3 rounded-2xl bg-card px-3.5 py-2.5">
+          <span className="flex-1 text-sm">
+            <b className="block">Yol Üstündekileri Göster</b>
+            <span className="text-xs text-ink-muted" data-testid="on-route-count">Rota Üzerinde 📍 {onRouteCount} tuvalet daha</span>
+          </span>
+          <Toggle on={routeOnly} tone="ink" />
+          <input type="checkbox" className="sr-only" checked={routeOnly} onChange={(e) => onToggleRouteOnly(e.target.checked)} />
+        </label>
+      )}
       <div className="px-4 pb-4">
         <button
           type="button"
-          onClick={onClose}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-sm font-bold text-ink transition hover:bg-line/60"
+          onClick={onFinish}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-night py-3 text-sm font-bold text-white transition hover:opacity-90"
         >
-          <X size={16} /> Rotayı Bitir
+          <Flag size={16} /> Rotayı Bitir
         </button>
       </div>
       {route.approximate && !route.loading && (

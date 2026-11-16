@@ -80,7 +80,7 @@ body {
   opacity: 0.45;
 }
 /* Rota açıkken çizgi okunsun: hedef dışındaki pinler soluk */
-.routing .tn-pin:not(.is-selected):not(.is-emergency) {
+.routing .tn-pin:not(.is-selected):not(.is-emergency):not(.is-on-route) {
   opacity: 0.35;
 }
 
@@ -185,6 +185,13 @@ body {
 .tn-pin-closed {
   background: #ea580c;
   left: 22px;
+}
+.tn-pin-route {
+  background: #2563eb;
+}
+/* Rota açıkken yol üstündekiler soluklaşmaz */
+.routing .tn-pin.is-on-route {
+  opacity: 1;
 }
 .tn-pin.is-closed .tn-pin-body {
   filter: grayscale(0.6);
