@@ -61,7 +61,29 @@ CREATE TABLE IF NOT EXISTS pending_places (
   submitted_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS votes_place ON votes(place_id);
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (user_id, place_id)
+);
+CREATE TABLE IF NOT EXISTS status_reports (
+  id INTEGER PRIMARY KEY,
+  place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  report_type TEXT NOT NULL CHECK (report_type IN ('closed', 'no_supplies', 'crowded')),
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS reports_place_time ON status_reports(place_id, created_at);
 `;
+
+/** Sonradan eklenen sütunlar: yeni ve eski veritabanları aynı göçten geçer */
+const ADDED_COLUMNS = {
+  users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0'],
+  places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL'],
+  votes: ['toilet_type TEXT'],
+  pending_places: ['toilet_type TEXT', 'public_access INTEGER'],
+};
 
 const norm = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0) : v);
 
@@ -74,6 +96,10 @@ export async function openDb(path, { seedFile } = {}) {
   const db = existsSync(path) ? new SQL.Database(readFileSync(path)) : new SQL.Database();
   db.run('PRAGMA foreign_keys = ON');
   db.exec(SCHEMA);
+  for (const [table, cols] of Object.entries(ADDED_COLUMNS)) {
+    const have = new Set(db.exec(`PRAGMA table_info(${table})`)[0].values.map((r) => r[1]));
+    for (const col of cols) if (!have.has(col.split(' ')[0])) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col}`);
+  }
   let inTx = false;
 
   function save() {
@@ -120,7 +146,7 @@ export async function openDb(path, { seedFile } = {}) {
     }
   }
 
-  const api = { all, get: (sql, params) => all(sql, params)[0], run, tx, save };
+  const api = { all, get: (sql, params) => all(sql, params)[0], run, tx, save, seeded: false };
 
   if (seedFile && existsSync(seedFile) && api.get('SELECT COUNT(*) AS n FROM places').n === 0) {
     const seed = JSON.parse(readFileSync(seedFile, 'utf8'));
@@ -128,12 +154,14 @@ export async function openDb(path, { seedFile } = {}) {
     tx(() => {
       for (const p of seed) {
         run(
-          `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, source, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
-          [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging, now, now],
+          `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
+          [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
+            p.toiletType ?? null, p.publicAccess ?? null, now, now],
         );
       }
     });
+    api.seeded = true;
   }
 
   return api;

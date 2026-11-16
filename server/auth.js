@@ -39,14 +39,20 @@ export function verifyToken(token, secret) {
   }
 }
 
-export const publicUser = (u) => ({ id: u.id, username: u.username, role: u.role });
+export const publicUser = (u) => ({
+  id: u.id,
+  username: u.username,
+  role: u.role,
+  displayName: u.display_name || u.username,
+  avatarUrl: u.avatar_url ?? null,
+});
 
 /** Geçerli belirteç varsa req.user'ı veritabanındaki güncel kullanıcıyla doldurur. */
 export function optionalUser(db, secret) {
   return (req, _res, next) => {
     const header = req.headers.authorization ?? '';
     const payload = header.startsWith('Bearer ') ? verifyToken(header.slice(7), secret) : null;
-    const user = payload && db.get('SELECT id, username, role FROM users WHERE id = ?', [payload.id]);
+    const user = payload && db.get('SELECT id, username, role, display_name, avatar_url FROM users WHERE id = ?', [payload.id]);
     req.user = user ? publicUser(user) : null;
     next();
   };

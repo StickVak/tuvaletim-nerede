@@ -10,6 +10,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 402049604,
@@ -28,6 +30,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 153653899,
@@ -46,6 +50,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 496188242,
@@ -64,6 +70,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "relation",
    "id": 12008698,
@@ -82,6 +90,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 92918712,
@@ -100,6 +110,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "relation",
    "id": 5960237,
@@ -118,6 +130,8 @@
   "hours": "10:00-22:00",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1360403892,
@@ -136,6 +150,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 839313143,
@@ -154,6 +170,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1304501841,
@@ -172,6 +190,8 @@
   "hours": "08:00-23:00",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 8008907824,
@@ -190,6 +210,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 761081377,
@@ -208,6 +230,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5284001055,
@@ -226,6 +250,8 @@
   "hours": "10:00-22:00",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12593565907,
@@ -244,6 +270,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 6797009581,
@@ -262,6 +290,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13327610272,
@@ -280,6 +310,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 6672553563,
@@ -298,6 +330,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14244999501,
@@ -316,6 +350,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": true,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1052446932,
@@ -334,6 +370,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1453413507,
@@ -352,6 +390,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 913402649,
@@ -370,6 +410,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": "alafranga",
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 12214265201,
@@ -388,6 +430,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": null,
   "approximate": true
  },
@@ -402,6 +446,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": null,
   "approximate": true
  },
@@ -416,6 +462,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9779419008,
@@ -434,6 +482,8 @@
   "hours": "24/7",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14204624001,
@@ -452,6 +502,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 10110098518,
@@ -470,6 +522,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11269527625,
@@ -488,6 +542,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14209680931,
@@ -506,6 +562,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14209705373,
@@ -524,6 +582,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14219211539,
@@ -542,6 +602,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9863956700,
@@ -560,6 +622,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": "alaturka",
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12842912500,
@@ -578,6 +642,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11022634380,
@@ -596,6 +662,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9002730910,
@@ -614,6 +682,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5538727153,
@@ -632,6 +702,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 2959837669,
@@ -650,6 +722,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1540726048,
@@ -668,6 +742,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5093856452,
@@ -686,6 +762,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13050125370,
@@ -704,6 +782,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 868144899,
@@ -722,6 +802,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 865916982,
@@ -740,6 +822,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 11161986076,
@@ -758,6 +842,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9968202902,
@@ -776,6 +862,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14056235261,
@@ -794,6 +882,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1553970629,
@@ -812,6 +902,8 @@
   "hours": "Mo-Su 10:00-22:00",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 923203738,
@@ -830,6 +922,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1553970630,
@@ -848,6 +942,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5440936449,
@@ -866,6 +962,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12812065201,
@@ -884,6 +982,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9966726424,
@@ -902,6 +1002,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 5265418190,
@@ -920,6 +1022,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 3921776090,
@@ -938,6 +1042,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1164885061,
@@ -956,6 +1062,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 2512676620,
@@ -974,6 +1082,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13423627885,
@@ -992,6 +1102,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14173457775,
@@ -1010,6 +1122,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 7018070870,
@@ -1028,6 +1142,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 14091912476,
@@ -1046,6 +1162,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1096782925,
@@ -1064,6 +1182,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11266338690,
@@ -1082,6 +1202,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 502731151,
@@ -1100,6 +1222,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 7020202185,
@@ -1118,6 +1242,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13094257349,
@@ -1136,6 +1262,8 @@
   "hours": "10:00-22:00",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 37254624,
@@ -1154,6 +1282,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 593414707,
@@ -1172,6 +1302,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 387585142,
@@ -1190,6 +1322,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "relation",
    "id": 6031617,
@@ -1208,6 +1342,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 37373244,
@@ -1226,6 +1362,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 859049564,
@@ -1244,6 +1382,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5087889664,
@@ -1262,6 +1402,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5087889665,
@@ -1280,6 +1422,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 637305655,
@@ -1298,6 +1442,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 4464895893,
@@ -1316,6 +1462,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5287447537,
@@ -1334,6 +1482,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13342248013,
@@ -1352,6 +1502,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13299667101,
@@ -1370,6 +1522,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9215806359,
@@ -1388,6 +1542,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13100280725,
@@ -1406,6 +1562,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13363702255,
@@ -1424,6 +1582,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 6720558086,
@@ -1442,6 +1602,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 6792299186,
@@ -1460,6 +1622,8 @@
   "hours": "Mo-Su 07:00-22:30",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11447354269,
@@ -1478,6 +1642,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5576265262,
@@ -1496,6 +1662,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 4358654791,
@@ -1514,6 +1682,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13357543484,
@@ -1532,6 +1702,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13529158613,
@@ -1550,6 +1722,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5293941622,
@@ -1568,6 +1742,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11624047702,
@@ -1586,6 +1762,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 7814490112,
@@ -1604,6 +1782,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12985833590,
@@ -1622,6 +1802,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13663064463,
@@ -1640,6 +1822,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5702977817,
@@ -1658,6 +1842,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12966135671,
@@ -1676,6 +1862,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 758442409,
@@ -1694,6 +1882,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1557963656,
@@ -1712,6 +1902,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1071055200,
@@ -1730,6 +1922,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 391107059,
@@ -1748,6 +1942,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1208432039,
@@ -1766,6 +1962,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1453073144,
@@ -1784,6 +1982,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 387617181,
@@ -1802,6 +2002,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 876469303,
@@ -1820,6 +2022,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1320055049,
@@ -1838,6 +2042,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 4930999423,
@@ -1856,6 +2062,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 10969508474,
@@ -1874,6 +2082,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11832468800,
@@ -1892,6 +2102,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9795398805,
@@ -1910,6 +2122,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13423466469,
@@ -1928,6 +2142,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11091677273,
@@ -1946,6 +2162,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12238139355,
@@ -1964,6 +2182,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 8046299689,
@@ -1982,6 +2202,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11131434855,
@@ -2000,6 +2222,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 7088337685,
@@ -2018,6 +2242,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11126031885,
@@ -2036,6 +2262,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 10031675867,
@@ -2054,6 +2282,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11918147591,
@@ -2072,6 +2302,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11131443544,
@@ -2090,6 +2322,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13844319602,
@@ -2108,6 +2342,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 3063672929,
@@ -2126,6 +2362,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12213603301,
@@ -2144,6 +2382,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 3063665576,
@@ -2162,6 +2402,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1026803326,
@@ -2180,6 +2422,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 10225253970,
@@ -2198,6 +2442,8 @@
   "hours": "10:00-22:00",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1431526374,
@@ -2216,6 +2462,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 779934636,
@@ -2234,6 +2482,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14380867786,
@@ -2252,6 +2502,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1064859223,
@@ -2270,6 +2522,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1064642233,
@@ -2288,6 +2542,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1282826423,
@@ -2306,6 +2562,8 @@
   "hours": "24/7",
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 701582020,
@@ -2324,6 +2582,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1283206025,
@@ -2342,6 +2602,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14200498772,
@@ -2360,6 +2622,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 377274238,
@@ -2378,6 +2642,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12348360572,
@@ -2396,6 +2662,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11341492142,
@@ -2414,6 +2682,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11341536850,
@@ -2432,6 +2702,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 415563326,
@@ -2450,6 +2722,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 415564620,
@@ -2468,6 +2742,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 8151437217,
@@ -2486,6 +2762,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14177372939,
@@ -2504,6 +2782,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 785047304,
@@ -2522,6 +2802,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1205957282,
@@ -2540,6 +2822,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 186411318,
@@ -2558,6 +2842,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1210931536,
@@ -2576,6 +2862,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5221511121,
@@ -2594,6 +2882,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11825031469,
@@ -2612,6 +2902,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14317744121,
@@ -2630,6 +2922,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 14322442892,
@@ -2648,6 +2942,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 7673542889,
@@ -2666,6 +2962,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 11127534460,
@@ -2684,6 +2982,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 730469609,
@@ -2702,6 +3002,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1333715286,
@@ -2720,6 +3022,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 12062620346,
@@ -2738,6 +3042,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9999731500,
@@ -2756,6 +3062,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 9999731501,
@@ -2774,6 +3082,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1525239510,
@@ -2792,6 +3102,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1219807516,
@@ -2810,6 +3122,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 282933410,
@@ -2828,6 +3142,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 6911846317,
@@ -2846,6 +3162,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1062205068,
@@ -2864,6 +3182,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "way",
    "id": 1453729418,
@@ -2882,6 +3202,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 5078998293,
@@ -2900,6 +3222,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13174965260,
@@ -2918,6 +3242,8 @@
   "hours": null,
   "accessible": true,
   "babyChanging": false,
+  "toiletType": "alafranga",
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 11195499050,
@@ -2936,6 +3262,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 2988168104,
@@ -2954,6 +3282,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 10015641580,
@@ -2972,6 +3302,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 502157944,
@@ -2990,6 +3322,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "way",
    "id": 1216410712,
@@ -3008,6 +3342,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": true,
   "osm": {
    "type": "node",
    "id": 12566204777,
@@ -3026,6 +3362,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13909793508,
@@ -3044,6 +3382,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14306544096,
@@ -3062,6 +3402,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14306544093,
@@ -3080,6 +3422,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14305373625,
@@ -3098,6 +3442,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13920791007,
@@ -3116,6 +3462,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 1256853198,
@@ -3134,6 +3482,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13920800537,
@@ -3152,6 +3502,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 13917455443,
@@ -3170,6 +3522,8 @@
   "hours": null,
   "accessible": false,
   "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
   "osm": {
    "type": "node",
    "id": 14286240340,

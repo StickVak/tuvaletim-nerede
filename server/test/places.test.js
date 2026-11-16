@@ -41,7 +41,7 @@ test('vote then re-vote updates same row: voteCount stays 1, myVote reflects sec
   const second = await srv.req('PUT', '/api/places/seed-forum/vote', vote({ cleanliness: 5, isPaid: false, comment: 'Temiz' }), token);
   assert.equal(second.body.stats.voteCount, 1);
   assert.equal(second.body.stats.cleanliness, 5);
-  assert.deepEqual(second.body.myVote, { cleanliness: 5, comfort: 3, isPaid: false, priceAmount: null, comment: 'Temiz' });
+  assert.deepEqual(second.body.myVote, { cleanliness: 5, comfort: 3, isPaid: false, priceAmount: null, comment: 'Temiz', toiletType: null });
   const list = await srv.req('GET', '/api/places', null, token);
   assert.equal(list.body.find((p) => p.id === 'seed-forum').myVote.cleanliness, 5);
 });

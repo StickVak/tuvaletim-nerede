@@ -42,6 +42,11 @@ export function parsePlaceFields(body, { partial = false } = {}) {
       out.photo = p;
     }
     for (const k of ['accessible', 'babyChanging']) if (has(k)) out[k] = !!b[k];
+    if (b.publicAccess !== undefined || !partial) out.publicAccess = b.publicAccess == null ? null : !!b.publicAccess;
+    if (b.toiletType !== undefined) {
+      if (b.toiletType !== null && !['alafranga', 'alaturka', 'ikisi'].includes(b.toiletType)) throw 'Geçersiz tuvalet tipi.';
+      out.toiletType = b.toiletType;
+    }
   } catch (msg) {
     return msg;
   }

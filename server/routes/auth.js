@@ -4,8 +4,9 @@ import { hashPassword, publicUser, requireUser, signToken, verifyPassword } from
 const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function authRoutes(db, secret) {
+export function authRoutes(db, secret, limiter) {
   const r = Router();
+  r.use(['/register', '/login'], limiter);
   const respond = (res, status, user) => res.status(status).json({ token: signToken({ id: user.id, role: user.role }, secret), user: publicUser(user) });
 
   r.post('/register', (req, res) => {
@@ -18,10 +19,10 @@ export function authRoutes(db, secret) {
     if (db.get('SELECT 1 FROM users WHERE username = ?', [username])) return res.status(409).json({ error: 'Bu kullanıcı adı alınmış.' });
     if (email && db.get('SELECT 1 FROM users WHERE email = ?', [email])) return res.status(409).json({ error: 'Bu e-posta ile kayıtlı bir hesap var.' });
 
-    const { lastId } = db.run('INSERT INTO users (username, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?)', [
-      username, email, hashPassword(password), 'user', new Date().toISOString(),
+    const { lastId } = db.run('INSERT INTO users (username, display_name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
+      username, username, email, hashPassword(password), 'user', new Date().toISOString(),
     ]);
-    respond(res, 201, { id: lastId, username, role: 'user' });
+    respond(res, 201, { id: lastId, username, role: 'user', display_name: username, avatar_url: null });
   });
 
   r.post('/login', (req, res) => {

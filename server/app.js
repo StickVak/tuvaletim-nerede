@@ -5,6 +5,11 @@ import { authRoutes } from './routes/auth.js';
 import { placeRoutes } from './routes/places.js';
 import { pendingRoutes } from './routes/pending.js';
 import { adminRoutes } from './routes/admin.js';
+import { favoriteRoutes } from './routes/places.js';
+import { avatarRoutes, profileRoutes, userRoutes } from './routes/profile.js';
+import { DEFAULT_LIMITS, rateLimit } from './ratelimit.js';
+import { seedDemo } from './demo.js';
+import { dirname, join } from 'node:path';
 
 /** .env'deki yönetici hesabını oluşturur ya da rolünü/şifresini eşitler. */
 function ensureAdmin(db, username, password) {
@@ -16,16 +21,33 @@ function ensureAdmin(db, username, password) {
   }
 }
 
-export async function createApp({ dbPath, secret, seedFile, adminUsername, adminPassword }) {
+/**
+ * limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar.
+ * demo: true → yeni oluşturulan veritabanına örnek kullanıcılar eklenir.
+ */
+export async function createApp({ dbPath, secret, seedFile, adminUsername, adminPassword, limits = {}, demo = false }) {
   const db = await openDb(dbPath, { seedFile });
   ensureAdmin(db, adminUsername, adminPassword);
+  const avatarDir = join(dirname(dbPath), 'avatars');
+  if (demo && db.seeded) seedDemo(db, avatarDir);
+
+  const pass = (_req, _res, next) => next();
+  const L = limits === false ? null : { ...DEFAULT_LIMITS, ...limits };
+  const authLimit = L ? rateLimit(L.auth, 'Çok fazla giriş denemesi. Lütfen birkaç dakika sonra tekrar deneyin.') : pass;
+  const writeLimit = L ? rateLimit(L.write) : pass;
 
   const app = express();
+  // Vite proxy (127.0.0.1) arkasında gerçek istemci IP'si X-Forwarded-For'dan okunur
+  app.set('trust proxy', 'loopback');
   app.use(express.json({ limit: '6mb' }));
   app.use(optionalUser(db, secret));
-  app.use('/api/auth', authRoutes(db, secret));
-  app.use('/api/places', placeRoutes(db));
-  app.use('/api/pending', pendingRoutes(db));
+  app.use('/api/auth', authRoutes(db, secret, authLimit));
+  app.use('/api/places', placeRoutes(db, writeLimit));
+  app.use('/api/favorites', favoriteRoutes(db, writeLimit));
+  app.use('/api/pending', pendingRoutes(db, writeLimit));
+  app.use('/api/profile', profileRoutes(db, { avatarDir, writeLimit }));
+  app.use('/api/users', userRoutes(db));
+  app.use('/api/avatars', avatarRoutes(avatarDir));
   app.use('/api/admin', adminRoutes(db));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Bulunamadı.' }));
   // eslint-disable-next-line no-unused-vars

@@ -3,7 +3,7 @@ import { requireAdmin } from '../auth.js';
 import { parsePlaceFields } from '../validate.js';
 import { getPlace } from './places.js';
 
-const COLUMN = { babyChanging: 'baby_changing' };
+const COLUMN = { babyChanging: 'baby_changing', publicAccess: 'public_access', toiletType: 'toilet_type' };
 
 export function adminRoutes(db) {
   const r = Router();
@@ -40,15 +40,17 @@ export function adminRoutes(db) {
     const now = new Date().toISOString();
     db.tx(() => {
       db.run(
-        `INSERT INTO places (id, name, category, district, address, lat, lng, photo, hours, accessible, baby_changing, source, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`,
-        [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.photo, p.hours, p.accessible, p.baby_changing, now, now],
+        `INSERT INTO places (id, name, category, district, address, lat, lng, photo, hours, accessible, baby_changing, public_access,
+           added_by, source, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`,
+        [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.photo, p.hours, p.accessible, p.baby_changing,
+          p.public_access, p.user_id, now, now],
       );
       if (p.user_id) {
         db.run(
-          `INSERT INTO votes (place_id, user_id, cleanliness, comfort, is_paid, price_amount, comment, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [p.id, p.user_id, p.cleanliness, p.comfort, p.is_paid, p.price_amount, p.comment, p.submitted_at, now],
+          `INSERT INTO votes (place_id, user_id, cleanliness, comfort, is_paid, price_amount, comment, toilet_type, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [p.id, p.user_id, p.cleanliness, p.comfort, p.is_paid, p.price_amount, p.comment, p.toilet_type, p.submitted_at, now],
         );
       }
       db.run('DELETE FROM pending_places WHERE id = ?', [p.id]);
@@ -82,12 +84,12 @@ export function adminRoutes(db) {
 
   r.get('/votes', (_req, res) => {
     const rows = db.all(
-      `SELECT v.*, u.username, p.name AS place_name FROM votes v
+      `SELECT v.*, u.username, u.display_name, p.name AS place_name FROM votes v
        JOIN users u ON u.id = v.user_id JOIN places p ON p.id = v.place_id ORDER BY v.updated_at DESC`,
     );
     res.json(
       rows.map((v) => ({
-        id: v.id, placeId: v.place_id, placeName: v.place_name, username: v.username,
+        id: v.id, placeId: v.place_id, placeName: v.place_name, username: v.username, displayName: v.display_name || v.username,
         cleanliness: v.cleanliness, comfort: v.comfort, isPaid: !!v.is_paid, priceAmount: v.price_amount, comment: v.comment,
         createdAt: v.created_at, updatedAt: v.updated_at,
       })),

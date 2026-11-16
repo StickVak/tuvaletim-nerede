@@ -58,3 +58,12 @@ test('approximate places say so in the address and have a district', () => {
     assert.ok(p.district, `${p.id} ilçesiz`);
   }
 });
+
+test('OSM toilet position and access tags are carried over', () => {
+  for (const p of seed) {
+    assert.ok([undefined, null, 'alafranga', 'alaturka', 'ikisi'].includes(p.toiletType), p.id);
+    assert.ok([undefined, null, true, false].includes(p.publicAccess), p.id);
+  }
+  assert.ok(seed.some((p) => p.toiletType), 'en az bir mekanda OSM toilets:position');
+  assert.ok(seed.some((p) => p.publicAccess === true), 'en az bir mekanda OSM access=yes');
+});

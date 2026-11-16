@@ -19,6 +19,8 @@ const app = await createApp({
   secret,
   adminUsername: process.env.ADMIN_USERNAME || 'admin',
   adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+  // Yeni veritabanında örnek kullanıcı ve yorumlar (kapatmak için SEED_DEMO_DATA=false)
+  demo: process.env.SEED_DEMO_DATA !== 'false',
 });
 
 app.listen(PORT, () => console.log(`[api] http://localhost:${PORT}`));

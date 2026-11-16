@@ -62,6 +62,15 @@ function toPlace(x, overrides) {
     hours: t.opening_hours ?? null,
     accessible: t.wheelchair === 'yes',
     babyChanging: t.changing_table === 'yes' || t.diaper === 'yes',
+    // OSM toilets:position → alafranga (seated) / alaturka (squat) / ikisi
+    toiletType: (() => {
+      const pos = t['toilets:position'] ?? '';
+      const seated = pos.includes('seated');
+      const squat = pos.includes('squat');
+      return seated && squat ? 'ikisi' : seated ? 'alafranga' : squat ? 'alaturka' : null;
+    })(),
+    // Şifresiz / herkese açık: OSM access; bilinmiyorsa null (sunucu tür varsayılanını kullanır)
+    publicAccess: ['yes', 'permissive', 'public'].includes(t.access) ? true : ['customers', 'private', 'no'].includes(t.access) ? false : null,
     osm: { type: x.osm_type, id: x.osm_id, display_name: x.display_name },
     approximate: false,
     ...overrides,
@@ -123,7 +132,7 @@ for (const n of NAMED) {
     log(`✓ ${n.id.padEnd(34)} ${chosen.category}/${chosen.type} "${chosen.name}" ${landmark ? Math.round(dist(landmark, pt(chosen))) + ' m' : ''}  ${chosen.display_name.slice(0, 70)}`);
   } else if (landmark) {
     // Kullanıcı detayda konumun kesin olmadığını görsün
-    named.push({ ...base, district: landmarkDistrict, address: `${n.near} çevresi (yaklaşık konum)`, lat: landmark.lat, lng: landmark.lng, hours: null, accessible: false, babyChanging: false, osm: null, approximate: true });
+    named.push({ ...base, district: landmarkDistrict, address: `${n.near} çevresi (yaklaşık konum)`, lat: landmark.lat, lng: landmark.lng, hours: null, accessible: false, babyChanging: false, toiletType: null, publicAccess: null, osm: null, approximate: true });
     log(`~ ${n.id.padEnd(34)} OSM'de yakında "${n.q}" yok → referans noktası "${n.near}" kullanıldı (YAKLAŞIK)`);
   } else {
     throw new Error(`Bulunamadı: ${n.q}`);
