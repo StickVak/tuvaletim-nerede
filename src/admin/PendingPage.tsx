@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { Accessibility, Baby, Check, Clock3, Inbox, MapPin, X } from 'lucide-react';
-import type { PendingSubmission } from '../types';
-import { approveSubmission, rejectSubmission } from '../db/repo';
+import { api } from '../api';
+import type { AdminPending } from './types';
 import { CATEGORIES, placePhoto } from '../lib/categories';
 import StarRating from '../components/StarRating';
-import { PriceBadge } from '../components/Badges';
 import MiniMap from './MiniMap';
 import { ConfirmDialog, EmptyState, PageHeader, relTime } from './ui';
 
-export default function PendingPage({ pending, onToast }: { pending: PendingSubmission[]; onToast: (t: string) => void }) {
-  const [rejecting, setRejecting] = useState<PendingSubmission | null>(null);
-  const sorted = [...pending].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt));
+type Act = (fn: () => Promise<unknown>, success: string) => Promise<void>;
+
+export default function PendingPage({ pending, act }: { pending: AdminPending[]; act: Act }) {
+  const [rejecting, setRejecting] = useState<AdminPending | null>(null);
+  const sorted = pending;
 
   return (
     <>
@@ -22,9 +23,9 @@ export default function PendingPage({ pending, onToast }: { pending: PendingSubm
           {sorted.map((s) => {
             const Cat = CATEGORIES[s.category].icon;
             return (
-              <article key={s.id} className="animate-slide-up overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
+              <article key={s.id} className="animate-slide-up overflow-hidden rounded-3xl bg-surface shadow-sm ring-1 ring-line">
                 <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
-                  <img src={placePhoto(s)} alt={s.name} className="h-48 w-full rounded-2xl bg-gray-200 object-cover" />
+                  <img src={placePhoto(s)} alt={s.name} className="h-48 w-full rounded-2xl bg-card object-cover" />
                   <MiniMap center={s} category={s.category} />
                 </div>
                 <div className="px-5 pb-4">
@@ -34,22 +35,25 @@ export default function PendingPage({ pending, onToast }: { pending: PendingSubm
                       <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
                         <span className="flex items-center gap-1 font-semibold text-ink-soft"><Cat size={13} /> {CATEGORIES[s.category].label}</span>
                         <span className="flex items-center gap-1"><Clock3 size={12} /> {relTime(s.submittedAt)}</span>
+                        {s.username && <span className="font-semibold">@{s.username}</span>}
                         <span className="flex items-center gap-1 font-mono"><MapPin size={12} /> {s.lat.toFixed(5)}, {s.lng.toFixed(5)}</span>
                       </p>
                     </div>
-                    <PriceBadge place={s} size="md" />
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${s.vote.isPaid ? 'bg-brand/20 text-ink' : 'bg-green-500/15 text-green-600'}`}>
+                      {s.vote.isPaid ? `Ücretli${s.vote.priceAmount ? ` · ${s.vote.priceAmount} ₺` : ''}` : 'Ücretsiz'}
+                    </span>
                   </div>
                   <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
                     <div className="rounded-2xl bg-card p-3">
                       <dt className="text-xs font-semibold text-ink-muted">Temizlik</dt>
-                      <dd className="mt-1"><StarRating value={s.cleanliness} size={14} /></dd>
+                      <dd className="mt-1"><StarRating value={s.vote.cleanliness} size={14} /></dd>
                     </div>
                     <div className="rounded-2xl bg-card p-3">
                       <dt className="text-xs font-semibold text-ink-muted">Konfor</dt>
-                      <dd className="mt-1"><StarRating value={s.comfort} size={14} /></dd>
+                      <dd className="mt-1"><StarRating value={s.vote.comfort} size={14} /></dd>
                     </div>
                     <div className="col-span-2 rounded-2xl bg-card p-3 text-ink-soft">
-                      <span className="font-semibold text-ink">{[s.address, s.city].filter(Boolean).join(', ') || 'Adres belirtilmemiş'}</span>
+                      <span className="font-semibold text-ink">{[s.address, s.district].filter(Boolean).join(', ') || 'Adres belirtilmemiş'}</span>
                       {s.hours && <span> · {s.hours}</span>}
                       {(s.accessible || s.babyChanging) && (
                         <span className="ml-2 inline-flex gap-1.5 align-middle">
@@ -60,21 +64,18 @@ export default function PendingPage({ pending, onToast }: { pending: PendingSubm
                     </div>
                   </dl>
                 </div>
-                <div className="grid grid-cols-2 border-t border-gray-100">
+                <div className="grid grid-cols-2 border-t border-line">
                   <button
                     type="button"
                     onClick={() => setRejecting(s)}
-                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-red-600 hover:bg-red-50"
+                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-red-600 hover:bg-red-500/10"
                   >
                     <X size={16} /> Reddet
                   </button>
                   <button
                     type="button"
-                    onClick={async () => {
-                      const p = await approveSubmission(s.id);
-                      if (p) onToast(`“${p.name}” onaylandı ve haritaya eklendi.`);
-                    }}
-                    className="flex items-center justify-center gap-1.5 bg-brand py-3.5 text-sm font-extrabold text-ink hover:bg-brand-dark"
+                    onClick={() => act(() => api(`/admin/pending/${s.id}/approve`, { method: 'POST' }), `“${s.name}” onaylandı ve haritaya eklendi.`)}
+                    className="flex items-center justify-center gap-1.5 bg-brand py-3.5 text-sm font-extrabold text-onbrand hover:bg-brand-dark"
                   >
                     <Check size={16} /> Onayla (Haritaya Ekle)
                   </button>
@@ -91,10 +92,10 @@ export default function PendingPage({ pending, onToast }: { pending: PendingSubm
           text={<>“{rejecting.name}” başvurusu kalıcı olarak silinecek.</>}
           confirmLabel="Reddet"
           onCancel={() => setRejecting(null)}
-          onConfirm={async () => {
-            await rejectSubmission(rejecting.id);
-            onToast('Başvuru reddedildi.');
+          onConfirm={() => {
+            const id = rejecting.id;
             setRejecting(null);
+            void act(() => api(`/admin/pending/${id}`, { method: 'DELETE' }), 'Başvuru reddedildi.');
           }}
         />
       )}

@@ -1,8 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { Building2, CheckCircle2, ExternalLink, Inbox, LayoutDashboard, LogOut, MessageSquareText } from 'lucide-react';
-import type { AdminUser } from '../types';
-import { db } from '../db/db';
+import { useAdminData } from './useAdminData';
 import Logo from '../components/Logo';
 import Dashboard from './Dashboard';
 import PendingPage from './PendingPage';
@@ -15,7 +13,7 @@ const TABS: { id: AdminTab; label: string; icon: typeof Inbox }[] = [
   { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard },
   { id: 'pending', label: 'Başvurular', icon: Inbox },
   { id: 'places', label: 'Mekanlar', icon: Building2 },
-  { id: 'reviews', label: 'Yorumlar', icon: MessageSquareText },
+  { id: 'reviews', label: 'Oylar', icon: MessageSquareText },
 ];
 
 function readTab(): AdminTab {
@@ -23,12 +21,10 @@ function readTab(): AdminTab {
   return TABS.some((t) => t.id === h) ? h : 'dashboard';
 }
 
-export default function AdminPanel({ user, onLogout }: { user: AdminUser; onLogout: () => void }) {
+export default function AdminPanel({ username, onLogout }: { username: string; onLogout: () => void }) {
   const [tab, setTabState] = useState<AdminTab>(readTab);
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
-  const places = useLiveQuery(() => db.places.toArray(), []) ?? [];
-  const pending = useLiveQuery(() => db.pending_submissions.toArray(), []) ?? [];
-  const reviews = useLiveQuery(() => db.reviews.toArray(), []) ?? [];
+  const { stats, pending, places, votes, error, reload } = useAdminData();
 
   const setTab = (t: AdminTab) => {
     setTabState(t);
@@ -42,10 +38,24 @@ export default function AdminPanel({ user, onLogout }: { user: AdminUser; onLogo
     window.setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 3200);
   }, []);
 
+  /** İşlemi çalıştırır, verileri yeniler ve sonucu bildirir */
+  const act = useCallback(
+    async (fn: () => Promise<unknown>, success: string) => {
+      try {
+        await fn();
+        showToast(success);
+      } catch (e) {
+        showToast((e as Error).message);
+      }
+      await reload();
+    },
+    [reload, showToast],
+  );
+
   const badge = (id: AdminTab) => (id === 'pending' ? pending.length : 0);
 
   return (
-    <div className="min-h-[100dvh] bg-card lg:pl-[260px]">
+    <div className="min-h-[100dvh] bg-card text-ink lg:pl-[260px]">
       {/* Masaüstü yan menü */}
       <aside className="fixed inset-y-0 left-0 hidden w-[260px] flex-col bg-ink p-5 text-white lg:flex">
         <div className="flex items-center gap-3">
@@ -80,7 +90,7 @@ export default function AdminPanel({ user, onLogout }: { user: AdminUser; onLogo
           </a>
           <div className="rounded-2xl bg-white/5 p-3">
             <div className="text-xs text-white/50">Oturum açık</div>
-            <div className="font-bold">{user.username}</div>
+            <div className="font-bold">{username}</div>
             <button type="button" onClick={onLogout} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2 text-sm font-bold hover:bg-white/20">
               <LogOut size={15} /> Çıkış yap
             </button>
@@ -117,10 +127,11 @@ export default function AdminPanel({ user, onLogout }: { user: AdminUser; onLogo
       </header>
 
       <main className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
-        {tab === 'dashboard' && <Dashboard places={places} pending={pending} reviews={reviews} onNavigate={setTab} />}
-        {tab === 'pending' && <PendingPage pending={pending} onToast={showToast} />}
-        {tab === 'places' && <PlacesPage places={places} reviews={reviews} onToast={showToast} />}
-        {tab === 'reviews' && <ReviewsPage reviews={reviews} places={places} onToast={showToast} />}
+        {error && <p className="mb-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
+        {tab === 'dashboard' && <Dashboard stats={stats} places={places} votes={votes} pendingCount={pending.length} onNavigate={setTab} />}
+        {tab === 'pending' && <PendingPage pending={pending} act={act} />}
+        {tab === 'places' && <PlacesPage places={places} votes={votes} act={act} />}
+        {tab === 'reviews' && <ReviewsPage votes={votes} act={act} />}
       </main>
 
       {toast && (

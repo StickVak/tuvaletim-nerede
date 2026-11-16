@@ -1,22 +1,23 @@
 import { useRef, useState } from 'react';
 import { Camera, Save, Trash2, X } from 'lucide-react';
-import type { FeeType, Place, PlaceBase, ToiletCategory } from '../types';
-import { CATEGORIES, CATEGORY_ORDER, FEE_LABELS, placePhoto } from '../lib/categories';
+import type { Place, ToiletCategory } from '../types';
+import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../lib/categories';
 import { readImageAsDataUrl } from '../lib/image';
-import { updatePlace } from '../db/repo';
 import MiniMap from './MiniMap';
 import { inputCls } from './ui';
 
-export default function PlaceEditModal({ place, onClose, onSaved }: { place: Place; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState<PlaceBase>({
-    name: place.name, category: place.category, city: place.city, district: place.district, address: place.address,
-    lat: place.lat, lng: place.lng, photo: place.photo, fee: place.fee, price: place.price, hours: place.hours,
+type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'photo' | 'hours' | 'accessible' | 'babyChanging'>;
+
+export default function PlaceEditModal({ place, onClose, onSave }: { place: Place; onClose: () => void; onSave: (changes: EditFields) => Promise<void> }) {
+  const [form, setForm] = useState<EditFields>({
+    name: place.name, category: place.category, district: place.district, address: place.address,
+    lat: place.lat, lng: place.lng, photo: place.photo, hours: place.hours,
     accessible: place.accessible, babyChanging: place.babyChanging,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
-  const set = <K extends keyof PlaceBase>(k: K, v: PlaceBase[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof EditFields>(k: K, v: EditFields[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,24 +25,15 @@ export default function PlaceEditModal({ place, onClose, onSaved }: { place: Pla
     if (!Number.isFinite(form.lat) || !Number.isFinite(form.lng) || Math.abs(form.lat) > 90 || Math.abs(form.lng) > 180)
       return setError('Geçerli bir koordinat girin.');
     setSaving(true);
-    try {
-      await updatePlace(place.id, {
-        ...form,
-        name: form.name.trim(),
-        price: form.fee === 'paid' ? form.price?.trim() || undefined : undefined,
-      });
-      onSaved();
-    } catch {
-      setError('Kaydedilemedi.');
-      setSaving(false);
-    }
+    await onSave({ ...form, name: form.name.trim() });
+    setSaving(false);
   };
 
   return (
     <div className="fixed inset-0 z-[900] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Mekanı düzenle">
       <div className="absolute inset-0 animate-fade-in bg-ink/50" onClick={onClose} />
-      <form onSubmit={save} className="relative flex max-h-[94dvh] w-full max-w-3xl animate-slide-up flex-col rounded-t-[28px] bg-white shadow-2xl sm:rounded-[28px]">
-        <header className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+      <form onSubmit={save} className="relative flex max-h-[94dvh] w-full max-w-3xl animate-slide-up flex-col rounded-t-[28px] bg-surface shadow-2xl sm:rounded-[28px]">
+        <header className="flex items-center justify-between border-b border-line px-6 py-4">
           <div>
             <h2 className="text-lg font-extrabold">Mekanı düzenle</h2>
             <p className="font-mono text-[11px] text-ink-muted">{place.id}</p>
@@ -66,37 +58,18 @@ export default function PlaceEditModal({ place, onClose, onSaved }: { place: Pla
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-ink-soft">Şehir</span>
-                <input value={form.city ?? ''} onChange={(e) => set('city', e.target.value || undefined)} className={inputCls} />
-              </label>
-              <label className="block">
-                <span className="mb-1 block text-xs font-bold text-ink-soft">İlçe</span>
-                <input value={form.district ?? ''} onChange={(e) => set('district', e.target.value || undefined)} className={inputCls} />
-              </label>
-            </div>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-ink-soft">İlçe</span>
+              <input value={form.district ?? ''} onChange={(e) => set('district', e.target.value || null)} className={inputCls} />
+            </label>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Adres</span>
-              <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || undefined)} className={inputCls} />
+              <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || null)} className={inputCls} />
             </label>
-            <div>
-              <span className="mb-1 block text-xs font-bold text-ink-soft">Ücret</span>
-              <div className="grid grid-cols-3 gap-1 rounded-xl bg-card p-1">
-                {(['free', 'customers', 'paid'] as FeeType[]).map((f) => (
-                  <button key={f} type="button" onClick={() => set('fee', f)}
-                    className={`rounded-lg py-2 text-xs font-bold ${form.fee === f ? 'bg-white shadow-sm' : 'text-ink-muted'}`}>
-                    {FEE_LABELS[f]}
-                  </button>
-                ))}
-              </div>
-              {form.fee === 'paid' && (
-                <input value={form.price ?? ''} onChange={(e) => set('price', e.target.value)} placeholder="örn. 5 ₺" className={`${inputCls} mt-2`} />
-              )}
-            </div>
+            <p className="rounded-xl bg-card px-3 py-2 text-xs text-ink-muted">Ücret durumu ve puanlar kullanıcı oylarıyla belirlenir; buradan düzenlenmez.</p>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Çalışma saatleri</span>
-              <input value={form.hours ?? ''} onChange={(e) => set('hours', e.target.value || undefined)} className={inputCls} />
+              <input value={form.hours ?? ''} onChange={(e) => set('hours', e.target.value || null)} className={inputCls} />
             </label>
             <div className="flex gap-4 text-sm font-semibold">
               <label className="flex items-center gap-2"><input type="checkbox" checked={!!form.accessible} onChange={(e) => set('accessible', e.target.checked)} className="h-4 w-4 accent-ink" /> Engelli erişimi</label>
@@ -116,13 +89,13 @@ export default function PlaceEditModal({ place, onClose, onSaved }: { place: Pla
             <div>
               <span className="mb-1 block text-xs font-bold text-ink-soft">Fotoğraf</span>
               <div className="relative overflow-hidden rounded-2xl">
-                <img src={placePhoto(form)} alt="" className="h-36 w-full bg-gray-200 object-cover" />
+                <img src={placePhoto(form)} alt="" className="h-36 w-full bg-card object-cover" />
                 <div className="absolute bottom-2 right-2 flex gap-1.5">
                   <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold shadow">
                     <Camera size={13} /> Değiştir
                   </button>
                   {form.photo && (
-                    <button type="button" onClick={() => set('photo', undefined)} aria-label="Fotoğrafı kaldır" className="rounded-full bg-white/95 p-1.5 text-red-600 shadow">
+                    <button type="button" onClick={() => set('photo', null)} aria-label="Fotoğrafı kaldır" className="rounded-full bg-white/95 p-1.5 text-red-600 shadow">
                       <Trash2 size={14} />
                     </button>
                   )}
@@ -137,7 +110,7 @@ export default function PlaceEditModal({ place, onClose, onSaved }: { place: Pla
           </div>
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-gray-100 px-6 py-4">
+        <footer className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
           <p className="text-sm font-semibold text-red-600">{error}</p>
           <div className="flex gap-2">
             <button type="button" onClick={onClose} className="rounded-xl bg-card px-4 py-2.5 text-sm font-bold">Vazgeç</button>

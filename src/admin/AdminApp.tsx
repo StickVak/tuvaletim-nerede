@@ -1,39 +1,37 @@
-import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import type { AdminUser } from '../types';
-import { logout, restoreSession } from './auth';
+import { useEffect } from 'react';
+import { Loader2, LogOut, ShieldAlert } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import AdminLogin from './AdminLogin';
 import AdminPanel from './AdminPanel';
 
 export default function AdminApp() {
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [checking, setChecking] = useState(true);
+  const { user, ready, logout } = useAuth();
 
   useEffect(() => {
     document.title = 'Yönetim Paneli · Tuvaletim Nerede?';
-    void restoreSession().then((u) => {
-      setUser(u);
-      setChecking(false);
-    });
   }, []);
 
-  if (checking) {
+  if (!ready) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-card">
         <Loader2 className="animate-spin text-ink-muted" />
       </div>
     );
   }
-
-  return user ? (
-    <AdminPanel
-      user={user}
-      onLogout={async () => {
-        await logout(user);
-        setUser(null);
-      }}
-    />
-  ) : (
-    <AdminLogin onLogin={setUser} />
-  );
+  if (!user) return <AdminLogin />;
+  if (user.role !== 'admin') {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-card p-4">
+        <div className="max-w-sm rounded-3xl bg-surface p-7 text-center shadow-float ring-1 ring-line">
+          <ShieldAlert size={36} className="mx-auto text-red-500" />
+          <h1 className="mt-3 text-lg font-extrabold text-ink">Bu hesabın yönetici yetkisi yok.</h1>
+          <p className="mt-1 text-sm text-ink-muted">“{user.username}” olarak giriş yaptınız.</p>
+          <button type="button" onClick={logout} className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-ink px-5 py-3 text-sm font-bold text-surface">
+            <LogOut size={16} /> Çıkış yap
+          </button>
+        </div>
+      </div>
+    );
+  }
+  return <AdminPanel username={user.username} onLogout={logout} />;
 }

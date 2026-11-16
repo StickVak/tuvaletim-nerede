@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, KeyRound, Loader2, LogIn, ShieldCheck, User } from 'lucide-react';
-import type { AdminUser } from '../types';
-import { login, loginLockedFor } from './auth';
-import { ADMIN_FROM_ENV } from '../db/db';
+import { useAuth } from '../hooks/useAuth';
 import Logo from '../components/Logo';
 
-export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => void }) {
+export default function AdminLogin() {
+  const { login, logout } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
@@ -21,14 +20,13 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
     setBusy(true);
     setError('');
     try {
-      onLogin(await login(username, password));
+      const u = await login(username, password);
+      if (u.role !== 'admin') {
+        logout();
+        setError('Bu hesabın yönetici yetkisi yok.');
+      }
     } catch (err) {
-      const locked = loginLockedFor();
-      setError(
-        (err as Error).message === 'LOCKED' || locked
-          ? `Çok fazla hatalı deneme. ${Math.ceil(locked / 1000)} sn sonra tekrar deneyin.`
-          : 'Kullanıcı adı veya şifre hatalı.',
-      );
+      setError((err as Error).message);
     } finally {
       setBusy(false);
     }
@@ -90,12 +88,13 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
             {busy ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />} Giriş Yap
           </button>
 
-          {!ADMIN_FROM_ENV && (
+          {import.meta.env.DEV && (
             <p className="mt-5 flex items-start gap-2 rounded-2xl bg-brand-soft p-3 text-xs text-ink-soft">
               <ShieldCheck size={15} className="mt-px shrink-0" />
               <span>
-                Varsayılan test hesabı: <b className="font-mono">admin</b> / <b className="font-mono">admin123</b>. Değiştirmek için
-                <span className="font-mono"> .env</span> dosyasında <span className="font-mono">VITE_ADMIN_PASSWORD</span> tanımlayın.
+                Geliştirme: yönetici hesabı sunucudaki <span className="font-mono">.env</span> dosyasından (
+                <span className="font-mono">ADMIN_USERNAME</span> / <span className="font-mono">ADMIN_PASSWORD</span>) oluşturulur. Varsayılan{' '}
+                <b className="font-mono">admin</b> / <b className="font-mono">admin123</b>.
               </span>
             </p>
           )}
