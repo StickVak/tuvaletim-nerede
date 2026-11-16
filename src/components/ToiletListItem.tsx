@@ -22,14 +22,14 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
         onClick={() => onSelect(place.id)}
         onKeyDown={(e) => e.key === 'Enter' && onSelect(place.id)}
         className={`flex w-full items-center gap-3 rounded-3xl p-2.5 text-left transition active:scale-[.99] ${
-          active ? 'bg-brand-soft ring-2 ring-brand-dark' : 'bg-card hover:bg-gray-100'
+          active ? 'bg-brand-soft ring-2 ring-brand-dark' : 'bg-card hover:bg-line/60'
         }`}
       >
         <img
           src={placePhoto(place)}
           alt=""
           loading="lazy"
-          className="h-[76px] w-[76px] shrink-0 rounded-2xl bg-gray-200 object-cover"
+          className="h-[76px] w-[76px] shrink-0 rounded-2xl bg-line object-cover"
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
@@ -56,7 +56,7 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
           target="_blank"
           rel="noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex shrink-0 flex-col items-center gap-1 self-stretch rounded-2xl bg-ink px-3 py-2 text-[10px] font-bold text-white transition hover:bg-black active:scale-95"
+          className="flex shrink-0 flex-col items-center gap-1 self-stretch rounded-2xl bg-ink px-3 py-2 text-[10px] font-bold text-surface transition hover:bg-black active:scale-95"
           aria-label={`${place.name} için yol tarifi`}
         >
           <span className="flex flex-1 items-center">

@@ -11,6 +11,7 @@ import { STORAGE_ERROR_EVENT, usePersistentState } from './hooks/usePersistentSt
 import { useGeolocation } from './hooks/useGeolocation';
 import { useElementHeight } from './hooks/useElementHeight';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import { useTheme } from './hooks/useTheme';
 import MapView, { type FlyCommand } from './components/MapView';
 import BottomSheet, { PEEK_HEIGHT, snapHeights, type SheetSnap } from './components/BottomSheet';
 import FloatingControls from './components/FloatingControls';
@@ -47,6 +48,7 @@ export default function App() {
 
   // ---------- Veriler (Express API) ----------
   const auth = useAuth();
+  const [theme, setTheme] = useTheme();
   const { places, error: placesError, replace: replacePlace } = usePlaces(auth.user?.id ?? null);
   const loading = places === undefined;
 
@@ -253,7 +255,7 @@ export default function App() {
   // ---------- Ortak parçalar ----------
   const emptyState = (
     <div className="flex flex-col items-center px-8 py-10 text-center">
-      <ListFilter size={30} className="text-gray-300" />
+      <ListFilter size={30} className="text-ink-muted/60" />
       <p className="mt-3 font-bold">{loading ? 'Veriler yükleniyor…' : 'Sonuç bulunamadı'}</p>
       {!loading && (
         <button
@@ -273,7 +275,7 @@ export default function App() {
   const sortLabel = filters.sort === 'distance' ? 'En yakın' : 'En temiz';
 
   return (
-    <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-white">
+    <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-surface text-ink">
       <MapView
         initialCenter={IZMIR_CENTER}
         places={markers}
@@ -313,7 +315,7 @@ export default function App() {
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label="Ayarlar"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-float transition active:scale-95"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-ink shadow-float transition active:scale-95"
           >
             <SettingsIcon size={21} />
           </button>
@@ -387,12 +389,12 @@ export default function App() {
       {/* Konum seçme modu */}
       {picking && (
         <div
-          className={`absolute z-40 animate-slide-down rounded-3xl bg-ink p-4 text-white shadow-float ${
+          className={`absolute z-40 animate-slide-down rounded-3xl bg-night p-4 text-white shadow-float ${
             desktop ? 'left-1/2 top-4 w-[440px] -translate-x-1/2' : 'inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))]'
           }`}
         >
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand text-ink">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand text-onbrand">
               <Crosshair size={20} />
             </span>
             <div className="flex-1">
@@ -410,7 +412,7 @@ export default function App() {
               type="button"
               disabled={!draftLocation}
               onClick={() => setPicking(false)}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand py-2.5 text-sm font-bold text-ink disabled:opacity-40"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand py-2.5 text-sm font-bold text-onbrand disabled:opacity-40"
             >
               <Check size={15} /> Bu konumu kullan
             </button>
@@ -455,6 +457,8 @@ export default function App() {
         onClose={() => setSettingsOpen(false)}
         placeCount={places?.length ?? 0}
         myVoteCount={places?.filter((p) => p.myVote).length ?? 0}
+        theme={theme}
+        onThemeChange={setTheme}
       />
 
       {addOpen && (

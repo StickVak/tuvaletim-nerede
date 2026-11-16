@@ -31,14 +31,14 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
 
   return (
     <div className="fixed inset-0 z-[900] flex items-end justify-center sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Mekanı düzenle">
-      <div className="absolute inset-0 animate-fade-in bg-ink/50" onClick={onClose} />
+      <div className="absolute inset-0 animate-fade-in bg-black/50" onClick={onClose} />
       <form onSubmit={save} className="relative flex max-h-[94dvh] w-full max-w-3xl animate-slide-up flex-col rounded-t-[28px] bg-surface shadow-2xl sm:rounded-[28px]">
         <header className="flex items-center justify-between border-b border-line px-6 py-4">
           <div>
             <h2 className="text-lg font-extrabold">Mekanı düzenle</h2>
             <p className="font-mono text-[11px] text-ink-muted">{place.id}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-gray-100"><X size={18} /></button>
+          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-line/60"><X size={18} /></button>
         </header>
 
         <div className="grid flex-1 grid-cols-1 gap-5 overflow-y-auto p-6 md:grid-cols-2">
@@ -52,7 +52,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
               <div className="flex flex-wrap gap-1.5">
                 {CATEGORY_ORDER.map((c: ToiletCategory) => (
                   <button key={c} type="button" onClick={() => set('category', c)}
-                    className={`rounded-full px-3 py-1.5 text-xs font-bold ${form.category === c ? 'bg-ink text-white' : 'bg-card text-ink-soft'}`}>
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold ${form.category === c ? 'bg-ink text-surface' : 'bg-card text-ink-soft'}`}>
                     {CATEGORIES[c].label}
                   </button>
                 ))}
@@ -91,7 +91,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place: Plac
               <div className="relative overflow-hidden rounded-2xl">
                 <img src={placePhoto(form)} alt="" className="h-36 w-full bg-card object-cover" />
                 <div className="absolute bottom-2 right-2 flex gap-1.5">
-                  <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold shadow">
+                  <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-onbrand shadow">
                     <Camera size={13} /> Değiştir
                   </button>
                   {form.photo && (

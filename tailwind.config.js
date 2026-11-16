@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -16,6 +17,8 @@ export default {
         },
         /** Sarı/açık zemin üzerindeki metin: temadan bağımsız koyu */
         onbrand: '#1A1A1A',
+        /** Her iki temada da koyu kalan yüzeyler (bildirim, admin menüsü) */
+        night: '#1A1A1A',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],

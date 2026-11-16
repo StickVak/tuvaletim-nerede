@@ -1,4 +1,5 @@
-import { HeartHandshake, Info, Star, X } from 'lucide-react';
+import { HeartHandshake, Info, Monitor, Moon, Palette, Star, Sun, X } from 'lucide-react';
+import type { ThemeSetting } from '../hooks/useTheme';
 import Logo from './Logo';
 
 interface Props {
@@ -6,14 +7,22 @@ interface Props {
   onClose: () => void;
   placeCount: number;
   myVoteCount: number;
+  theme: ThemeSetting;
+  onThemeChange: (t: ThemeSetting) => void;
 }
 
-export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount }: Props) {
+const THEMES: { value: ThemeSetting; label: string; icon: typeof Sun }[] = [
+  { value: 'system', label: 'Sistem', icon: Monitor },
+  { value: 'light', label: 'Açık', icon: Sun },
+  { value: 'dark', label: 'Koyu', icon: Moon },
+];
+
+export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount, theme, onThemeChange }: Props) {
   if (!open) return null;
   return (
     <div className="absolute inset-0 z-50" role="dialog" aria-modal="true" aria-label="Ayarlar">
-      <div className="absolute inset-0 animate-fade-in bg-ink/40 backdrop-blur-[2px]" onClick={onClose} />
-      <aside className="absolute inset-y-0 left-0 flex w-[88%] max-w-[360px] animate-drawer-in flex-col bg-white shadow-2xl">
+      <div className="absolute inset-0 animate-fade-in bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
+      <aside className="absolute inset-y-0 left-0 flex w-[88%] max-w-[360px] animate-drawer-in flex-col bg-surface text-ink shadow-2xl">
         <header className="flex items-center justify-between px-5 pb-4 pt-[max(1.25rem,env(safe-area-inset-top))]">
           <div className="flex items-center gap-3">
             <Logo size={40} />
@@ -22,7 +31,7 @@ export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount 
               <p className="text-xs font-medium text-ink-muted">Ayarlar</p>
             </div>
           </div>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-gray-100">
+          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-line/60">
             <X size={18} />
           </button>
         </header>
@@ -38,6 +47,28 @@ export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount 
                 {myVoteCount} <Star size={16} className="text-brand-dark" fill="currentColor" />
               </div>
               <div className="text-[11px] font-semibold text-ink-soft">Oy verdiğiniz mekan</div>
+            </div>
+          </section>
+
+          <section>
+            <h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+              <Palette size={13} /> Görünüm
+            </h3>
+            <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1" role="radiogroup" aria-label="Tema">
+              {THEMES.map((t) => (
+                <button
+                  key={t.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={theme === t.value}
+                  onClick={() => onThemeChange(t.value)}
+                  className={`flex flex-col items-center gap-1 rounded-xl py-2.5 text-xs font-bold transition ${
+                    theme === t.value ? 'bg-surface text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
+                  }`}
+                >
+                  <t.icon size={17} /> {t.label}
+                </button>
+              ))}
             </div>
           </section>
 

@@ -30,7 +30,7 @@ export default function FeeVoteInput({ isPaid, price, onChange }: Props) {
             value={price}
             onChange={(e) => onChange(true, e.target.value)}
             placeholder="örn. 10"
-            className="w-full rounded-2xl border-2 border-transparent bg-surface px-4 py-2.5 text-[15px] font-medium outline-none focus:border-brand-dark"
+            className="w-full rounded-2xl border-2 border-line bg-surface px-4 py-2.5 text-[15px] font-medium text-ink outline-none focus:border-brand-dark"
           />
         </label>
       )}

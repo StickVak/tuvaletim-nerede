@@ -16,7 +16,7 @@ export default function StarRating({ value, onChange, size = 14, label }: Props)
         const half = !filled && value >= i - 0.75;
         const star = (
           <span className="relative inline-flex" style={{ width: size, height: size }}>
-            <Star size={size} className="absolute text-gray-300" fill="currentColor" strokeWidth={0} />
+            <Star size={size} className="absolute text-ink-muted/60" fill="currentColor" strokeWidth={0} />
             {(filled || half) && (
               <span className="absolute inset-0 overflow-hidden" style={{ width: filled ? '100%' : '50%' }}>
                 <Star size={size} className="text-brand-dark" fill="currentColor" strokeWidth={0} />

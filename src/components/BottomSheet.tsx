@@ -71,7 +71,7 @@ export default function BottomSheet({ snap, onSnapChange, containerHeight, heade
   return (
     <section
       aria-label="Yakındaki tuvaletler paneli"
-      className={`absolute inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[28px] bg-white shadow-sheet ${
+      className={`absolute inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[28px] bg-surface shadow-sheet ${
         dragHeight === null ? 'transition-[height] duration-300 ease-[cubic-bezier(.2,.8,.2,1)]' : ''
       }`}
       style={{ height }}
@@ -86,7 +86,7 @@ export default function BottomSheet({ snap, onSnapChange, containerHeight, heade
         onPointerCancel={onPointerUp}
       >
         <div className="flex justify-center pb-1 pt-2.5">
-          <span className="h-1.5 w-11 rounded-full bg-gray-300" />
+          <span className="h-1.5 w-11 rounded-full bg-ink-muted/40" />
         </div>
         {header}
       </div>

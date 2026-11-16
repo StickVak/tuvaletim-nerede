@@ -57,7 +57,7 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
   return (
     <div className="min-h-[100dvh] bg-card text-ink lg:pl-[260px]">
       {/* Masaüstü yan menü */}
-      <aside className="fixed inset-y-0 left-0 hidden w-[260px] flex-col bg-ink p-5 text-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 hidden w-[260px] flex-col bg-night p-5 text-white lg:flex">
         <div className="flex items-center gap-3">
           <Logo size={42} />
           <div>
@@ -73,13 +73,13 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
               onClick={() => setTab(t.id)}
               aria-current={tab === t.id ? 'page' : undefined}
               className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition ${
-                tab === t.id ? 'bg-brand text-ink' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                tab === t.id ? 'bg-brand text-onbrand' : 'text-white/75 hover:bg-white/10 hover:text-white'
               }`}
             >
               <t.icon size={18} />
               <span className="flex-1 text-left">{t.label}</span>
               {badge(t.id) > 0 && (
-                <span className={`rounded-full px-2 py-0.5 text-[11px] ${tab === t.id ? 'bg-ink text-white' : 'bg-red-500 text-white'}`}>{badge(t.id)}</span>
+                <span className={`rounded-full px-2 py-0.5 text-[11px] ${tab === t.id ? 'bg-night text-white' : 'bg-red-500 text-white'}`}>{badge(t.id)}</span>
               )}
             </button>
           ))}
@@ -99,7 +99,7 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
       </aside>
 
       {/* Mobil üst bar */}
-      <header className="sticky top-0 z-[500] bg-ink text-white lg:hidden">
+      <header className="sticky top-0 z-[500] bg-night text-white lg:hidden">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2.5">
             <Logo size={34} />
@@ -116,7 +116,7 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
               type="button"
               onClick={() => setTab(t.id)}
               className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold ${
-                tab === t.id ? 'bg-brand text-ink' : 'bg-white/10 text-white/80'
+                tab === t.id ? 'bg-brand text-onbrand' : 'bg-white/10 text-white/80'
               }`}
             >
               <t.icon size={14} /> {t.label}
@@ -135,7 +135,7 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
       </main>
 
       {toast && (
-        <div role="status" className="fixed bottom-6 left-1/2 z-[1100] flex -translate-x-1/2 animate-slide-up items-center gap-2 rounded-2xl bg-ink px-4 py-3 text-sm font-semibold text-white shadow-float lg:left-[calc(50%+130px)]">
+        <div role="status" className="fixed bottom-6 left-1/2 z-[1100] flex -translate-x-1/2 animate-slide-up items-center gap-2 rounded-2xl bg-night px-4 py-3 text-sm font-semibold text-white shadow-float lg:left-[calc(50%+130px)]">
           <CheckCircle2 size={17} className="text-green-400" /> {toast.text}
         </div>
       )}

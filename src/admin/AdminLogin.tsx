@@ -38,7 +38,7 @@ export default function AdminLogin() {
         <a href="/" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink">
           <ArrowLeft size={16} /> Haritaya dön
         </a>
-        <form onSubmit={submit} className="animate-slide-up rounded-[32px] bg-white p-7 shadow-float ring-1 ring-black/5">
+        <form onSubmit={submit} className="animate-slide-up rounded-[32px] bg-surface p-7 shadow-float ring-1 ring-line">
           <div className="flex items-center gap-3">
             <Logo size={48} />
             <div>
@@ -49,7 +49,7 @@ export default function AdminLogin() {
 
           <label className="mt-7 block">
             <span className="mb-1.5 block text-sm font-bold">Kullanıcı adı</span>
-            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-white">
+            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-surface">
               <User size={17} className="text-ink-muted" />
               <input
                 value={username}
@@ -63,7 +63,7 @@ export default function AdminLogin() {
 
           <label className="mt-4 block">
             <span className="mb-1.5 block text-sm font-bold">Şifre</span>
-            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-white">
+            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-surface">
               <KeyRound size={17} className="text-ink-muted" />
               <input
                 type={show ? 'text' : 'password'}
@@ -83,7 +83,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={busy}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-base font-bold text-white transition hover:bg-black disabled:opacity-60"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-base font-bold text-surface transition hover:bg-black disabled:opacity-60"
           >
             {busy ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />} Giriş Yap
           </button>

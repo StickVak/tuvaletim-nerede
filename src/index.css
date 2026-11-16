@@ -17,6 +17,19 @@ body,
   --c-ink-soft: 74 74 74;
   --c-ink-muted: 138 138 138;
   --c-brand-soft: 255 246 199;
+  color-scheme: light;
+}
+
+/* Koyu tema: antrasit zemin, sarı vurgular aynı kalır */
+.dark {
+  --c-surface: 30 30 30;
+  --c-card: 42 42 42;
+  --c-line: 64 64 64;
+  --c-ink: 242 242 242;
+  --c-ink-soft: 200 200 200;
+  --c-ink-muted: 150 150 150;
+  --c-brand-soft: 74 63 10;
+  color-scheme: dark;
 }
 
 body {
@@ -39,6 +52,20 @@ body {
 .leaflet-container {
   font-family: inherit;
   background: #eef0f2;
+}
+.dark .leaflet-container {
+  background: #1b1d1f;
+}
+/* Koyu harita: tek OSM katmanı, karolar filtreyle koyulaştırılır (pinler etkilenmez) */
+.dark .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9);
+}
+.dark .leaflet-control-attribution {
+  background: rgba(30, 30, 30, 0.75) !important;
+  color: #bbb;
+}
+.dark .leaflet-control-attribution a {
+  color: #ffd60a;
 }
 .leaflet-control-attribution {
   font-size: 9px !important;

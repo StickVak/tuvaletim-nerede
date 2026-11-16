@@ -96,14 +96,14 @@ export default function AddToiletModal({
 
   return (
     <div className={`absolute inset-0 z-50 ${visible ? '' : 'hidden'}`} role="dialog" aria-modal="true" aria-label="Tuvalet ekle">
-      <div className="absolute inset-0 animate-fade-in bg-ink/40 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="absolute inset-0 animate-fade-in bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
       <form
         onSubmit={submit}
         noValidate
         className={
           desktop
-            ? 'absolute left-1/2 top-1/2 flex max-h-[90%] w-[520px] -translate-x-1/2 -translate-y-1/2 animate-fade-in flex-col rounded-[32px] bg-white shadow-2xl'
-            : 'absolute inset-x-0 bottom-0 flex max-h-[92%] animate-sheet-in flex-col rounded-t-[32px] bg-white shadow-sheet'
+            ? 'absolute left-1/2 top-1/2 flex max-h-[90%] w-[520px] -translate-x-1/2 -translate-y-1/2 animate-fade-in flex-col rounded-[32px] bg-surface shadow-2xl'
+            : 'absolute inset-x-0 bottom-0 flex max-h-[92%] animate-sheet-in flex-col rounded-t-[32px] bg-surface shadow-sheet'
         }
       >
         <header className="flex items-center justify-between px-5 pb-3 pt-5">
@@ -111,7 +111,7 @@ export default function AddToiletModal({
             <h2 className="text-xl font-extrabold">Tuvalet Ekle</h2>
             <p className="text-xs font-medium text-ink-muted">İncelendikten sonra haritada yayınlanır.</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-gray-100">
+          <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-line/60">
             <X size={18} />
           </button>
         </header>
@@ -136,7 +136,7 @@ export default function AddToiletModal({
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold shadow"
+                    className="flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-onbrand shadow"
                   >
                     <Camera size={14} /> Değiştir
                   </button>
@@ -154,10 +154,10 @@ export default function AddToiletModal({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="flex h-36 w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-gray-300 bg-card text-ink-soft transition hover:border-brand-dark hover:bg-brand-soft"
+                className="flex h-36 w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-line bg-card text-ink-soft transition hover:border-brand-dark hover:bg-brand-soft"
               >
                 {photoLoading ? (
-                  <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-gray-300 border-t-ink" />
+                  <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-line border-t-ink" />
                 ) : (
                   <ImagePlus size={28} />
                 )}
@@ -190,14 +190,14 @@ export default function AddToiletModal({
                 <button
                   type="button"
                   onClick={onRequestPick}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-ink py-2.5 text-xs font-bold text-white"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-ink py-2.5 text-xs font-bold text-surface"
                 >
                   <Crosshair size={15} /> Haritadan Seç
                 </button>
                 <button
                   type="button"
                   onClick={onUseMyLocation}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-white py-2.5 text-xs font-bold text-ink ring-1 ring-gray-200"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-surface py-2.5 text-xs font-bold text-ink ring-1 ring-line"
                 >
                   <LocateFixed size={15} /> Konumum
                 </button>
@@ -214,7 +214,7 @@ export default function AddToiletModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="örn. Moda Sahil Kafe"
               maxLength={60}
-              className={`w-full rounded-2xl border-2 bg-card px-4 py-3 text-[15px] font-medium outline-none transition placeholder:text-gray-400 focus:border-brand-dark focus:bg-white ${
+              className={`w-full rounded-2xl border-2 bg-card px-4 py-3 text-[15px] font-medium outline-none transition placeholder:text-ink-muted focus:border-brand-dark focus:bg-surface ${
                 errors.name ? 'border-red-300' : 'border-transparent'
               }`}
             />
@@ -227,14 +227,14 @@ export default function AddToiletModal({
               onChange={(e) => setDistrict(e.target.value)}
               placeholder="İlçe"
               maxLength={60}
-              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
+              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-surface"
             />
             <input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="Adres (isteğe bağlı)"
               maxLength={80}
-              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
+              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-surface"
             />
           </div>
 
@@ -251,7 +251,7 @@ export default function AddToiletModal({
                     type="button"
                     onClick={() => setCategory(c)}
                     className={`flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold transition ${
-                      active ? 'bg-ink text-white' : 'bg-card text-ink-soft hover:bg-gray-100'
+                      active ? 'bg-ink text-surface' : 'bg-card text-ink-soft hover:bg-line/60'
                     }`}
                   >
                     <Icon size={15} /> {CATEGORIES[c].label}
@@ -310,16 +310,16 @@ export default function AddToiletModal({
               onChange={(e) => setHours(e.target.value)}
               placeholder="Çalışma saatleri (örn. 09:00 – 22:00)"
               maxLength={40}
-              className="mt-2 w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
+              className="mt-2 w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-surface"
             />
           </div>
         </div>
 
-        <footer className="border-t border-gray-100 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
+        <footer className="border-t border-line px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
           <button
             type="submit"
             disabled={photoLoading || submitting}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-base font-extrabold text-ink shadow-float transition hover:bg-brand-dark active:scale-[.98] disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-4 text-base font-extrabold text-onbrand shadow-float transition hover:bg-brand-dark active:scale-[.98] disabled:opacity-60"
           >
             <Send size={18} /> Onaya Gönder
           </button>

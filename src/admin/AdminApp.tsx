@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { Loader2, LogOut, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useTheme } from '../hooks/useTheme';
 import AdminLogin from './AdminLogin';
 import AdminPanel from './AdminPanel';
 
 export default function AdminApp() {
   const { user, ready, logout } = useAuth();
+  useTheme(); // sistem/kayıtlı temayı panelde de uygula
 
   useEffect(() => {
     document.title = 'Yönetim Paneli · Tuvaletim Nerede?';
