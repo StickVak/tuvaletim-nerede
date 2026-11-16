@@ -23,6 +23,8 @@ import Sidebar from './components/Sidebar';
 import SearchBox from './components/SearchBox';
 import Toasts from './components/Toasts';
 import Logo from './components/Logo';
+import AuthModal from './components/AuthModal';
+import AccountButton from './components/AccountButton';
 
 const DEFAULT_FILTERS: Filters = { sort: 'distance', freeOnly: false };
 /** Masaüstü: kenar panel (16 + 400 + 16) */
@@ -199,6 +201,7 @@ export default function App() {
   };
 
   const openAdd = () => {
+    if (!auth.requireAuth()) return;
     closeEmergency();
     setSelectedId(null);
     setDraftLocation(null);
@@ -298,9 +301,11 @@ export default function App() {
           >
             <SettingsIcon size={21} />
           </button>
-          <div className="flex h-12 min-w-0 items-center gap-2 rounded-full bg-white/95 pl-1.5 pr-4 shadow-float backdrop-blur">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface shadow-float" title="Tuvaletim Nerede?">
             <Logo size={36} />
-            <span className="truncate text-[15px] font-extrabold tracking-tight">Tuvaletim Nerede?</span>
+          </span>
+          <div className="ml-auto">
+            <AccountButton variant="bar" />
           </div>
         </div>
       )}
@@ -417,6 +422,8 @@ export default function App() {
       )}
 
       <Toasts toasts={toasts} desktop={desktop} />
+
+      <AuthModal onWelcome={(name) => toast(`Hoş geldin, ${name}!`, 'success')} />
 
       <SettingsDrawer
         open={settingsOpen}

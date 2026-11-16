@@ -3,6 +3,7 @@ import type { Filters, LatLng, PlaceView } from '../types';
 import ToiletListItem from './ToiletListItem';
 import SearchBox from './SearchBox';
 import Logo from './Logo';
+import AccountButton from './AccountButton';
 import { Toggle } from './FilterPanel';
 
 interface Props {
@@ -43,6 +44,9 @@ export default function Sidebar({
       </header>
 
       <div className="px-5">
+        <div className="mb-3">
+          <AccountButton variant="sidebar" />
+        </div>
         <button
           type="button"
           onClick={onEmergency}
