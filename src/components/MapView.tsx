@@ -65,8 +65,12 @@ interface Props {
   places: PlaceView[];
   user: LatLng | null;
   selectedId: string | null;
-  emergencyId: string | null;
+  /** Rota hedefi; Acil modunda kırmızı, yol tarifinde seçili pin */
+  routeTargetId: string | null;
+  routeMode: 'emergency' | 'navigate' | null;
   route: LatLng[] | null;
+  /** true: kuş uçuşu (kesikli) çizgi */
+  routeApproximate: boolean;
   picking: boolean;
   pickedLocation: LatLng | null;
   fly: FlyCommand | null;
@@ -80,8 +84,10 @@ export default function MapView({
   places,
   user,
   selectedId,
-  emergencyId,
+  routeTargetId,
+  routeMode,
   route,
+  routeApproximate,
   picking,
   pickedLocation,
   fly,
@@ -95,7 +101,7 @@ export default function MapView({
   );
 
   return (
-    <div className={`absolute inset-0 z-0 ${picking ? 'picking' : ''}`}>
+    <div className={`absolute inset-0 z-0 ${picking ? 'picking' : ''} ${route ? 'routing' : ''}`}>
       <MapContainer
         center={[initialCenter.lat, initialCenter.lng]}
         zoom={13}
@@ -107,15 +113,16 @@ export default function MapView({
         <Controller fly={fly} onReady={onReady} />
         <ClickHandler onClick={onMapClick} />
 
-        {routeLatLngs && (
-          <>
-            <Polyline positions={routeLatLngs} pathOptions={{ color: '#2563EB', weight: 9, opacity: 0.3, lineCap: 'round' }} />
-            <Polyline
-              positions={routeLatLngs}
-              pathOptions={{ color: '#FFC300', weight: 5, opacity: 1, dashArray: '2 12', lineCap: 'round' }}
-            />
-          </>
-        )}
+        {routeLatLngs &&
+          (routeApproximate ? (
+            // Rota servisi yanıt vermedi: kesikli kuş uçuşu çizgi
+            <Polyline positions={routeLatLngs} pathOptions={{ color: '#2563EB', weight: 4, opacity: 0.9, dashArray: '6 10', lineCap: 'round' }} />
+          ) : (
+            <>
+              <Polyline positions={routeLatLngs} pathOptions={{ color: '#FFFFFF', weight: 10, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }} />
+              <Polyline positions={routeLatLngs} pathOptions={{ color: '#2563EB', weight: 6, opacity: 1, lineCap: 'round', lineJoin: 'round' }} />
+            </>
+          ))}
 
         {places.map((t) => (
           <Marker
@@ -124,10 +131,10 @@ export default function MapView({
             icon={toiletIcon(
               t.category,
               t.stats.isPaid ? 'paid' : 'free',
-              t.id === emergencyId ? 'emergency' : t.id === selectedId ? 'selected' : 'normal',
+              t.id === routeTargetId ? (routeMode === 'emergency' ? 'emergency' : 'selected') : t.id === selectedId ? 'selected' : 'normal',
             )}
             title={t.name}
-            zIndexOffset={t.id === emergencyId ? 1000 : t.id === selectedId ? 500 : 0}
+            zIndexOffset={t.id === routeTargetId ? 1000 : t.id === selectedId ? 500 : 0}
             eventHandlers={{
               click: (e) => {
                 // Konum seçme modunda pine dokunmak da o noktayı seçer

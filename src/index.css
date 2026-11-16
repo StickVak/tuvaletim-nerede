@@ -79,6 +79,10 @@ body {
 .picking .tn-pin:not(.is-new) {
   opacity: 0.45;
 }
+/* Rota açıkken çizgi okunsun: hedef dışındaki pinler soluk */
+.routing .tn-pin:not(.is-selected):not(.is-emergency) {
+  opacity: 0.35;
+}
 
 /* ---------- Tuvalet pini (Sarı-Beyaz) ---------- */
 .tn-pin {

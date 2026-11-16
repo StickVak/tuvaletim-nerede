@@ -39,13 +39,6 @@ export function toView(p: Place, user: LatLng | null): PlaceView {
   return { ...p, distance: user ? distanceMeters(user, p) : null };
 }
 
-/** Başlangıç noktası yoksa Google Maps kullanıcının kendi konumunu kullanır */
-export function googleMapsDirections(from: LatLng | null, to: LatLng): string {
-  const p = new URLSearchParams({ api: '1', destination: `${to.lat},${to.lng}`, travelmode: 'walking' });
-  if (from) p.set('origin', `${from.lat},${from.lng}`);
-  return `https://www.google.com/maps/dir/?${p.toString()}`;
-}
-
 /**
  * ACİL: 2 km içindeki ÜCRETSİZ mekanlar arasından yakınlık (%70) + puan (%30) skoruyla seçer;
  * oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz yoksa en yakın mekanı döner.

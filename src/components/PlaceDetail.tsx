@@ -1,20 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Accessibility, Baby, Clock, LogIn, MapPin, MessageSquareText, Navigation, Send, Sofa, Sparkles, Wallet, X } from 'lucide-react';
-import type { LatLng, Place, PlaceView, Vote } from '../types';
+import type { Place, PlaceView, Vote } from '../types';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { CATEGORIES, placePhoto } from '../lib/categories';
-import { formatDistance, formatScore, formatWalk, googleMapsDirections } from '../lib/geo';
+import { formatDistance, formatScore, formatWalk } from '../lib/geo';
 import StarRating from './StarRating';
 import { PriceBadge } from './Badges';
 import FeeVoteInput, { parsePrice } from './FeeVoteInput';
 
 interface Props {
   place: PlaceView;
-  user: LatLng | null;
   desktop: boolean;
   onClose: () => void;
   onVoted: (place: Place) => void;
+  /** Uygulama içi yol tarifi */
+  onRoute: (id: string) => void;
   onToast: (text: string, tone?: 'success' | 'info' | 'error') => void;
 }
 
@@ -44,7 +45,7 @@ function ScoreBar({ label, icon: Icon, value }: { label: string; icon: typeof Sp
   );
 }
 
-export default function PlaceDetail({ place, user, desktop, onClose, onVoted, onToast }: Props) {
+export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute, onToast }: Props) {
   const auth = useAuth();
   const cat = CATEGORIES[place.category];
   const CatIcon = cat.icon;
@@ -159,15 +160,14 @@ export default function PlaceDetail({ place, user, desktop, onClose, onVoted, on
               </div>
             )}
 
-            <a
-              href={googleMapsDirections(user, place)}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => onRoute(place.id)}
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-[15px] font-bold text-surface transition hover:opacity-90 active:scale-[.98]"
             >
               <Navigation size={18} className="text-brand" fill="currentColor" />
               Yol Tarifi{place.distance !== null && ` · ${formatDistance(place.distance)} · ${formatWalk(place.distance)}`}
-            </a>
+            </button>
 
             <section className="mt-6 rounded-3xl border-2 border-brand bg-brand/10 p-4" aria-label="Puan ver">
               <h3 className="text-base font-extrabold text-ink">{mine ? 'Oyunuz' : 'Bu tuvaleti puanla'}</h3>

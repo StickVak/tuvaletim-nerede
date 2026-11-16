@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type L from 'leaflet';
 import { Check, Crosshair, ListFilter, MapPin, Settings as SettingsIcon, Siren, X } from 'lucide-react';
-import type { EmergencyState, Filters, LatLng, PlaceDraft, PlaceView, ToastMessage } from './types';
+import type { Filters, LatLng, PlaceDraft, PlaceView, RouteState, ToastMessage } from './types';
 import { api } from './api';
 import { usePlaces } from './hooks/usePlaces';
 import { useAuth } from './hooks/useAuth';
 import { IZMIR_CENTER, pickEmergency, toView } from './lib/geo';
-import { fetchWalkingRoute } from './lib/route';
+import { fetchWalkingRoute, WALK_SPEED_MPS } from './lib/route';
 import { STORAGE_ERROR_EVENT, usePersistentState } from './hooks/usePersistentState';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useElementHeight } from './hooks/useElementHeight';
@@ -18,6 +18,7 @@ import FloatingControls from './components/FloatingControls';
 import ToiletListItem from './components/ToiletListItem';
 import PlaceDetail from './components/PlaceDetail';
 import EmergencyCard from './components/EmergencyCard';
+import RouteCard from './components/RouteCard';
 import SettingsDrawer from './components/SettingsDrawer';
 import AddToiletModal from './components/AddToiletModal';
 import Sidebar from './components/Sidebar';
@@ -63,10 +64,10 @@ export default function App() {
   const [addOpen, setAddOpen] = useState(false);
   const [picking, setPicking] = useState(false);
   const [draftLocation, setDraftLocation] = useState<LatLng | null>(null);
-  const [emergency, setEmergency] = useState<EmergencyState | null>(null);
+  const [route, setRoute] = useState<RouteState | null>(null);
   const [fly, setFly] = useState<FlyCommand | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
-  const emergencyReq = useRef(0);
+  const routeReq = useRef(0);
 
   const toast = useCallback((text: string, tone: ToastMessage['tone'] = 'info') => {
     const id = Date.now() + Math.random();
@@ -124,13 +125,13 @@ export default function App() {
 
   const markers = useMemo(() => {
     const base = filters.freeOnly ? views.filter((t) => !t.stats.isPaid) : views;
-    const ensure = [emergency?.placeId, selectedId].filter(Boolean) as string[];
+    const ensure = [route?.placeId, selectedId].filter(Boolean) as string[];
     const missing = ensure.filter((id) => !base.some((t) => t.id === id));
     return missing.length ? [...base, ...views.filter((t) => missing.includes(t.id))] : base;
-  }, [views, filters.freeOnly, emergency, selectedId]);
+  }, [views, filters.freeOnly, route, selectedId]);
 
   const selected = selectedId ? views.find((t) => t.id === selectedId) ?? null : null;
-  const emergencyPlace = emergency ? views.find((t) => t.id === emergency.placeId) ?? null : null;
+  const routePlace = route ? views.find((t) => t.id === route.placeId) ?? null : null;
   const H = rootHeight || window.innerHeight;
   const heights = snapHeights(H);
 
@@ -181,42 +182,55 @@ export default function App() {
 
   const zoom = (d: 1 | -1) => (d > 0 ? mapRef.current?.zoomIn() : mapRef.current?.zoomOut());
 
-  const startEmergency = async () => {
-    if (!user) {
-      // Konum yok ya da hâlâ bekleniyor: elle işaretleme modunu aç
-      setRemarking(true);
-      toast('Önce haritada konumunuzu işaretleyin.', 'error');
-      return;
-    }
+  /** Konum yok ya da hâlâ bekleniyor: elle işaretleme modunu aç */
+  const promptLocation = () => {
+    setRemarking(true);
+    toast('Önce haritada konumunuzu işaretleyin.', 'error');
+  };
+
+  /** Kullanıcının konumundan hedefe uygulama içi yaya rotası (OSRM; yanıt yoksa kuş uçuşu) */
+  const startRoute = async (target: PlaceView, mode: RouteState['mode']) => {
+    if (!user) return promptLocation();
+    const req = Date.now();
+    routeReq.current = req;
+    setSelectedId(null);
+    setSheetSnap('peek');
+    const straight = target.distance ?? 0;
+    setRoute({ placeId: target.id, mode, points: [user, target], approximate: true, distance: straight, duration: Math.round(straight / WALK_SPEED_MPS), loading: true });
+    const padding = desktop
+      ? { top: 70, right: 90, bottom: 70, left: SIDEBAR_SPACE + 460 }
+      : { top: mode === 'emergency' ? 290 : 200, right: 72, bottom: PEEK_HEIGHT + 50, left: 48 };
+    setFly({ key: req, bounds: [user, target], padding });
+
+    const r = await fetchWalkingRoute(user, target);
+    if (routeReq.current !== req) return;
+    setRoute((cur) => (cur ? { ...cur, ...r, loading: false } : cur));
+    if (!r.approximate) setFly({ key: Date.now(), bounds: r.points, padding });
+  };
+
+  const startEmergency = () => {
+    if (!user) return promptLocation();
     const target = pickEmergency(views);
     if (!target) {
       toast('Kayıtlı tuvalet bulunamadı.', 'error');
       return;
     }
-    const req = Date.now();
-    emergencyReq.current = req;
-    setSelectedId(null);
-    setSheetSnap('peek');
-    setEmergency({ placeId: target.id, route: [user, target], approximate: true });
-    const padding = desktop
-      ? { top: 70, right: 90, bottom: 70, left: SIDEBAR_SPACE + 460 }
-      : { top: 290, right: 72, bottom: PEEK_HEIGHT + 50, left: 48 };
-    setFly({ key: req, bounds: [user, target], padding });
-
-    const r = await fetchWalkingRoute(user, target);
-    if (emergencyReq.current !== req) return;
-    setEmergency({ placeId: target.id, route: r.points, approximate: r.approximate, routeDistance: r.distance });
-    if (!r.approximate) setFly({ key: Date.now(), bounds: r.points, padding });
+    void startRoute(target, 'emergency');
   };
 
-  const closeEmergency = () => {
-    emergencyReq.current = 0;
-    setEmergency(null);
+  const navigateTo = (id: string) => {
+    const target = views.find((p) => p.id === id);
+    if (target) void startRoute(target, 'navigate');
+  };
+
+  const closeRoute = () => {
+    routeReq.current = 0;
+    setRoute(null);
   };
 
   const openAdd = () => {
     if (!auth.requireAuth()) return;
-    closeEmergency();
+    closeRoute();
     setSelectedId(null);
     setDraftLocation(null);
     setAddOpen(true);
@@ -283,8 +297,10 @@ export default function App() {
         places={markers}
         user={user}
         selectedId={selectedId}
-        emergencyId={emergency?.placeId ?? null}
-        route={emergency?.route ?? null}
+        routeTargetId={route?.placeId ?? null}
+        routeMode={route?.mode ?? null}
+        route={route?.points ?? null}
+        routeApproximate={route?.approximate ?? false}
         picking={picking}
         pickedLocation={addOpen ? draftLocation : null}
         fly={fly}
@@ -297,7 +313,6 @@ export default function App() {
       {desktop && !picking && (
         <Sidebar
           places={listed}
-          user={user}
           filters={filters}
           onFiltersChange={setFilters}
           query={query}
@@ -306,12 +321,13 @@ export default function App() {
           hasLocation={Boolean(user)}
           onSelect={selectPlace}
           onEmergency={startEmergency}
+          onRoute={navigateTo}
           onOpenSettings={() => setSettingsOpen(true)}
         />
       )}
 
       {/* ---------------- MOBİL ---------------- */}
-      {!desktop && !picking && !emergency && !selected && (
+      {!desktop && !picking && !route && !selected && (
         <div className="absolute inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-20 flex items-center gap-2.5">
           <button
             type="button"
@@ -339,7 +355,7 @@ export default function App() {
           onAdd={openAdd}
           onZoom={zoom}
           bottom={(sheetSnap === 'full' ? heights.half : heights[sheetSnap]) + 16}
-          hidden={!desktop && (sheetSnap === 'full' || Boolean(emergency) || Boolean(selected))}
+          hidden={!desktop && (sheetSnap === 'full' || Boolean(route) || Boolean(selected))}
         />
       )}
 
@@ -381,7 +397,7 @@ export default function App() {
           ) : (
             <ul className="space-y-2.5 px-4 pb-6">
               {listed.map((t) => (
-                <ToiletListItem key={t.id} place={t} user={user} active={t.id === selectedId} onSelect={selectPlace} />
+                <ToiletListItem key={t.id} place={t} active={t.id === selectedId} onSelect={selectPlace} onRoute={navigateTo} />
               ))}
             </ul>
           )}
@@ -422,26 +438,30 @@ export default function App() {
         </div>
       )}
 
-      {emergency && emergencyPlace && !picking && (
+      {route && routePlace && !picking && route.mode === 'emergency' && (
         <EmergencyCard
-          place={emergencyPlace}
-          emergency={emergency}
-          user={user}
+          place={routePlace}
+          route={route}
           desktop={desktop}
-          onClose={closeEmergency}
+          onClose={closeRoute}
+          onGo={() => setRoute((r) => (r ? { ...r, mode: 'navigate' } : r))}
           onDetails={() => {
-            const id = emergencyPlace.id;
-            closeEmergency();
+            const id = routePlace.id;
+            closeRoute();
             selectPlace(id);
           }}
         />
       )}
 
-      {selected && !picking && !addOpen && (
-        <PlaceDetail key={selected.id} place={selected} user={user} desktop={desktop} onClose={closeDetail} onVoted={replacePlace} onToast={toast} />
+      {route && routePlace && !picking && route.mode === 'navigate' && (
+        <RouteCard place={routePlace} route={route} desktop={desktop} onClose={closeRoute} />
       )}
 
-      {markingLocation && !picking && !addOpen && !emergency && (
+      {selected && !picking && !addOpen && (
+        <PlaceDetail key={selected.id} place={selected} desktop={desktop} onClose={closeDetail} onVoted={replacePlace} onRoute={navigateTo} onToast={toast} />
+      )}
+
+      {markingLocation && !picking && !addOpen && !route && (
         <LocationBanner
           desktop={desktop}
           title={manualLocation ? 'Konumunuzu yeniden işaretleyin' : gpsUnavailable ? 'Konumunuza erişemedik.' : 'Konumunuz henüz alınamadı.'}

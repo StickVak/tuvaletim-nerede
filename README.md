@@ -29,7 +29,7 @@ Veritabanını sıfırlamak için sunucuyu durdurup `server/data/` klasörünü 
 Diğer komutlar:
 
 ```bash
-npm test          # sunucu (node:test) + Acil algoritması testleri
+npm test          # sunucu (node:test) + Acil algoritması ve rota testleri
 npm run build     # üretim derlemesi (dist/)
 ```
 
@@ -44,7 +44,8 @@ npm run build     # üretim derlemesi (dist/)
 ## Özellikler
 
 - **Gerçek konum:** Açılışta tarayıcının konum izni istenir ve harita GPS konumunuza odaklanır. İzin verilmezse veya konum alınamazsa üstte bir uyarı çıkar; haritada bulunduğunuz noktaya dokunarak konumunuzu işaretlersiniz (yalnızca o oturum için). Konum yokken harita İzmir merkezli açılır.
-- **Acil:** 2 km içindeki **ücretsiz** tuvaletler arasından yakınlık (%70) ve puan (%30) ağırlıklı en uygununu seçer; oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz tuvalet yoksa en yakın tuvaleti gösterir. Yürüme rotası çizilir, “Hemen Git” Google Maps'i açar.
+- **Acil:** 2 km içindeki **ücretsiz** tuvaletler arasından yakınlık (%70) ve puan (%30) ağırlıklı en uygununu seçer; oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz tuvalet yoksa en yakın tuvaleti gösterir. “Hemen Git” uygulama içi yol tarifine geçer.
+- **Uygulama içi yol tarifi:** Liste kartındaki, detay penceresindeki “Yol Tarifi” ve Acil'deki “Hemen Git” kullanıcıyı dışarı yönlendirmez; konumunuzdan tuvalete sokaklara oturan yaya rotası haritada çizilir. Üstteki kartta yürüme mesafesi, tahmini süre ve **Rotayı Bitir** bulunur. Rota motoru OSRM'dir ([`src/lib/route.ts`](src/lib/route.ts)): önce gerçek yaya profili olan `routing.openstreetmap.de`, yanıt vermezse `router.project-osrm.org` denenir. Genel demo sunucusu yalnızca araç profili çalıştırdığından orada süre yürüme hızından (4,8 km/sa) hesaplanır. İkisi de yanıt vermezse kesikli kuş uçuşu çizgi çizilir.
 - **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek ve puan vermek için giriş gerekir.
 - **Kitle kaynaklı puan ve ücret:**
   - Başlangıç verisinde hiç puan yoktur (`Henüz puanlanmadı · 0 oy`).
@@ -133,5 +134,6 @@ src/
   components/         # MapView, Sidebar, BottomSheet, PlaceDetail, AuthModal, LocationBanner, …
   admin/              # /admin paneli
   lib/geo.ts          # mesafe + Acil algoritması (geo.test.ts)
+  lib/route.ts        # OSRM yaya rotası + kuş uçuşu yedeği (route.test.ts)
 docs/superpowers/     # tasarım ve uygulama planı
 ```

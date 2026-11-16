@@ -1,5 +1,5 @@
 import { ListFilter, MapPin, Navigation, Settings as SettingsIcon, Siren, Sparkles } from 'lucide-react';
-import type { Filters, LatLng, PlaceView } from '../types';
+import type { Filters, PlaceView } from '../types';
 import ToiletListItem from './ToiletListItem';
 import SearchBox from './SearchBox';
 import Logo from './Logo';
@@ -8,7 +8,6 @@ import { Toggle } from './FilterPanel';
 
 interface Props {
   places: PlaceView[];
-  user: LatLng | null;
   filters: Filters;
   onFiltersChange: (f: Filters) => void;
   query: string;
@@ -17,11 +16,12 @@ interface Props {
   hasLocation: boolean;
   onSelect: (id: string) => void;
   onEmergency: () => void;
+  onRoute: (id: string) => void;
   onOpenSettings: () => void;
 }
 
 export default function Sidebar({
-  places, user, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onOpenSettings,
+  places, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onRoute, onOpenSettings,
 }: Props) {
   return (
     <aside className="absolute bottom-4 left-4 top-4 z-30 flex w-[400px] flex-col overflow-hidden rounded-[28px] bg-surface shadow-float ring-1 ring-line">
@@ -103,7 +103,7 @@ export default function Sidebar({
         ) : (
           <ul className="space-y-2.5">
             {places.map((p) => (
-              <ToiletListItem key={p.id} place={p} user={user} active={p.id === selectedId} onSelect={onSelect} />
+              <ToiletListItem key={p.id} place={p} active={p.id === selectedId} onSelect={onSelect} onRoute={onRoute} />
             ))}
           </ul>
         )}

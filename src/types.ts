@@ -72,11 +72,20 @@ export interface Filters {
   freeOnly: boolean;
 }
 
-export interface EmergencyState {
+/** Uygulama içi yaya rotası (Acil ya da Yol Tarifi) */
+export interface RouteState {
   placeId: string;
-  route: LatLng[];
+  /** emergency: Acil kartı gösterilir · navigate: rota bilgi kartı */
+  mode: 'emergency' | 'navigate';
+  points: LatLng[];
+  /** Rota servisi yanıt vermedi → kesikli kuş uçuşu çizgi */
   approximate: boolean;
-  routeDistance?: number;
+  /** metre */
+  distance: number;
+  /** saniye */
+  duration: number;
+  /** Sokak rotası hâlâ hesaplanıyor */
+  loading: boolean;
 }
 
 export interface ToastMessage {

@@ -1,18 +1,19 @@
 import { Navigation } from 'lucide-react';
-import type { LatLng, PlaceView } from '../types';
+import type { PlaceView } from '../types';
 import { CATEGORIES, placePhoto } from '../lib/categories';
-import { formatDistance, formatWalk, googleMapsDirections } from '../lib/geo';
+import { formatDistance, formatWalk } from '../lib/geo';
 import StarRating from './StarRating';
 import { FeatureIcons, PriceBadge, RatingText } from './Badges';
 
 interface Props {
   place: PlaceView;
-  user: LatLng | null;
   active?: boolean;
   onSelect: (id: string) => void;
+  /** Uygulama içi yol tarifi */
+  onRoute: (id: string) => void;
 }
 
-export default function ToiletListItem({ place, user, active, onSelect }: Props) {
+export default function ToiletListItem({ place, active, onSelect, onRoute }: Props) {
   const cat = CATEGORIES[place.category];
   return (
     <li>
@@ -51,11 +52,12 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
             </p>
           )}
         </div>
-        <a
-          href={googleMapsDirections(user, place)}
-          target="_blank"
-          rel="noreferrer"
-          onClick={(e) => e.stopPropagation()}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRoute(place.id);
+          }}
           className="flex shrink-0 flex-col items-center gap-1 self-stretch rounded-2xl bg-ink px-3 py-2 text-[10px] font-bold text-surface transition hover:opacity-90 active:scale-95"
           aria-label={`${place.name} için yol tarifi`}
         >
@@ -63,7 +65,7 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
             <Navigation size={18} className="text-brand" fill="currentColor" />
           </span>
           Yol Tarifi
-        </a>
+        </button>
       </div>
     </li>
   );
