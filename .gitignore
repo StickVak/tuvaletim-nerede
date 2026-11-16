@@ -6,3 +6,4 @@ dist
 .env
 .superpowers/
 server/data/
+scripts/.nominatim-cache.json
