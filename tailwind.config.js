@@ -4,9 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#FFD60A', dark: '#FFC300', soft: '#FFF6C7' },
-        ink: { DEFAULT: '#1A1A1A', soft: '#4A4A4A', muted: '#8A8A8A' },
-        card: '#F8F9FA',
+        brand: { DEFAULT: '#FFD60A', dark: '#FFC300', soft: 'rgb(var(--c-brand-soft) / <alpha-value>)' },
+        // Tema renkleri CSS değişkenlerinden gelir (src/index.css)
+        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+        card: 'rgb(var(--c-card) / <alpha-value>)',
+        line: 'rgb(var(--c-line) / <alpha-value>)',
+        ink: {
+          DEFAULT: 'rgb(var(--c-ink) / <alpha-value>)',
+          soft: 'rgb(var(--c-ink-soft) / <alpha-value>)',
+          muted: 'rgb(var(--c-ink-muted) / <alpha-value>)',
+        },
+        /** Sarı/açık zemin üzerindeki metin: temadan bağımsız koyu */
+        onbrand: '#1A1A1A',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],

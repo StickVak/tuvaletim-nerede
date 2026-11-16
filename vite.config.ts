@@ -11,7 +11,6 @@ export default defineConfig({
       output: {
         manualChunks: {
           map: ['leaflet', 'react-leaflet'],
-          db: ['dexie', 'dexie-react-hooks'],
         },
       },
     },

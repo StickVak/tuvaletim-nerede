@@ -1,5 +1,5 @@
 import { Coffee, Landmark, MapPin, ShoppingBag, Trees, type LucideIcon } from 'lucide-react';
-import type { FeeType, PlaceBase, ToiletCategory } from '../types';
+import type { Place, PlaceStats, ToiletCategory } from '../types';
 
 export const CATEGORIES: Record<ToiletCategory, { label: string; icon: LucideIcon; from: string; to: string }> = {
   avm: { label: 'AVM', icon: ShoppingBag, from: '#FFE566', to: '#FFC300' },
@@ -11,14 +11,11 @@ export const CATEGORIES: Record<ToiletCategory, { label: string; icon: LucideIco
 
 export const CATEGORY_ORDER: ToiletCategory[] = ['avm', 'kafe', 'belediye', 'park', 'diger'];
 
-export const FEE_LABELS: Record<FeeType, string> = {
-  free: 'Ücretsiz',
-  customers: 'Müşteriye Ücretsiz',
-  paid: 'Ücretli',
-};
-
-export function feeLabel(p: Pick<PlaceBase, 'fee' | 'price'>): string {
-  return p.fee === 'paid' && p.price ? p.price : FEE_LABELS[p.fee];
+/** `Ücretsiz`, `Ücretli` ya da `Ücretli • Ort. 12,5 ₺` */
+export function feeLabel(stats: Pick<PlaceStats, 'isPaid' | 'avgPrice'>): string {
+  if (!stats.isPaid) return 'Ücretsiz';
+  if (stats.avgPrice == null) return 'Ücretli';
+  return `Ücretli • Ort. ${stats.avgPrice.toLocaleString('tr-TR', { maximumFractionDigits: 1 })} ₺`;
 }
 
 const cache = new Map<string, string>();
@@ -51,6 +48,6 @@ function hash(s: string) {
 }
 
 /** Mekanın fotoğrafı; yoksa kategoriye göre temsili görsel */
-export function placePhoto(p: Pick<PlaceBase, 'photo' | 'category' | 'name'>): string {
+export function placePhoto(p: Pick<Place, 'photo' | 'category' | 'name'>): string {
   return p.photo || placeholderPhoto(p.category, hash(p.name));
 }

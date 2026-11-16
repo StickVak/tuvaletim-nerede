@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Accessibility, Baby, Camera, Crosshair, ImagePlus, LocateFixed, MapPin, Send, Trash2, X } from 'lucide-react';
-import type { FeeType, LatLng, PlaceBase, ToiletCategory } from '../types';
-import { CATEGORIES, CATEGORY_ORDER, FEE_LABELS } from '../lib/categories';
+import type { LatLng, PlaceDraft, ToiletCategory } from '../types';
+import { CATEGORIES, CATEGORY_ORDER } from '../lib/categories';
+import FeeVoteInput, { parsePrice } from './FeeVoteInput';
 import { readImageAsDataUrl } from '../lib/image';
 import StarRating from './StarRating';
 
@@ -12,10 +13,8 @@ interface Props {
   onUseMyLocation: () => void;
   onClose: () => void;
   desktop: boolean;
-  onSubmit: (draft: PlaceBase & { cleanliness: number; comfort: number }) => Promise<void> | void;
+  onSubmit: (draft: PlaceDraft) => Promise<void> | void;
 }
-
-export type PlaceDraft = PlaceBase & { cleanliness: number; comfort: number };
 
 export default function AddToiletModal({
   visible,
@@ -28,8 +27,8 @@ export default function AddToiletModal({
 }: Props) {
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ToiletCategory>('kafe');
-  const [fee, setFee] = useState<FeeType>('free');
-  const [city, setCity] = useState('');
+  const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  const [district, setDistrict] = useState('');
   const [address, setAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [price, setPrice] = useState('');
@@ -71,8 +70,9 @@ export default function AddToiletModal({
     if (!location) errs.location = 'Haritadan bir konum seçin.';
     if (!cleanliness) errs.cleanliness = 'Temizlik puanı verin.';
     if (!comfort) errs.comfort = 'Konfor puanı verin.';
+    if (isPaid === null) errs.fee = 'Ücretli mi ücretsiz mi, seçin.';
     setErrors(errs);
-    if (Object.values(errs).some(Boolean) || !location) return;
+    if (Object.values(errs).some(Boolean) || !location || isPaid === null) return;
 
     setSubmitting(true);
     try {
@@ -81,16 +81,13 @@ export default function AddToiletModal({
         category,
         lat: location.lat,
         lng: location.lng,
-        city: city.trim() || undefined,
+        district: district.trim() || undefined,
         address: address.trim() || undefined,
         photo: photo ?? undefined,
-        cleanliness,
-        comfort,
-        fee,
-        price: fee === 'paid' ? price.trim() || undefined : undefined,
         hours: hours.trim() || undefined,
         accessible,
         babyChanging,
+        vote: { cleanliness, comfort, isPaid, priceAmount: isPaid ? parsePrice(price) : null, comment: null },
       });
     } finally {
       setSubmitting(false);
@@ -226,16 +223,16 @@ export default function AddToiletModal({
 
           <div className="grid grid-cols-[2fr_3fr] gap-2">
             <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="Şehir"
-              maxLength={30}
+              value={district}
+              onChange={(e) => setDistrict(e.target.value)}
+              placeholder="İlçe"
+              maxLength={60}
               className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
             />
             <input
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              placeholder="Adres / ilçe (isteğe bağlı)"
+              placeholder="Adres (isteğe bağlı)"
               maxLength={80}
               className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-white"
             />
@@ -264,40 +261,6 @@ export default function AddToiletModal({
             </div>
           </div>
 
-          {/* Ücret */}
-          <div>
-            <span className="mb-1.5 block text-sm font-bold">Ücret durumu</span>
-            <div className="grid grid-cols-3 gap-1 rounded-2xl bg-card p-1">
-              {(['free', 'customers', 'paid'] as FeeType[]).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setFee(v)}
-                  className={`rounded-xl px-1 py-2.5 text-[13px] font-bold leading-tight transition ${
-                    fee === v
-                      ? v === 'free'
-                        ? 'bg-green-500 text-white shadow'
-                        : v === 'customers'
-                          ? 'bg-amber-400 text-ink shadow'
-                          : 'bg-brand text-ink shadow'
-                      : 'text-ink-muted'
-                  }`}
-                >
-                  {FEE_LABELS[v]}
-                </button>
-              ))}
-            </div>
-            {fee === 'paid' && (
-              <input
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="Ücret (örn. 10 ₺)"
-                maxLength={30}
-                className="mt-2 w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-[15px] font-medium outline-none focus:border-brand-dark focus:bg-white"
-              />
-            )}
-          </div>
-
           {/* Puanlar */}
           <div className="grid grid-cols-1 gap-2">
             <div className={`flex items-center justify-between rounded-2xl bg-card px-4 py-2 ${errors.cleanliness ? 'ring-2 ring-red-300' : ''}`}>
@@ -312,6 +275,12 @@ export default function AddToiletModal({
               <p className="text-xs font-semibold text-red-600">{errors.cleanliness || errors.comfort}</p>
             )}
           </div>
+
+          {/* Ücret: puanların hemen altında */}
+          <div className={errors.fee ? 'rounded-2xl ring-2 ring-red-300' : ''}>
+            <FeeVoteInput isPaid={isPaid} price={price} onChange={(p, v) => { setIsPaid(p); setPrice(v); }} />
+          </div>
+          {errors.fee && <p className="-mt-3 text-xs font-semibold text-red-600">{errors.fee}</p>}
 
           {/* Ek bilgiler */}
           <div>

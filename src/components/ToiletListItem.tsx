@@ -1,13 +1,13 @@
 import { Navigation } from 'lucide-react';
 import type { LatLng, PlaceView } from '../types';
 import { CATEGORIES, placePhoto } from '../lib/categories';
-import { formatDistance, formatScore, formatWalk, googleMapsDirections } from '../lib/geo';
+import { formatDistance, formatWalk, googleMapsDirections } from '../lib/geo';
 import StarRating from './StarRating';
-import { FeatureIcons, PriceBadge } from './Badges';
+import { FeatureIcons, PriceBadge, RatingText } from './Badges';
 
 interface Props {
   place: PlaceView;
-  user: LatLng;
+  user: LatLng | null;
   active?: boolean;
   onSelect: (id: string) => void;
 }
@@ -33,7 +33,7 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <PriceBadge place={place} />
+            <PriceBadge stats={place.stats} />
             <span className="truncate text-[11px] font-semibold text-ink-muted">
               {cat.label}
               {place.district ? ` · ${place.district}` : ''}
@@ -42,13 +42,14 @@ export default function ToiletListItem({ place, user, active, onSelect }: Props)
           </div>
           <h3 className="mt-1 truncate text-[15px] font-bold leading-tight text-ink">{place.name}</h3>
           <div className="mt-1 flex items-center gap-1.5">
-            <StarRating value={place.rating} size={12} />
-            <span className="text-xs font-bold text-ink">{place.ratingCount ? formatScore(place.rating) : '–'}</span>
-            <span className="text-[11px] text-ink-muted">({place.ratingCount})</span>
+            {place.stats.voteCount > 0 && <StarRating value={place.stats.rating} size={12} />}
+            <RatingText stats={place.stats} />
           </div>
-          <p className="mt-0.5 truncate text-xs font-medium text-ink-muted">
-            {formatDistance(place.distance)} · {formatWalk(place.distance)}
-          </p>
+          {place.distance !== null && (
+            <p className="mt-0.5 truncate text-xs font-medium text-ink-muted">
+              {formatDistance(place.distance)} · {formatWalk(place.distance)}
+            </p>
+          )}
         </div>
         <a
           href={googleMapsDirections(user, place)}

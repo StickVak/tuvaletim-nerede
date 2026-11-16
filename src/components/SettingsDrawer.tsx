@@ -1,20 +1,14 @@
-import { HeartHandshake, Info, MapPin, Star, X } from 'lucide-react';
-import type { Settings } from '../types';
-import { DEMO_LOCATION_LABEL } from '../db/seed';
+import { HeartHandshake, Info, Star, X } from 'lucide-react';
 import Logo from './Logo';
-import { Toggle } from './FilterPanel';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  settings: Settings;
-  onSettingsChange: (s: Settings) => void;
-  locationLabel: string;
   placeCount: number;
   myVoteCount: number;
 }
 
-export default function SettingsDrawer({ open, onClose, settings, onSettingsChange, locationLabel, placeCount, myVoteCount }: Props) {
+export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount }: Props) {
   if (!open) return null;
   return (
     <div className="absolute inset-0 z-50" role="dialog" aria-modal="true" aria-label="Ayarlar">
@@ -43,29 +37,8 @@ export default function SettingsDrawer({ open, onClose, settings, onSettingsChan
               <div className="flex items-center gap-1 text-2xl font-extrabold">
                 {myVoteCount} <Star size={16} className="text-brand-dark" fill="currentColor" />
               </div>
-              <div className="text-[11px] font-semibold text-ink-soft">Puan verdiğiniz mekan</div>
+              <div className="text-[11px] font-semibold text-ink-soft">Oy verdiğiniz mekan</div>
             </div>
-          </section>
-
-          <section>
-            <h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
-              <MapPin size={13} /> Konum
-            </h3>
-            <label className="flex cursor-pointer items-center gap-3 rounded-2xl bg-card p-3.5">
-              <div className="flex-1">
-                <div className="text-sm font-bold">Demo konumu kullan</div>
-                <div className="text-xs text-ink-muted">
-                  {DEMO_LOCATION_LABEL} · Şu an: {locationLabel}
-                </div>
-              </div>
-              <Toggle on={settings.forceDemoLocation} tone="ink" />
-              <input
-                type="checkbox"
-                className="sr-only"
-                checked={settings.forceDemoLocation}
-                onChange={(e) => onSettingsChange({ ...settings, forceDemoLocation: e.target.checked })}
-              />
-            </label>
           </section>
 
           <section>

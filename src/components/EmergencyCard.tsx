@@ -1,21 +1,21 @@
 import { Footprints, Info, Navigation, Siren, X } from 'lucide-react';
 import type { EmergencyState, LatLng, PlaceView } from '../types';
-import { formatDistance, formatScore, googleMapsDirections, walkMinutes } from '../lib/geo';
+import { formatDistance, googleMapsDirections, walkMinutes } from '../lib/geo';
 import { placePhoto } from '../lib/categories';
 import StarRating from './StarRating';
-import { PriceBadge } from './Badges';
+import { PriceBadge, RatingText } from './Badges';
 
 interface Props {
   place: PlaceView;
   emergency: EmergencyState;
-  user: LatLng;
+  user: LatLng | null;
   desktop: boolean;
   onClose: () => void;
   onDetails: () => void;
 }
 
 export default function EmergencyCard({ place, emergency, user, desktop, onClose, onDetails }: Props) {
-  const distance = emergency.routeDistance ?? place.distance;
+  const distance = emergency.routeDistance ?? place.distance ?? 0;
   return (
     <div
       className={`absolute z-40 animate-slide-down overflow-hidden rounded-[28px] bg-white shadow-float ring-1 ring-black/5 ${
@@ -36,9 +36,9 @@ export default function EmergencyCard({ place, emergency, user, desktop, onClose
         <div className="min-w-0 flex-1">
           <h2 className="truncate text-lg font-extrabold leading-tight text-ink">{place.name}</h2>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
-            <StarRating value={place.rating} size={13} />
-            <span className="text-xs font-bold">{formatScore(place.rating)}</span>
-            <PriceBadge place={place} />
+            {place.stats.voteCount > 0 && <StarRating value={place.stats.rating} size={13} />}
+            <RatingText stats={place.stats} />
+            <PriceBadge stats={place.stats} />
           </div>
           <div className="mt-2 flex items-baseline gap-3">
             <span className="text-2xl font-extrabold text-ink">{formatDistance(distance)}</span>

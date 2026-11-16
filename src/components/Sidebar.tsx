@@ -7,20 +7,20 @@ import { Toggle } from './FilterPanel';
 
 interface Props {
   places: PlaceView[];
-  user: LatLng;
+  user: LatLng | null;
   filters: Filters;
   onFiltersChange: (f: Filters) => void;
   query: string;
   onQueryChange: (q: string) => void;
   selectedId: string | null;
-  usingDemo: boolean;
+  hasLocation: boolean;
   onSelect: (id: string) => void;
   onEmergency: () => void;
   onOpenSettings: () => void;
 }
 
 export default function Sidebar({
-  places, user, filters, onFiltersChange, query, onQueryChange, selectedId, usingDemo, onSelect, onEmergency, onOpenSettings,
+  places, user, filters, onFiltersChange, query, onQueryChange, selectedId, hasLocation, onSelect, onEmergency, onOpenSettings,
 }: Props) {
   return (
     <aside className="absolute bottom-4 left-4 top-4 z-30 flex w-[400px] flex-col overflow-hidden rounded-[28px] bg-white shadow-float ring-1 ring-black/5">
@@ -29,7 +29,7 @@ export default function Sidebar({
         <div className="min-w-0 flex-1">
           <h1 className="text-lg font-extrabold leading-tight">Tuvaletim Nerede?</h1>
           <p className="flex items-center gap-1 text-xs font-medium text-ink-muted">
-            <MapPin size={12} className={usingDemo ? '' : 'text-blue-600'} /> {usingDemo ? 'Demo konumu' : 'Gerçek konumunuz'}
+            <MapPin size={12} className={hasLocation ? 'text-blue-600' : ''} /> {hasLocation ? 'Konumunuz belirlendi' : 'Konum bekleniyor'}
           </p>
         </div>
         <button
