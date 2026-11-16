@@ -15,7 +15,7 @@ export default function Toasts({ toasts, desktop }: { toasts: ToastMessage[]; de
           <div
             key={t.id}
             role="status"
-            className="flex max-w-full animate-slide-down items-start gap-2.5 rounded-2xl bg-ink px-4 py-3 text-sm font-medium text-white shadow-float"
+            className="flex max-w-full animate-slide-down items-start gap-2.5 rounded-2xl bg-night px-4 py-3 text-sm font-medium text-white shadow-float"
           >
             <Icon size={18} className={`mt-px shrink-0 ${color}`} />
             <span>{t.text}</span>

@@ -4,3 +4,6 @@ dist
 .DS_Store
 *.tsbuildinfo
 .env
+.superpowers/
+server/data/
+scripts/.nominatim-cache.json

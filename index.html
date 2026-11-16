@@ -16,6 +16,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <title>Tuvaletim Nerede?</title>
+    <script>
+      // Boyamadan önce temayı uygula (beyaz yanıp sönmeyi önler) — src/hooks/useTheme.ts ile aynı kural
+      try { var t = localStorage.getItem('tn.theme'); if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark'); } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

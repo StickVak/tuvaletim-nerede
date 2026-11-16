@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { ArrowLeft, Eye, EyeOff, KeyRound, Loader2, LogIn, ShieldCheck, User } from 'lucide-react';
-import type { AdminUser } from '../types';
-import { login, loginLockedFor } from './auth';
-import { ADMIN_FROM_ENV } from '../db/db';
+import { useAuth } from '../hooks/useAuth';
 import Logo from '../components/Logo';
 
-export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => void }) {
+export default function AdminLogin() {
+  const { login, logout } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
@@ -21,14 +20,13 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
     setBusy(true);
     setError('');
     try {
-      onLogin(await login(username, password));
+      const u = await login(username, password);
+      if (u.role !== 'admin') {
+        logout();
+        setError('Bu hesabın yönetici yetkisi yok.');
+      }
     } catch (err) {
-      const locked = loginLockedFor();
-      setError(
-        (err as Error).message === 'LOCKED' || locked
-          ? `Çok fazla hatalı deneme. ${Math.ceil(locked / 1000)} sn sonra tekrar deneyin.`
-          : 'Kullanıcı adı veya şifre hatalı.',
-      );
+      setError((err as Error).message);
     } finally {
       setBusy(false);
     }
@@ -40,7 +38,7 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
         <a href="/" className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft hover:text-ink">
           <ArrowLeft size={16} /> Haritaya dön
         </a>
-        <form onSubmit={submit} className="animate-slide-up rounded-[32px] bg-white p-7 shadow-float ring-1 ring-black/5">
+        <form onSubmit={submit} className="animate-slide-up rounded-[32px] bg-surface p-7 shadow-float ring-1 ring-line">
           <div className="flex items-center gap-3">
             <Logo size={48} />
             <div>
@@ -51,7 +49,7 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
 
           <label className="mt-7 block">
             <span className="mb-1.5 block text-sm font-bold">Kullanıcı adı</span>
-            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-white">
+            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-surface">
               <User size={17} className="text-ink-muted" />
               <input
                 value={username}
@@ -65,7 +63,7 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
 
           <label className="mt-4 block">
             <span className="mb-1.5 block text-sm font-bold">Şifre</span>
-            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-white">
+            <span className="flex items-center gap-2 rounded-2xl border-2 border-transparent bg-card px-3.5 focus-within:border-brand-dark focus-within:bg-surface">
               <KeyRound size={17} className="text-ink-muted" />
               <input
                 type={show ? 'text' : 'password'}
@@ -80,22 +78,23 @@ export default function AdminLogin({ onLogin }: { onLogin: (u: AdminUser) => voi
             </span>
           </label>
 
-          {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm font-semibold text-red-700" role="alert">{error}</p>}
+          {error && <p className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-700" role="alert">{error}</p>}
 
           <button
             type="submit"
             disabled={busy}
-            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-base font-bold text-white transition hover:bg-black disabled:opacity-60"
+            className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3.5 text-base font-bold text-surface transition hover:opacity-90 disabled:opacity-60"
           >
             {busy ? <Loader2 size={18} className="animate-spin" /> : <LogIn size={18} />} Giriş Yap
           </button>
 
-          {!ADMIN_FROM_ENV && (
+          {import.meta.env.DEV && (
             <p className="mt-5 flex items-start gap-2 rounded-2xl bg-brand-soft p-3 text-xs text-ink-soft">
               <ShieldCheck size={15} className="mt-px shrink-0" />
               <span>
-                Varsayılan test hesabı: <b className="font-mono">admin</b> / <b className="font-mono">admin123</b>. Değiştirmek için
-                <span className="font-mono"> .env</span> dosyasında <span className="font-mono">VITE_ADMIN_PASSWORD</span> tanımlayın.
+                Geliştirme: yönetici hesabı sunucudaki <span className="font-mono">.env</span> dosyasından (
+                <span className="font-mono">ADMIN_USERNAME</span> / <span className="font-mono">ADMIN_PASSWORD</span>) oluşturulur. Varsayılan{' '}
+                <b className="font-mono">admin</b> / <b className="font-mono">admin123</b>.
               </span>
             </p>
           )}

@@ -1,64 +1,68 @@
 import { useMemo, useState } from 'react';
 import { ExternalLink, MapPinOff, Pencil, Search, Trash2 } from 'lucide-react';
-import type { FeeType, Place, Review, ToiletCategory } from '../types';
-import { deletePlace } from '../db/repo';
-import { CATEGORIES, CATEGORY_ORDER, FEE_LABELS, placePhoto } from '../lib/categories';
-import { formatScore, placeAverages } from '../lib/geo';
+import type { Place, ToiletCategory } from '../types';
+import type { AdminVote } from './types';
+import { api } from '../api';
+import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../lib/categories';
+import { formatScore } from '../lib/geo';
 import { PriceBadge } from '../components/Badges';
 import PlaceEditModal from './PlaceEditModal';
 import { ConfirmDialog, EmptyState, PageHeader, selectCls } from './ui';
 
-export default function PlacesPage({ places, reviews, onToast }: { places: Place[]; reviews: Review[]; onToast: (t: string) => void }) {
+type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
+
+export default function PlacesPage({ places, votes, act }: { places: Place[]; votes: AdminVote[]; act: Act }) {
   const [q, setQ] = useState('');
-  const [city, setCity] = useState('');
+  const [district, setDistrict] = useState('');
   const [category, setCategory] = useState<ToiletCategory | ''>('');
-  const [fee, setFee] = useState<FeeType | ''>('');
+  const [fee, setFee] = useState<'' | 'paid' | 'free'>('');
   const [source, setSource] = useState<'' | 'seed' | 'user'>('');
   const [editing, setEditing] = useState<Place | null>(null);
   const [deleting, setDeleting] = useState<Place | null>(null);
 
-  const cities = useMemo(() => [...new Set(places.map((p) => p.city).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'tr')), [places]);
+  const districts = useMemo(() => [...new Set(places.map((p) => p.district).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'tr')), [places]);
   const reviewCount = useMemo(() => {
     const m = new Map<string, number>();
-    for (const r of reviews) m.set(r.placeId, (m.get(r.placeId) ?? 0) + 1);
+    for (const v of votes) m.set(v.placeId, (m.get(v.placeId) ?? 0) + 1);
     return m;
-  }, [reviews]);
+  }, [votes]);
 
   const items = useMemo(() => {
     const needle = q.trim().toLocaleLowerCase('tr-TR');
     return places
-      .filter((p) => !city || p.city === city)
+      .filter((p) => !district || p.district === district)
       .filter((p) => !category || p.category === category)
-      .filter((p) => !fee || p.fee === fee)
+      .filter((p) => !fee || p.stats.isPaid === (fee === 'paid'))
       .filter((p) => !source || p.source === source)
-      .filter((p) => !needle || [p.name, p.city, p.district, p.address].join(' ').toLocaleLowerCase('tr-TR').includes(needle))
+      .filter((p) => !needle || [p.name, p.district, p.address].join(' ').toLocaleLowerCase('tr-TR').includes(needle))
       .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-  }, [places, q, city, category, fee, source]);
+  }, [places, q, district, category, fee, source]);
 
   return (
     <>
       <PageHeader title="Tüm Mekanlar" subtitle={`${items.length} / ${places.length} mekan gösteriliyor`} />
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl bg-white px-3.5 py-2.5 ring-1 ring-gray-200 focus-within:ring-2 focus-within:ring-brand-dark">
+        <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 ring-1 ring-line focus-within:ring-2 focus-within:ring-brand-dark">
           <Search size={16} className="text-ink-muted" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad, ilçe, adres ara" className="w-full bg-transparent text-sm outline-none" />
         </label>
-        <select value={city} onChange={(e) => setCity(e.target.value)} className={selectCls} aria-label="Şehir">
-          <option value="">Tüm şehirler</option>
-          {cities.map((c) => <option key={c}>{c}</option>)}
+        <select value={district} onChange={(e) => setDistrict(e.target.value)} className={selectCls} aria-label="İlçe">
+          <option value="">Tüm ilçeler</option>
+          {districts.map((d) => <option key={d}>{d}</option>)}
         </select>
         <select value={category} onChange={(e) => setCategory(e.target.value as ToiletCategory | '')} className={selectCls} aria-label="Tür">
           <option value="">Tüm türler</option>
           {CATEGORY_ORDER.map((c) => <option key={c} value={c}>{CATEGORIES[c].label}</option>)}
         </select>
-        <select value={fee} onChange={(e) => setFee(e.target.value as FeeType | '')} className={selectCls} aria-label="Ücret">
+        <select value={fee} onChange={(e) => setFee(e.target.value as '' | 'paid' | 'free')} className={selectCls} aria-label="Ücret">
           <option value="">Tüm ücretler</option>
-          {(Object.keys(FEE_LABELS) as FeeType[]).map((f) => <option key={f} value={f}>{FEE_LABELS[f]}</option>)}
+          <option value="paid">Ücretli</option>
+          <option value="free">Ücretsiz</option>
         </select>
         <select value={source} onChange={(e) => setSource(e.target.value as '' | 'seed' | 'user')} className={selectCls} aria-label="Kaynak">
           <option value="">Tüm kaynaklar</option>
-          <option value="seed">Örnek veri</option>
+          <option value="seed">Başlangıç (OSM)</option>
           <option value="user">Topluluk</option>
         </select>
       </div>
@@ -66,28 +70,27 @@ export default function PlacesPage({ places, reviews, onToast }: { places: Place
       {items.length === 0 ? (
         <EmptyState icon={MapPinOff} title="Mekan bulunamadı" text="Arama veya filtreleri değiştirin." />
       ) : (
-        <div className="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5">
-          <ul className="divide-y divide-gray-100">
+        <div className="overflow-hidden rounded-3xl bg-surface shadow-sm ring-1 ring-line">
+          <ul className="divide-y divide-line">
             {items.map((p) => {
-              const avg = placeAverages(p);
               return (
                 <li key={p.id} className="flex flex-wrap items-center gap-4 px-4 py-3 hover:bg-card/60">
-                  <img src={placePhoto(p)} alt="" className="h-14 w-14 shrink-0 rounded-xl bg-gray-200 object-cover" />
+                  <img src={placePhoto(p)} alt="" className="h-14 w-14 shrink-0 rounded-xl bg-card object-cover" />
                   <div className="min-w-[180px] flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold">{p.name}</span>
-                      {p.source === 'user' && <span className="rounded-md bg-ink px-1.5 py-0.5 text-[10px] font-bold text-white">Topluluk</span>}
+                      {p.source === 'user' && <span className="rounded-md bg-[#1A1A1A] px-1.5 py-0.5 text-[10px] font-bold text-white">Topluluk</span>}
                     </div>
                     <div className="mt-0.5 text-xs text-ink-muted">
-                      {CATEGORIES[p.category].label} · {[p.district, p.city].filter(Boolean).join(', ') || '—'}
+                      {CATEGORIES[p.category].label} · {p.district || '—'}
                     </div>
                   </div>
-                  <PriceBadge place={p} />
+                  <PriceBadge stats={p.stats} />
                   <div className="w-36 text-xs">
                     <div className="font-bold">
-                      {p.ratingCount ? formatScore(avg.rating) : '–'} <span className="font-medium text-ink-muted">({p.ratingCount} oy)</span>
+                      {p.stats.voteCount ? formatScore(p.stats.rating) : '–'} <span className="font-medium text-ink-muted">({p.stats.voteCount} oy)</span>
                     </div>
-                    <div className="text-ink-muted">T {formatScore(avg.cleanliness)} · K {formatScore(avg.comfort)}</div>
+                    <div className="text-ink-muted">{p.stats.voteCount ? `T ${formatScore(p.stats.cleanliness)} · K ${formatScore(p.stats.comfort)}` : 'Henüz puanlanmadı'}</div>
                   </div>
                   <div className="flex gap-1">
                     <a href={`https://www.openstreetmap.org/?mlat=${p.lat}&mlon=${p.lng}#map=18/${p.lat}/${p.lng}`} target="_blank" rel="noreferrer"
@@ -97,7 +100,7 @@ export default function PlacesPage({ places, reviews, onToast }: { places: Place
                     <button type="button" onClick={() => setEditing(p)} className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold hover:bg-card">
                       <Pencil size={15} /> Düzenle
                     </button>
-                    <button type="button" onClick={() => setDeleting(p)} className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-50">
+                    <button type="button" onClick={() => setDeleting(p)} className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-red-600 hover:bg-red-500/10">
                       <Trash2 size={15} /> Sil
                     </button>
                   </div>
@@ -112,10 +115,7 @@ export default function PlacesPage({ places, reviews, onToast }: { places: Place
         <PlaceEditModal
           place={editing}
           onClose={() => setEditing(null)}
-          onSaved={() => {
-            onToast('Mekan güncellendi.');
-            setEditing(null);
-          }}
+          onSave={(changes) => act(() => api(`/admin/places/${editing.id}`, { method: 'PATCH', body: changes }), 'Mekan güncellendi.').then((ok) => ok && setEditing(null))}
         />
       )}
       {deleting && (
@@ -123,15 +123,15 @@ export default function PlacesPage({ places, reviews, onToast }: { places: Place
           title="Mekanı kalıcı olarak sil"
           text={
             <>
-              <b>“{deleting.name}”</b> ve ona ait {reviewCount.get(deleting.id) ?? 0} puan/yorum kaydı veritabanından kalıcı olarak silinecek. Bu işlem geri alınamaz.
+              <b>“{deleting.name}”</b> ve ona ait {reviewCount.get(deleting.id) ?? 0} oy kaydı veritabanından kalıcı olarak silinecek. Bu işlem geri alınamaz.
             </>
           }
           confirmLabel="Kalıcı olarak sil"
           onCancel={() => setDeleting(null)}
-          onConfirm={async () => {
-            await deletePlace(deleting.id);
-            onToast(`“${deleting.name}” silindi.`);
+          onConfirm={() => {
+            const { id, name } = deleting;
             setDeleting(null);
+            void act(() => api(`/admin/places/${id}`, { method: 'DELETE' }), `“${name}” silindi.`);
           }}
         />
       )}

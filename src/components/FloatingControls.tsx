@@ -15,7 +15,7 @@ interface Props {
   hidden?: boolean;
 }
 
-const round = 'flex h-12 w-12 items-center justify-center rounded-full bg-white text-ink shadow-float transition active:scale-95';
+const round = 'flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink shadow-float transition active:scale-95';
 
 export default function FloatingControls({ desktop, filters, onFiltersChange, onLocate, onAdd, onZoom, bottom, hidden }: Props) {
   const [open, setOpen] = useState(false);
@@ -40,11 +40,11 @@ export default function FloatingControls({ desktop, filters, onFiltersChange, on
       } ${hidden ? 'pointer-events-none translate-x-24 opacity-0' : ''}`}
     >
       {desktop ? (
-        <div className="flex flex-col overflow-hidden rounded-full bg-white shadow-float">
+        <div className="flex flex-col overflow-hidden rounded-full bg-surface shadow-float">
           <button type="button" aria-label="Yakınlaştır" onClick={() => onZoom(1)} className="flex h-12 w-12 items-center justify-center hover:bg-card">
             <Plus size={20} />
           </button>
-          <span className="mx-3 h-px bg-gray-200" />
+          <span className="mx-3 h-px bg-line" />
           <button type="button" aria-label="Uzaklaştır" onClick={() => onZoom(-1)} className="flex h-12 w-12 items-center justify-center hover:bg-card">
             <Minus size={20} />
           </button>
@@ -56,13 +56,13 @@ export default function FloatingControls({ desktop, filters, onFiltersChange, on
             aria-label="Filtre ve sıralama"
             aria-expanded={open}
             onClick={() => setOpen((o) => !o)}
-            className={`${round} ${open ? '!bg-ink !text-white' : ''}`}
+            className={`${round} ${open ? '!bg-ink !text-surface' : ''}`}
           >
             {open ? <X size={20} /> : <SlidersHorizontal size={20} />}
             {active && !open && <span className="absolute right-1 top-1 h-3 w-3 rounded-full border-2 border-white bg-brand-dark" />}
           </button>
           {open && (
-            <div className="absolute bottom-0 right-14 w-64 animate-fade-in rounded-3xl bg-white p-3 shadow-float">
+            <div className="absolute bottom-0 right-14 w-64 animate-fade-in rounded-3xl bg-surface p-3 shadow-float">
               <FilterPanel filters={filters} onChange={onFiltersChange} />
             </div>
           )}
@@ -78,7 +78,7 @@ export default function FloatingControls({ desktop, filters, onFiltersChange, on
         aria-label="Tuvalet ekle"
         title="Tuvalet ekle"
         onClick={onAdd}
-        className="flex h-14 w-14 items-center justify-center rounded-full bg-brand text-ink shadow-float ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
+        className="flex h-14 w-14 items-center justify-center rounded-full bg-brand text-onbrand shadow-float ring-4 ring-white transition hover:bg-brand-dark active:scale-95"
       >
         <Plus size={28} strokeWidth={2.75} />
       </button>

@@ -1,0 +1,3180 @@
+[
+ {
+  "id": "seed-optimum-avm",
+  "name": "İzmir Optimum AVM",
+  "category": "avm",
+  "district": "Gaziemir",
+  "address": "Akçay Caddesi, Beyazevler Mahallesi",
+  "lat": 38.3378556,
+  "lng": 27.1348158,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 402049604,
+   "display_name": "İzmir Optimum, Akçay Caddesi, Beyazevler Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-forum-bornova",
+  "name": "Forum Bornova",
+  "category": "avm",
+  "district": "Bornova",
+  "address": "372. Sokak, Kazımdirik Mahallesi",
+  "lat": 38.4508432,
+  "lng": 27.2114042,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 153653899,
+   "display_name": "Forum Bornova, 372. Sokak, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-istinyepark-izmir",
+  "name": "İstinyePark İzmir",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Ali Resmi Tufan Caddesi, Bahçelerarası Mahallesi",
+  "lat": 38.3998313,
+  "lng": 27.0682329,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 496188242,
+   "display_name": "İstinyePark İzmir, Ali Resmi Tufan Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-agora-avm",
+  "name": "Agora AVM",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Mithatpaşa Caddesi Yanyolu, Bahçelerarası Mahallesi",
+  "lat": 38.3949769,
+  "lng": 27.052482,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "relation",
+   "id": 12008698,
+   "display_name": "Agora AVM, Mithatpaşa Caddesi Yanyolu, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-hilltown-karsiyaka",
+  "name": "Hilltown Karşıyaka",
+  "category": "avm",
+  "district": "Çiğli",
+  "address": "8293. Sokak, Ataşehir Mahallesi",
+  "lat": 38.4787837,
+  "lng": 27.0742053,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 92918712,
+   "display_name": "Hilltown Karşıyaka, 8293. Sokak, Ataşehir Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-mavibahce-avm",
+  "name": "MaviBahçe AVM",
+  "category": "avm",
+  "district": "Karşıyaka",
+  "address": "2040/4.Sokak, Mavişehir Mahallesi",
+  "lat": 38.4735588,
+  "lng": 27.0743195,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "relation",
+   "id": 5960237,
+   "display_name": "MaviBahçe, 2040/4.Sokak, Mavişehir Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-konak-pier",
+  "name": "Konak Pier",
+  "category": "avm",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Akdeniz Mahallesi",
+  "lat": 38.4227831,
+  "lng": 27.1295837,
+  "hours": "10:00-22:00",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1360403892,
+   "display_name": "Konak Pier, 19, Atatürk Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-point-bornova",
+  "name": "Point Bornova",
+  "category": "avm",
+  "district": "Bornova",
+  "address": "Yeşilova Mahallesi",
+  "lat": 38.4308909,
+  "lng": 27.2102157,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 839313143,
+   "display_name": "Point Bornova, Yeşilova Mahallesi, Bornova, İzmir, Ege Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-ege-perla",
+  "name": "Ege Perla",
+  "category": "avm",
+  "district": "Konak",
+  "address": "Çınarlı Mahallesi",
+  "lat": 38.4472711,
+  "lng": 27.1745672,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1304501841,
+   "display_name": "Ege Perla, Çınarlı Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-starbucks-buca-tinaztepe",
+  "name": "Starbucks Buca (Tınaztepe çevresi)",
+  "category": "kafe",
+  "district": "Buca",
+  "address": "203/52. Sokak, Kuruçeşme Mahallesi",
+  "lat": 38.3727849,
+  "lng": 27.1932932,
+  "hours": "08:00-23:00",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 8008907824,
+   "display_name": "Starbucks, 6/A, 203/52. Sokak, Kuruçeşme Mahallesi, Buca, İzmir, Ege Bölgesi, 35400, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-sirinyer-izban-kafe",
+  "name": "Coffee Lab (Şirinyer İZBAN)",
+  "category": "kafe",
+  "district": "Buca",
+  "address": "Aydın Hatboyu Caddesi, Hürriyet Mahallesi",
+  "lat": 38.3935735,
+  "lng": 27.1467809,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 761081377,
+   "display_name": "Coffee Lab, Aydın Hatboyu Caddesi, Şirinyer, Hürriyet Mahallesi, Buca, İzmir, Ege Bölgesi, 35370, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-starbucks-kibris-sehitleri",
+  "name": "Starbucks Alsancak Kıbrıs Şehitleri",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Kıbrıs Şehitleri Caddesi, Alsancak Mahallesi",
+  "lat": 38.4405639,
+  "lng": 27.1441553,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5284001055,
+   "display_name": "Starbucks, Kıbrıs Şehitleri Caddesi, Alsancak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-starbucks-konak-pier",
+  "name": "Starbucks Konak Pier",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Akdeniz Mahallesi",
+  "lat": 38.4233562,
+  "lng": 27.1290889,
+  "hours": "10:00-22:00",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12593565907,
+   "display_name": "Starbucks, 19, Atatürk Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-starbucks-bornova-kucukpark",
+  "name": "Starbucks Bornova Küçükpark",
+  "category": "kafe",
+  "district": "Bornova",
+  "address": "Süvari Caddesi, Kazımdirik Mahallesi",
+  "lat": 38.4614285,
+  "lng": 27.2131966,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 6797009581,
+   "display_name": "Starbucks, Süvari Caddesi, Özkanlar, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-starbucks-karsiyaka-carsi",
+  "name": "Starbucks Karşıyaka Çarşı",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "Yalı Bulvarı, Donanmacı Mahallesi",
+  "lat": 38.4546591,
+  "lng": 27.1183635,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13327610272,
+   "display_name": "Starbucks, Yalı Bulvarı, Donanmacı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35580, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-starbucks-bostanli",
+  "name": "Starbucks Bostanlı Sahil",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "Girne Bulvarı, Bostanlı Mahallesi",
+  "lat": 38.4525754,
+  "lng": 27.1045604,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 6672553563,
+   "display_name": "Starbucks, Girne Bulvarı, Bostanlı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-wc-buca-hasanaga",
+  "name": "Buca Hasanağa Bahçesi Belediye WC",
+  "category": "belediye",
+  "district": "Buca",
+  "address": "63. Sokak, Adatepe Mahallesi",
+  "lat": 38.3820696,
+  "lng": 27.1771234,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14244999501,
+   "display_name": "63. Sokak, Adatepe Mahallesi, Buca, İzmir, Ege Bölgesi, 35400, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-wc-sirinyer",
+  "name": "Şirinyer Parkı / İZBAN Belediye WC",
+  "category": "belediye",
+  "district": "Buca",
+  "address": "Aydın Hatboyu Caddesi, İnkılap Mahallesi",
+  "lat": 38.3910296,
+  "lng": 27.1473452,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": true,
+  "osm": {
+   "type": "way",
+   "id": 1052446932,
+   "display_name": "Aydın Hatboyu Caddesi, İnkılap Mahallesi, Buca, İzmir, Ege Bölgesi, 35380, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-wc-konak-kemeralti",
+  "name": "Konak Meydanı / Kemeraltı Girişi Belediye WC",
+  "category": "belediye",
+  "district": "Konak",
+  "address": "Mustafa Kemal Sahil Bulvarı, Konak Mahallesi",
+  "lat": 38.4184129,
+  "lng": 27.1268463,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1453413507,
+   "display_name": "Mustafa Kemal Sahil Bulvarı, Kemeraltı, Konak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-wc-alsancak-gundogdu",
+  "name": "Alsancak Kordon / Gündoğdu Belediye WC",
+  "category": "belediye",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Alsancak Mahallesi",
+  "lat": 38.4390091,
+  "lng": 27.1411972,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 913402649,
+   "display_name": "Atatürk Caddesi, Alsancak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-wc-kulturpark",
+  "name": "Kültürpark (Fuar) Belediye WC",
+  "category": "belediye",
+  "district": "Konak",
+  "address": "Şair Eşref Bulvarı, Mimar Sinan Mahallesi",
+  "lat": 38.4287305,
+  "lng": 27.1438876,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12214265201,
+   "display_name": "Şair Eşref Bulvarı, Mimar Sinan Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-wc-bornova-meydan",
+  "name": "Bornova Merkez Meydan Belediye WC",
+  "category": "belediye",
+  "district": "Bornova",
+  "address": "Bornova Cumhuriyet Meydanı çevresi (yaklaşık konum)",
+  "lat": 38.465889,
+  "lng": 27.2194516,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": null,
+  "approximate": true
+ },
+ {
+  "id": "seed-wc-karsiyaka-iskele",
+  "name": "Karşıyaka İskele / Çarşı Belediye WC",
+  "category": "belediye",
+  "district": "Karşıyaka",
+  "address": "Karşıyaka Vapur İskelesi çevresi (yaklaşık konum)",
+  "lat": 38.4549243,
+  "lng": 27.1204619,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": null,
+  "approximate": true
+ },
+ {
+  "id": "seed-wc-bostanli-sahil",
+  "name": "Bostanlı Sahil Belediye WC",
+  "category": "belediye",
+  "district": "Karşıyaka",
+  "address": "Hasan Ali Yücel Bulvarı, Bostanlı Mahallesi",
+  "lat": 38.4556791,
+  "lng": 27.0929159,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9779419008,
+   "display_name": "Hasan Ali Yücel Bulvarı, Bostanlı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14204624001",
+  "name": "Umumi Tuvalet – Alaçatı",
+  "category": "diger",
+  "district": "Çeşme",
+  "address": "11004. Sokak, Alaçatı Mahallesi",
+  "lat": 38.2833664,
+  "lng": 26.3754748,
+  "hours": "24/7",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14204624001,
+   "display_name": "11004. Sokak, Alaçatı Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35937, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n10110098518",
+  "name": "Starbucks Çeşme – Musalla",
+  "category": "kafe",
+  "district": "Çeşme",
+  "address": "1016. Sokak, Musalla Mahallesi",
+  "lat": 38.3198597,
+  "lng": 26.3023278,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 10110098518,
+   "display_name": "Starbucks, 1016. Sokak, Musalla Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11269527625",
+  "name": "Umumi Tuvalet – Musalla",
+  "category": "diger",
+  "district": "Çeşme",
+  "address": "3053. Sokak, Musalla Mahallesi",
+  "lat": 38.3231494,
+  "lng": 26.3022484,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11269527625,
+   "display_name": "3053. Sokak, Musalla Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14209680931",
+  "name": "Umumi Tuvalet – Celal Bayar",
+  "category": "diger",
+  "district": "Çeşme",
+  "address": "5219. Sokak, Celal Bayar Mahallesi",
+  "lat": 38.3078476,
+  "lng": 26.3776059,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14209680931,
+   "display_name": "5219. Sokak, Celal Bayar Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14209705373",
+  "name": "Umumi Tuvalet – Celal Bayar (2)",
+  "category": "diger",
+  "district": "Çeşme",
+  "address": "5221. Sokak, Celal Bayar Mahallesi",
+  "lat": 38.3089243,
+  "lng": 26.3769954,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14209705373,
+   "display_name": "5221. Sokak, Celal Bayar Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14219211539",
+  "name": "Starbucks Urla – İzmir-Çeşme yolu",
+  "category": "kafe",
+  "district": "Urla",
+  "address": "İzmir-Çeşme yolu",
+  "lat": 38.3141899,
+  "lng": 26.6357467,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14219211539,
+   "display_name": "Starbucks, İzmir-Çeşme yolu, İYTE Yerleşkesi, Gülbahçe Mahallesi, Urla, İzmir, Ege Bölgesi, 35433, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9863956700",
+  "name": "Umumi Tuvalet – Yalı",
+  "category": "diger",
+  "district": "Çeşme",
+  "address": "6000. Sokak, Yalı Mahallesi",
+  "lat": 38.382747,
+  "lng": 26.4765719,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9863956700,
+   "display_name": "6000. Sokak, Yalı Mahallesi, Germiyan Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12842912500",
+  "name": "Umumi Tuvalet – Urla",
+  "category": "diger",
+  "district": "Urla",
+  "address": "Karaburun Yolu",
+  "lat": 38.32207,
+  "lng": 26.6326349,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12842912500,
+   "display_name": "Karaburun Yolu, İYTE Yerleşkesi, Gülbahçe Mahallesi, Urla, İzmir, Ege Bölgesi, 35433, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11022634380",
+  "name": "Umumi Tuvalet – Karaburun",
+  "category": "diger",
+  "district": "Karaburun",
+  "address": "D 505",
+  "lat": 38.4725159,
+  "lng": 26.613034,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11022634380,
+   "display_name": "D 505, Mordoğan Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35970, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9002730910",
+  "name": "Umumi Tuvalet – Merkez",
+  "category": "diger",
+  "district": "Karaburun",
+  "address": "Aşağı Çeşme Sokak, Merkez Mahallesi",
+  "lat": 38.6428948,
+  "lng": 26.4950019,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9002730910,
+   "display_name": "Aşağı Çeşme Sokak, Merkez Mahallesi, Saip Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35960, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5538727153",
+  "name": "Umumi Tuvalet – İskele",
+  "category": "diger",
+  "district": "Karaburun",
+  "address": "Kuyucak Caddesi, İskele Mahallesi",
+  "lat": 38.6567742,
+  "lng": 26.4681002,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5538727153,
+   "display_name": "Kuyucak Caddesi, Akçakilise, İskele Mahallesi, Bozköy Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35960, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n2959837669",
+  "name": "Umumi Tuvalet – Merkez (2)",
+  "category": "diger",
+  "district": "Karaburun",
+  "address": "2100. Sokak, Merkez Mahallesi",
+  "lat": 38.6496877,
+  "lng": 26.50769,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 2959837669,
+   "display_name": "2100. Sokak, Merkez Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35960, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1540726048",
+  "name": "Park Renna",
+  "category": "avm",
+  "district": "Seferihisar",
+  "address": "Hıdırlık Caddesi",
+  "lat": 38.1953489,
+  "lng": 26.836957,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1540726048,
+   "display_name": "Park Renna, Hıdırlık Caddesi, Camikebir Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5093856452",
+  "name": "Teos Marina AVM",
+  "category": "avm",
+  "district": "Seferihisar",
+  "address": "Teos marina İçyolu, Sığacık Mahallesi",
+  "lat": 38.1923763,
+  "lng": 26.7839131,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5093856452,
+   "display_name": "Teos Marina AVM, Teos marina İçyolu, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13050125370",
+  "name": "Starbucks Seferihisar – İzmir Seferihisar Yolu",
+  "category": "kafe",
+  "district": "Seferihisar",
+  "address": "İzmir Seferihisar Yolu",
+  "lat": 38.194836,
+  "lng": 26.8346052,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13050125370,
+   "display_name": "Starbucks, 54, İzmir Seferihisar Yolu, Camikebir Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w868144899",
+  "name": "Umumi Tuvalet – Sığacık",
+  "category": "diger",
+  "district": "Seferihisar",
+  "address": "137. Sokak, Sığacık Mahallesi",
+  "lat": 38.1963806,
+  "lng": 26.7877827,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 868144899,
+   "display_name": "137. Sokak, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w865916982",
+  "name": "Umumi Tuvalet – Sığacık (2)",
+  "category": "diger",
+  "district": "Seferihisar",
+  "address": "Teos Caddesi, Sığacık Mahallesi",
+  "lat": 38.1796323,
+  "lng": 26.7832226,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 865916982,
+   "display_name": "Teos Caddesi, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11161986076",
+  "name": "Umumi Tuvalet – Seferihisar",
+  "category": "diger",
+  "district": "Seferihisar",
+  "address": "İnönü Caddesi",
+  "lat": 38.19474,
+  "lng": 26.839178,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11161986076,
+   "display_name": "İnönü Caddesi, Hıdırlık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9968202902",
+  "name": "Umumi Tuvalet – Sığacık (3)",
+  "category": "diger",
+  "district": "Seferihisar",
+  "address": "Akkum Caddesi, Sığacık Mahallesi",
+  "lat": 38.1895584,
+  "lng": 26.7718374,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9968202902,
+   "display_name": "Akkum Caddesi, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14056235261",
+  "name": "Umumi Tuvalet – Seferihisar (2)",
+  "category": "diger",
+  "district": "Seferihisar",
+  "address": "Azmak Mevki",
+  "lat": 38.2218148,
+  "lng": 26.7594425,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14056235261,
+   "display_name": "Azmak Mevki, Düzce Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1553970629",
+  "name": "Urla Mall",
+  "category": "avm",
+  "district": "Güzelbahçe",
+  "address": "İzmir-Çeşme Otoyolu, Yelki Mahallesi",
+  "lat": 38.3565592,
+  "lng": 26.857214,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1553970629,
+   "display_name": "Urla Mall, İzmir-Çeşme Otoyolu, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w923203738",
+  "name": "Urla Bamboo AVM",
+  "category": "avm",
+  "district": "Urla",
+  "address": "İzmir-Çeşme Yolu, Kalabak Mahallesi",
+  "lat": 38.335392,
+  "lng": 26.7709005,
+  "hours": "Mo-Su 10:00-22:00",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 923203738,
+   "display_name": "Urla Bamboo AVM, 6, İzmir-Çeşme Yolu, Kalabak Mahallesi, Urla, İzmir, Ege Bölgesi, 35441, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1553970630",
+  "name": "Starbucks Güzelbahçe – Yelki",
+  "category": "kafe",
+  "district": "Güzelbahçe",
+  "address": "İzmir-Çeşme Otoyolu, Yelki Mahallesi",
+  "lat": 38.3550774,
+  "lng": 26.8562602,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1553970630,
+   "display_name": "Starbucks, İzmir-Çeşme Otoyolu, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5440936449",
+  "name": "Starbucks Güzelbahçe – Yelki (2)",
+  "category": "kafe",
+  "district": "Güzelbahçe",
+  "address": "İzmir-Çeşme Otoyolu, Yelki Mahallesi",
+  "lat": 38.3544724,
+  "lng": 26.8559003,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5440936449,
+   "display_name": "Starbucks, İzmir-Çeşme Otoyolu, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12812065201",
+  "name": "Starbucks Güzelbahçe – Kahramandere",
+  "category": "kafe",
+  "district": "Güzelbahçe",
+  "address": "743. Sokak, Kahramandere Mahallesi",
+  "lat": 38.3569076,
+  "lng": 26.8709999,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12812065201,
+   "display_name": "Starbucks, 743. Sokak, Kahramandere Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9966726424",
+  "name": "Umumi Tuvalet – 75.Yıl Cumhuriyet",
+  "category": "diger",
+  "district": "Menemen",
+  "address": "Gediz Deltası Yolu, 75.Yıl Cumhuriyet Mahallesi",
+  "lat": 38.5332486,
+  "lng": 26.8981113,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9966726424,
+   "display_name": "Gediz Deltası Yolu, 75.Yıl Cumhuriyet Mahallesi, Süzbeyli Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5265418190",
+  "name": "Umumi Tuvalet – Kalabak",
+  "category": "diger",
+  "district": "Urla",
+  "address": "Mareşal Fevzi Çakmak Bulvarı, Kalabak Mahallesi",
+  "lat": 38.356978,
+  "lng": 26.8122382,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5265418190,
+   "display_name": "Mareşal Fevzi Çakmak Bulvarı, Kalabak Mahallesi, Urla, İzmir, Ege Bölgesi, 35441, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n3921776090",
+  "name": "Umumi Tuvalet – Hacı İsa",
+  "category": "diger",
+  "district": "Urla",
+  "address": "Pazaryeri Sokak, Hacı İsa Mahallesi",
+  "lat": 38.3234191,
+  "lng": 26.7667847,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 3921776090,
+   "display_name": "Pazaryeri Sokak, Hacı İsa Mahallesi, Urla, İzmir, Ege Bölgesi, 35430, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1164885061",
+  "name": "Umumi Tuvalet – Yelki",
+  "category": "diger",
+  "district": "Güzelbahçe",
+  "address": "2712/1. Sokak, Yelki Mahallesi",
+  "lat": 38.338438,
+  "lng": 26.8461569,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1164885061,
+   "display_name": "2712/1. Sokak, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n2512676620",
+  "name": "Foça",
+  "category": "diger",
+  "district": "Foça",
+  "address": "Reha Midilli Cd., Fevzipaşa Mahallesi",
+  "lat": 38.666842,
+  "lng": 26.754705,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 2512676620,
+   "display_name": "Foça, Reha Midilli Cd., Fevzipaşa Mahallesi, Foça, İzmir, Ege Bölgesi, 35680, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13423627885",
+  "name": "Umumi Tuvalet – Mustafa Kemal Atatürk",
+  "category": "diger",
+  "district": "Foça",
+  "address": "Ali Stair Caddesi, Mustafa Kemal Atatürk Mahallesi",
+  "lat": 38.7422025,
+  "lng": 26.8405729,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13423627885,
+   "display_name": "Ali Stair Caddesi, Yenifoça, Mustafa Kemal Atatürk Mahallesi, Foça, İzmir, Ege Bölgesi, 35680, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14173457775",
+  "name": "Umumi Tuvalet – Dikili",
+  "category": "diger",
+  "district": "Dikili",
+  "address": "Namık Kemal Caddesi",
+  "lat": 38.9360137,
+  "lng": 26.9341654,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14173457775,
+   "display_name": "Namık Kemal Caddesi, Çandarlı Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n7018070870",
+  "name": "Umumi Tuvalet – Dikili (2)",
+  "category": "diger",
+  "district": "Dikili",
+  "address": "Denizköy 1 Sokağı",
+  "lat": 38.9537635,
+  "lng": 26.8103502,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 7018070870,
+   "display_name": "Denizköy 1 Sokağı, Denizköy, Denizköy Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14091912476",
+  "name": "Umumi Tuvalet – Dikili (3)",
+  "category": "diger",
+  "district": "Dikili",
+  "address": "Polyak 6. Sokak",
+  "lat": 39.1134517,
+  "lng": 26.8664331,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14091912476,
+   "display_name": "Polyak 6. Sokak, Polyak Sitesi, Kabakum Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1096782925",
+  "name": "Umumi Tuvalet – Gazipaşa",
+  "category": "diger",
+  "district": "Dikili",
+  "address": "Şehit Sami Akbulut Caddesi, Gazipaşa Mahallesi",
+  "lat": 39.0675151,
+  "lng": 26.8855995,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1096782925,
+   "display_name": "Şehit Sami Akbulut Caddesi, Gazipaşa Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11266338690",
+  "name": "Umumi Tuvalet – Menderes",
+  "category": "diger",
+  "district": "Menderes",
+  "address": "Klaros yolu",
+  "lat": 38.0036727,
+  "lng": 27.1935218,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11266338690,
+   "display_name": "Klaros yolu, Ahmetbeyli Mahallesi, Menderes, İzmir, Ege Bölgesi, 35471, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w502731151",
+  "name": "ÜLKEA Merkez Menderes AVM",
+  "category": "avm",
+  "district": "Menderes",
+  "address": "İzmir-Aydın yolu, Görece Cumhuriyet Mahallesi",
+  "lat": 38.2755507,
+  "lng": 27.1501304,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 502731151,
+   "display_name": "ÜLKEA Merkez Menderes AVM, No:24, İzmir-Aydın yolu, Görece Cumhuriyet Mahallesi, Menderes, İzmir, Ege Bölgesi, 35470, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n7020202185",
+  "name": "Starbucks Gaziemir – Dokuz Eylül",
+  "category": "kafe",
+  "district": "Gaziemir",
+  "address": "İç Hatlar Gidiş, Dokuz Eylül Mahallesi",
+  "lat": 38.2913149,
+  "lng": 27.1489284,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 7020202185,
+   "display_name": "Starbucks, İç Hatlar Gidiş, Dokuz Eylül Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13094257349",
+  "name": "Umumi Tuvalet – Gümüldür Atatürk",
+  "category": "diger",
+  "district": "Menderes",
+  "address": "Sahil Cd., Gümüldür Atatürk Mahallesi",
+  "lat": 38.0670817,
+  "lng": 26.9993341,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13094257349,
+   "display_name": "No:51,53, Sahil Cd., Gümüldür Atatürk Mahallesi, Menderes, İzmir, Ege Bölgesi, 35480, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w37254624",
+  "name": "Çiğli AVM",
+  "category": "avm",
+  "district": "Çiğli",
+  "address": "Atatürk Organize Sanayi Bölgesi Yan Yolu, Ataşehir Mahallesi",
+  "lat": 38.4823565,
+  "lng": 27.0557988,
+  "hours": "10:00-22:00",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 37254624,
+   "display_name": "Çiğli AVM, Atatürk Organize Sanayi Bölgesi Yan Yolu, Ataşehir Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35630, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w593414707",
+  "name": "Westpark Outlet A Blok",
+  "category": "avm",
+  "district": "Bayraklı",
+  "address": "İzmir Çevre Yolu, 100. Yıl Mahallesi",
+  "lat": 38.4805142,
+  "lng": 27.1798663,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 593414707,
+   "display_name": "Westpark Outlet A Blok, S-12/9A, İzmir Çevre Yolu, 100. Yıl Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35540, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w387585142",
+  "name": "Özdilek",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "İnciraltı Caddesi, İnciraltı Mahallesi",
+  "lat": 38.4107773,
+  "lng": 27.031279,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 387585142,
+   "display_name": "Özdilek, İnciraltı Caddesi, İnciraltı Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-r6031617",
+  "name": "Ege Park",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Mithatpaşa Caddesi, Bahçelerarası Mahallesi",
+  "lat": 38.3951223,
+  "lng": 27.0440214,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "relation",
+   "id": 6031617,
+   "display_name": "Ege Park, 44, Mithatpaşa Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w37373244",
+  "name": "Gaziemir Outlet Center",
+  "category": "avm",
+  "district": "Gaziemir",
+  "address": "Akçay Caddesi Yanyol, Emrez Mahallesi",
+  "lat": 38.3568848,
+  "lng": 27.1337939,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 37373244,
+   "display_name": "Gaziemir Outlet Center, Akçay Caddesi Yanyol, Emrez Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w859049564",
+  "name": "İzmirPARK AVM",
+  "category": "avm",
+  "district": "Konak",
+  "address": "518 sokak, Güneşli Mahallesi",
+  "lat": 38.4034322,
+  "lng": 27.1287154,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 859049564,
+   "display_name": "İzmirPARK AVM, 518 sokak, Güneşli Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35270, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5087889664",
+  "name": "Selway Outlet Balçova",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Selway Outlet Balçova, Çetin Emeç Mahallesi",
+  "lat": 38.3761691,
+  "lng": 27.0750621,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5087889664,
+   "display_name": "Selway Outlet Balçova, Çetin Emeç Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5087889665",
+  "name": "Novada Outlet Balçova",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Selway Outlet Balçova, Çetin Emeç Mahallesi",
+  "lat": 38.3763036,
+  "lng": 27.0721439,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5087889665,
+   "display_name": "Novada Outlet Balçova, Selway Outlet Balçova, Çetin Emeç Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w637305655",
+  "name": "Starbucks Balçova – Fevzi Çakmak",
+  "category": "kafe",
+  "district": "Balçova",
+  "address": "Bora Sokak, Fevzi Çakmak Mahallesi",
+  "lat": 38.3889948,
+  "lng": 27.0442914,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 637305655,
+   "display_name": "Starbucks, Bora Sokak, Fevzi Çakmak Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n4464895893",
+  "name": "Starbucks Karabağlar – Basın Sitesi",
+  "category": "kafe",
+  "district": "Karabağlar",
+  "address": "İnönü Caddesi, Basın Sitesi Mahallesi",
+  "lat": 38.4013451,
+  "lng": 27.1023783,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 4464895893,
+   "display_name": "Starbucks, İnönü Caddesi, Küçükyalı, Basın Sitesi Mahallesi, İzmir, Karabağlar, İzmir, Ege Bölgesi, 35280, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5287447537",
+  "name": "Starbucks Konak – Kültür",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Kültür Mahallesi",
+  "lat": 38.4340059,
+  "lng": 27.138481,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5287447537,
+   "display_name": "Starbucks, Atatürk Caddesi, Kültür Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13342248013",
+  "name": "Starbucks Konak – Halkapınar",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Altınyol, Halkapınar Mahallesi",
+  "lat": 38.4334486,
+  "lng": 27.1613208,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13342248013,
+   "display_name": "Starbucks, Altınyol, Halkapınar Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35170, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13299667101",
+  "name": "Starbucks Bayraklı – Mansuroğlu",
+  "category": "kafe",
+  "district": "Bayraklı",
+  "address": "1593/1. Sokak, Mansuroğlu Mahallesi",
+  "lat": 38.4515749,
+  "lng": 27.1805638,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13299667101,
+   "display_name": "Starbucks, 2, 1593/1. Sokak, Mansuroğlu Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35535, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9215806359",
+  "name": "Starbucks Narlıdere – Yenikale",
+  "category": "kafe",
+  "district": "Narlıdere",
+  "address": "Mithatpaşa Caddesi, Yenikale Mahallesi",
+  "lat": 38.3944261,
+  "lng": 27.0097948,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9215806359,
+   "display_name": "Starbucks, Mithatpaşa Caddesi, Yenikale Mahallesi, Narlıdere, İzmir, Ege Bölgesi, 35320, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13100280725",
+  "name": "Starbucks Karşıyaka – Şemikler",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "Ordu Bulvarı, Şemikler Mahallesi",
+  "lat": 38.4731523,
+  "lng": 27.0969509,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13100280725,
+   "display_name": "Starbucks, Ordu Bulvarı, Şemikler Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35560, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13363702255",
+  "name": "Starbucks Karşıyaka – Yalı",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "6525. Sokak, Yalı Mahallesi",
+  "lat": 38.4794004,
+  "lng": 27.074259,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13363702255,
+   "display_name": "Starbucks, 6525. Sokak, Yalı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35550, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n6720558086",
+  "name": "Starbucks Konak – Akdeniz",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Akdeniz Caddesi, Akdeniz Mahallesi",
+  "lat": 38.4273075,
+  "lng": 27.1333225,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 6720558086,
+   "display_name": "Starbucks, Akdeniz Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35210, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n6792299186",
+  "name": "Starbucks Bayraklı – Adalet",
+  "category": "kafe",
+  "district": "Bayraklı",
+  "address": "Manas Bulvarı, Adalet Mahallesi",
+  "lat": 38.4533415,
+  "lng": 27.1776471,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 6792299186,
+   "display_name": "Starbucks, Manas Bulvarı, Adalet Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35530, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11447354269",
+  "name": "Starbucks Çiğli – Yeni Mahalle",
+  "category": "kafe",
+  "district": "Çiğli",
+  "address": "Eski Havaalanı Caddesi, Yeni Mahalle Mahallesi",
+  "lat": 38.4939206,
+  "lng": 27.0484182,
+  "hours": "Mo-Su 07:00-22:30",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11447354269,
+   "display_name": "Starbucks, 108, Eski Havaalanı Caddesi, Yeni Mahalle Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5576265262",
+  "name": "Starbucks Çiğli – Ataşehir",
+  "category": "kafe",
+  "district": "Çiğli",
+  "address": "Cahar Dudayev Bulvarı, Ataşehir Mahallesi",
+  "lat": 38.4779154,
+  "lng": 27.0660499,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5576265262,
+   "display_name": "Starbucks, Cahar Dudayev Bulvarı, Ataşehir Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n4358654791",
+  "name": "Starbucks Balçova – Bahçelerarası",
+  "category": "kafe",
+  "district": "Balçova",
+  "address": "Mustafa Kemal Sahil Bulvarı, Bahçelerarası Mahallesi",
+  "lat": 38.3953585,
+  "lng": 27.0414434,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 4358654791,
+   "display_name": "Starbucks, Mustafa Kemal Sahil Bulvarı, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13357543484",
+  "name": "Starbucks Karşıyaka – Bostanlı",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "Cengiz Topel Caddesi, Bostanlı Mahallesi",
+  "lat": 38.4587495,
+  "lng": 27.0944322,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13357543484,
+   "display_name": "Starbucks, Cengiz Topel Caddesi, Bostanlı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13529158613",
+  "name": "Starbucks Konak – Çınarlı",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "1583. Sokak, Çınarlı Mahallesi",
+  "lat": 38.4473593,
+  "lng": 27.1742191,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13529158613,
+   "display_name": "Starbucks, 1583. Sokak, Çınarlı Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35170, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5293941622",
+  "name": "Starbucks Konak – Kültür (2)",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Mustafa Enver Bey Caddesi, Kültür Mahallesi",
+  "lat": 38.4329935,
+  "lng": 27.139339,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5293941622,
+   "display_name": "Starbucks, Mustafa Enver Bey Caddesi, Kültür Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11624047702",
+  "name": "Starbucks Gaziemir – Beyazevler",
+  "category": "kafe",
+  "district": "Gaziemir",
+  "address": "341. Sokak, Beyazevler Mahallesi",
+  "lat": 38.3365056,
+  "lng": 27.1354923,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11624047702,
+   "display_name": "Starbucks, 341. Sokak, Beyazevler Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n7814490112",
+  "name": "Starbucks Karşıyaka – Donanmacı",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "1729. Sokak, Donanmacı Mahallesi",
+  "lat": 38.4574888,
+  "lng": 27.1148156,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 7814490112,
+   "display_name": "Starbucks, 1729. Sokak, Donanmacı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35580, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12985833590",
+  "name": "Starbucks Bayraklı – Manavkuyu",
+  "category": "kafe",
+  "district": "Bayraklı",
+  "address": "275/6. Sokak, Manavkuyu Mahallesi",
+  "lat": 38.4605579,
+  "lng": 27.1882545,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12985833590,
+   "display_name": "Starbucks, 275/6. Sokak, Manavkuyu Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35535, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13663064463",
+  "name": "Starbucks Balçova – Çetin Emeç",
+  "category": "kafe",
+  "district": "Balçova",
+  "address": "Selway Outlet Balçova, Çetin Emeç Mahallesi",
+  "lat": 38.376822,
+  "lng": 27.0727902,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13663064463,
+   "display_name": "Starbucks, Selway Outlet Balçova, Çetin Emeç Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5702977817",
+  "name": "Starbucks Karşıyaka – Tuna",
+  "category": "kafe",
+  "district": "Karşıyaka",
+  "address": "Yalı Bulvarı, Tuna Mahallesi",
+  "lat": 38.4557537,
+  "lng": 27.1202541,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5702977817,
+   "display_name": "Starbucks, Yalı Bulvarı, Tuna Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35580, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12966135671",
+  "name": "Starbucks Konak – Güzelyurt",
+  "category": "kafe",
+  "district": "Konak",
+  "address": "Havra Sokağı, Güzelyurt Mahallesi",
+  "lat": 38.4197108,
+  "lng": 27.1355812,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12966135671,
+   "display_name": "Starbucks, Havra Sokağı, Güzelyurt Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w758442409",
+  "name": "Umumi Tuvalet – Adatepe",
+  "category": "diger",
+  "district": "Buca",
+  "address": "Dokuzçeşmeler Yerleşkesi İç Yolu, Adatepe Mahallesi",
+  "lat": 38.3853576,
+  "lng": 27.1819722,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 758442409,
+   "display_name": "Dokuzçeşmeler Yerleşkesi İç Yolu, Adatepe Mahallesi, Buca, İzmir, Ege Bölgesi, 35400, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1557963656",
+  "name": "Umumi Tuvalet – Kültür",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Kültür Mahallesi",
+  "lat": 38.4425407,
+  "lng": 27.1441572,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1557963656,
+   "display_name": "Atatürk Caddesi, Kültür Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1071055200",
+  "name": "Umumi Tuvalet – Yamanlar",
+  "category": "diger",
+  "district": "Bayraklı",
+  "address": "7334/2. Sokak, Yamanlar Mahallesi",
+  "lat": 38.4919318,
+  "lng": 27.1453916,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1071055200,
+   "display_name": "7334/2. Sokak, Yamanlar Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35510, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w391107059",
+  "name": "Umumi Tuvalet – Evka-5",
+  "category": "diger",
+  "district": "Çiğli",
+  "address": "Siteiçi Sokak, Evka-5 Mahallesi",
+  "lat": 38.5191361,
+  "lng": 27.056092,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 391107059,
+   "display_name": "Siteiçi Sokak, Evka-5 Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1208432039",
+  "name": "Belediye Tuvaleti – Yeşiltepe",
+  "category": "belediye",
+  "district": "Konak",
+  "address": "Şehit Teğmen Güngör Dolunay Yaya Üst Geçidi, Yeşiltepe Mahallesi",
+  "lat": 38.4151323,
+  "lng": 27.1270851,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1208432039,
+   "display_name": "Şehit Teğmen Güngör Dolunay Yaya Üst Geçidi, Yeşiltepe Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35260, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1453073144",
+  "name": "Belediye Tuvaleti – Bayraklı",
+  "category": "belediye",
+  "district": "Bayraklı",
+  "address": "Bayraklı Üst Geçit, Bayraklı Mahallesi",
+  "lat": 38.4638925,
+  "lng": 27.1622761,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1453073144,
+   "display_name": "Bayraklı Üst Geçit, Bayraklı Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35530, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w387617181",
+  "name": "Umumi Tuvalet – Egekent",
+  "category": "diger",
+  "district": "Çiğli",
+  "address": "884. Sokak, Egekent Mahallesi",
+  "lat": 38.5065825,
+  "lng": 27.062367,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 387617181,
+   "display_name": "884. Sokak, Egekent Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w876469303",
+  "name": "Umumi Tuvalet – Buca Koop",
+  "category": "diger",
+  "district": "Buca",
+  "address": "1403. Sokak, Buca Koop Mahallesi",
+  "lat": 38.3685749,
+  "lng": 27.1846098,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 876469303,
+   "display_name": "1403. Sokak, Buca Koop Mahallesi, Buca, İzmir, Ege Bölgesi, 35390, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1320055049",
+  "name": "Umumi Tuvalet – Basın Sitesi",
+  "category": "diger",
+  "district": "Karabağlar",
+  "address": "108/2. Sokak, Basın Sitesi Mahallesi",
+  "lat": 38.3957907,
+  "lng": 27.0947889,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1320055049,
+   "display_name": "108/2. Sokak, Basın Sitesi Mahallesi, Karabağlar, İzmir, Ege Bölgesi, 35150, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n4930999423",
+  "name": "Umumi Tuvalet – Yıldırım Beyazıt",
+  "category": "diger",
+  "district": "Bornova",
+  "address": "5134. Sokak, Yıldırım Beyazıt Mahallesi",
+  "lat": 38.4385454,
+  "lng": 27.1881898,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 4930999423,
+   "display_name": "5134. Sokak, Yıldırım Beyazıt Mahallesi, Bornova, İzmir, Ege Bölgesi, 35090, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n10969508474",
+  "name": "Belediye Tuvaleti – Bahçelerarası",
+  "category": "belediye",
+  "district": "Balçova",
+  "address": "Haydar Aliyev Bulvarı, Bahçelerarası Mahallesi",
+  "lat": 38.4105871,
+  "lng": 27.0407288,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 10969508474,
+   "display_name": "Haydar Aliyev Bulvarı, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11832468800",
+  "name": "Umumi Tuvalet – Çankaya",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Ayşe Mayda Sokağı, Çankaya Mahallesi",
+  "lat": 38.4042423,
+  "lng": 27.0995714,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11832468800,
+   "display_name": "Ayşe Mayda Sokağı, Küçükyalı, Çankaya Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35280, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9795398805",
+  "name": "Umumi Tuvalet – Mithatpaşa",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Mithatpaşa Alt Geçidi, Mithatpaşa Mahallesi",
+  "lat": 38.4077771,
+  "lng": 27.1072699,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9795398805,
+   "display_name": "Mithatpaşa Alt Geçidi, Karantina, Mithatpaşa Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35280, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13423466469",
+  "name": "Umumi Tuvalet – Umurbey",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Umurbey Mahallesi",
+  "lat": 38.442497,
+  "lng": 27.1438249,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13423466469,
+   "display_name": "Atatürk Caddesi, Umurbey Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11091677273",
+  "name": "Umumi Tuvalet – Yeşiltepe",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Mustafa Kemal Sahil Bulvarı, Yeşiltepe Mahallesi",
+  "lat": 38.4169304,
+  "lng": 27.123038,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11091677273,
+   "display_name": "Mustafa Kemal Sahil Bulvarı, Yeşiltepe Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35260, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12238139355",
+  "name": "Umumi Tuvalet – Çınarlı",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Zafer Payzın Kavşağı, Çınarlı Mahallesi",
+  "lat": 38.4446929,
+  "lng": 27.1705746,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12238139355,
+   "display_name": "Zafer Payzın Kavşağı, Çınarlı Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35170, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n8046299689",
+  "name": "Umumi Tuvalet – Namazgah",
+  "category": "diger",
+  "district": "Konak",
+  "address": "817. Sokak, Namazgah Mahallesi",
+  "lat": 38.4184149,
+  "lng": 27.1387163,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 8046299689,
+   "display_name": "817. Sokak, Namazgah Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35240, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11131434855",
+  "name": "Umumi Tuvalet – Konak",
+  "category": "diger",
+  "district": "Konak",
+  "address": "873.Sokak, Konak Mahallesi",
+  "lat": 38.4187039,
+  "lng": 27.1335199,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11131434855,
+   "display_name": "873.Sokak, Kemeraltı, Konak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n7088337685",
+  "name": "Umumi Tuvalet – Konak (2)",
+  "category": "diger",
+  "district": "Konak",
+  "address": "863. Sokak, Konak Mahallesi",
+  "lat": 38.4184017,
+  "lng": 27.1333603,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 7088337685,
+   "display_name": "863. Sokak, Kemeraltı, Konak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11126031885",
+  "name": "Umumi Tuvalet – Kadifekale",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Rakım Erkutlu Caddesi, Kadifekale Mahallesi",
+  "lat": 38.4135337,
+  "lng": 27.1454432,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11126031885,
+   "display_name": "Rakım Erkutlu Caddesi, Kadifekale Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35240, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n10031675867",
+  "name": "Umumi Tuvalet – Akdeniz",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Atatürk Caddesi, Akdeniz Mahallesi",
+  "lat": 38.4224888,
+  "lng": 27.1293007,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 10031675867,
+   "display_name": "19, Atatürk Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11918147591",
+  "name": "Umumi Tuvalet – Fevzi Çakmak",
+  "category": "diger",
+  "district": "Balçova",
+  "address": "Sakarya Caddesi, Fevzi Çakmak Mahallesi",
+  "lat": 38.3882375,
+  "lng": 27.0430041,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11918147591,
+   "display_name": "Sakarya Caddesi, Fevzi Çakmak Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11131443544",
+  "name": "Umumi Tuvalet – Akdeniz (2)",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Mimar Kemalettin Caddesi, Akdeniz Mahallesi",
+  "lat": 38.4231339,
+  "lng": 27.1353524,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11131443544,
+   "display_name": "Mimar Kemalettin Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35210, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13844319602",
+  "name": "Umumi Tuvalet – Mimar Sinan",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Dr. Refik Saydam Bulvarı, Mimar Sinan Mahallesi",
+  "lat": 38.4266405,
+  "lng": 27.1435098,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13844319602,
+   "display_name": "Dr. Refik Saydam Bulvarı, Mimar Sinan Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n3063672929",
+  "name": "Umumi Tuvalet – Mimar Sinan (2)",
+  "category": "diger",
+  "district": "Konak",
+  "address": "1396. Sokak, Mimar Sinan Mahallesi",
+  "lat": 38.4283187,
+  "lng": 27.1475851,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 3063672929,
+   "display_name": "1396. Sokak, Mimar Sinan Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12213603301",
+  "name": "Umumi Tuvalet – Yenigün",
+  "category": "diger",
+  "district": "Konak",
+  "address": "Anafartalar Caddesi, Yenigün Mahallesi",
+  "lat": 38.4197567,
+  "lng": 27.1382859,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12213603301,
+   "display_name": "Anafartalar Caddesi, Yenigün Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n3063665576",
+  "name": "Umumi Tuvalet – Etiler",
+  "category": "diger",
+  "district": "Konak",
+  "address": "1268. Sokak, Etiler Mahallesi",
+  "lat": 38.4229145,
+  "lng": 27.1437408,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 3063665576,
+   "display_name": "1268. Sokak, Basmane, Etiler Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35240, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1026803326",
+  "name": "Umumi Tuvalet – Kaklıç",
+  "category": "diger",
+  "district": "Çiğli",
+  "address": "Ahmet Piriştina Bulvarı, Kaklıç Mahallesi",
+  "lat": 38.485707,
+  "lng": 26.9694835,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1026803326,
+   "display_name": "Ahmet Piriştina Bulvarı, Kaklıç Mahallesi, Sasalı Merkez Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n10225253970",
+  "name": "Umumi Tuvalet – Sasalı",
+  "category": "diger",
+  "district": "Çiğli",
+  "address": "Ahmet Piriştina Bulvarı, Sasalı",
+  "lat": 38.4926639,
+  "lng": 26.9681175,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 10225253970,
+   "display_name": "Ahmet Piriştina Bulvarı, Sasalı, Sasalı Merkez Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1431526374",
+  "name": "Novada Menemen Avm",
+  "category": "avm",
+  "district": "Menemen",
+  "address": "Çanakkale Asfaltı Caddesi, Yıldırım Mahallesi",
+  "lat": 38.678157,
+  "lng": 27.0150662,
+  "hours": "10:00-22:00",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1431526374,
+   "display_name": "Novada Menemen Avm, 46, Çanakkale Asfaltı Caddesi, Yıldırım Mahallesi, Buruncuk Mahallesi, Menemen, İzmir, Ege Bölgesi, 35676, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w779934636",
+  "name": "Sakıpağa Outlet",
+  "category": "avm",
+  "district": "Menemen",
+  "address": "Nene Hatun Caddesi, Ulus Mahallesi",
+  "lat": 38.5786628,
+  "lng": 27.0658651,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 779934636,
+   "display_name": "Sakıpağa Outlet, Nene Hatun Caddesi, Menemen, Ulus Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14380867786",
+  "name": "Starbucks Menemen – 30 Ağustos",
+  "category": "kafe",
+  "district": "Menemen",
+  "address": "3. Cadde, 30 Ağustos Mahallesi",
+  "lat": 38.5516688,
+  "lng": 27.0493423,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14380867786,
+   "display_name": "Starbucks, 3. Cadde, 30 Ağustos Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1064859223",
+  "name": "Umumi Tuvalet – Menemen",
+  "category": "diger",
+  "district": "Menemen",
+  "address": "Kuzey Ege Otoyolu",
+  "lat": 38.6493197,
+  "lng": 27.0918007,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1064859223,
+   "display_name": "Kuzey Ege Otoyolu, Doğa Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1064642233",
+  "name": "Umumi Tuvalet – Menemen (2)",
+  "category": "diger",
+  "district": "Menemen",
+  "address": "Kuzey Ege Otoyolu",
+  "lat": 38.6513177,
+  "lng": 27.0811066,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1064642233,
+   "display_name": "Kuzey Ege Otoyolu, Yanıkköy Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1282826423",
+  "name": "Umumi Tuvalet – Şakran Sayfiye",
+  "category": "diger",
+  "district": "Aliağa",
+  "address": "Yalı Cd., Şakran Sayfiye Mahallesi",
+  "lat": 38.8859265,
+  "lng": 27.0621758,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1282826423,
+   "display_name": "Yalı Cd., Şakran Sayfiye Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w701582020",
+  "name": "Umumi Tuvalet – Şakran Sayfiye (2)",
+  "category": "diger",
+  "district": "Aliağa",
+  "address": "3133 Sokak, Şakran Sayfiye Mahallesi",
+  "lat": 38.8858478,
+  "lng": 27.0648168,
+  "hours": "24/7",
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 701582020,
+   "display_name": "3133 Sokak, Şakran Sayfiye Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1283206025",
+  "name": "Umumi Tuvalet – Kültür (2)",
+  "category": "diger",
+  "district": "Aliağa",
+  "address": "Ord. Prof. Sebastiana Logana Caddesi, Kültür Mahallesi",
+  "lat": 38.8061654,
+  "lng": 26.974492,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1283206025,
+   "display_name": "Ord. Prof. Sebastiana Logana Caddesi, Kültür Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14200498772",
+  "name": "Umumi Tuvalet – Kültür (3)",
+  "category": "diger",
+  "district": "Aliağa",
+  "address": "Ord. Prof. Sebastiana Logana Caddesi, Kültür Mahallesi",
+  "lat": 38.8049598,
+  "lng": 26.9720638,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14200498772,
+   "display_name": "Ord. Prof. Sebastiana Logana Caddesi, Kültür Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w377274238",
+  "name": "Olympos AVM",
+  "category": "avm",
+  "district": "Bergama",
+  "address": "Atatürk Bulvarı, Bahçelievler Mahallesi",
+  "lat": 39.0868069,
+  "lng": 27.1215342,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 377274238,
+   "display_name": "Olympos AVM, Atatürk Bulvarı, Bahçelievler Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12348360572",
+  "name": "FORS AVM",
+  "category": "avm",
+  "district": "Bergama",
+  "address": "Böblingen Caddesi, Maltepe Mahallesi",
+  "lat": 39.1136484,
+  "lng": 27.1777546,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12348360572,
+   "display_name": "FORS AVM, Böblingen Caddesi, Maltepe Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11341492142",
+  "name": "Umumi Tuvalet – Zafer",
+  "category": "diger",
+  "district": "Bergama",
+  "address": "Via Tecta, Zafer Mahallesi",
+  "lat": 39.118624,
+  "lng": 27.1667537,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11341492142,
+   "display_name": "Via Tecta, Zafer Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11341536850",
+  "name": "Umumi Tuvalet – İslamsaray",
+  "category": "diger",
+  "district": "Bergama",
+  "address": "Üç Kemer Caddesi, İslamsaray Mahallesi",
+  "lat": 39.1214493,
+  "lng": 27.1836455,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11341536850,
+   "display_name": "Üç Kemer Caddesi, İslamsaray Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n415563326",
+  "name": "Umumi Tuvalet – Ulucami",
+  "category": "diger",
+  "district": "Bergama",
+  "address": "Akropol Caddesi, Ulucami Mahallesi",
+  "lat": 39.1312696,
+  "lng": 27.1858357,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 415563326,
+   "display_name": "Akropol Caddesi, Ulucami Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n415564620",
+  "name": "Umumi Tuvalet – Zafer (2)",
+  "category": "diger",
+  "district": "Bergama",
+  "address": "Tiyelti Caddesi, Zafer Mahallesi",
+  "lat": 39.1219668,
+  "lng": 27.1700846,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 415564620,
+   "display_name": "Tiyelti Caddesi, Zafer Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n8151437217",
+  "name": "Umumi Tuvalet – Ulucami (2)",
+  "category": "diger",
+  "district": "Bergama",
+  "address": "1. Türkeli Sokak, Ulucami Mahallesi",
+  "lat": 39.1250508,
+  "lng": 27.1791433,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 8151437217,
+   "display_name": "1. Türkeli Sokak, Ulucami Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14177372939",
+  "name": "Umumi Tuvalet – Barbaros",
+  "category": "diger",
+  "district": "Bergama",
+  "address": "Kasapoğlu Caddesi, Barbaros Mahallesi",
+  "lat": 39.1221952,
+  "lng": 27.1800636,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14177372939,
+   "display_name": "Kasapoğlu Caddesi, Barbaros Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n785047304",
+  "name": "Toilets",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "220 Sokak",
+  "lat": 37.942423,
+  "lng": 27.4337196,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 785047304,
+   "display_name": "Toilets, 220 Sokak, Şirince Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1205957282",
+  "name": "Umumi Tuvalet – Atatürk",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Kuşadası - Selçuk Eski Yolu, Atatürk Mahallesi",
+  "lat": 37.9381715,
+  "lng": 27.2765801,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1205957282,
+   "display_name": "Kuşadası - Selçuk Eski Yolu, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w186411318",
+  "name": "Umumi Tuvalet – Atatürk (2)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Meryem Ana yolu, Atatürk Mahallesi",
+  "lat": 37.9119686,
+  "lng": 27.3326513,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 186411318,
+   "display_name": "Meryem Ana yolu, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1210931536",
+  "name": "Umumi Tuvalet – Selçuk",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Muhtariyet Caddesi",
+  "lat": 37.9529754,
+  "lng": 27.4304543,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1210931536,
+   "display_name": "Muhtariyet Caddesi, Nesin Matematik Köyü, Şirince Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5221511121",
+  "name": "Umumi Tuvalet – Atatürk (3)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Meryem Ana Yolu, Atatürk Mahallesi",
+  "lat": 37.9354615,
+  "lng": 27.3457635,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5221511121,
+   "display_name": "Meryem Ana Yolu, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11825031469",
+  "name": "Umumi Tuvalet – Selçuk (2)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Çarşı Sokağı",
+  "lat": 37.9441667,
+  "lng": 27.4327448,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11825031469,
+   "display_name": "Çarşı Sokağı, Şirince Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14317744121",
+  "name": "Umumi Tuvalet – Selçuk (3)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "35-40",
+  "lat": 37.8856255,
+  "lng": 27.380194,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14317744121,
+   "display_name": "35-40, Çamlık, Çamlık Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14322442892",
+  "name": "Umumi Tuvalet – İsa Bey",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Abuhayat Caddesi, İsa Bey Mahallesi",
+  "lat": 37.9512016,
+  "lng": 27.3726301,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14322442892,
+   "display_name": "Abuhayat Caddesi, İsa Bey Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n7673542889",
+  "name": "Umumi Tuvalet – Atatürk (4)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "St. Jean Caddesi, Atatürk Mahallesi",
+  "lat": 37.9539584,
+  "lng": 27.3671234,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 7673542889,
+   "display_name": "St. Jean Caddesi, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11127534460",
+  "name": "Umumi Tuvalet – Atatürk (5)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "1050. Sokak, Atatürk Mahallesi",
+  "lat": 37.9511168,
+  "lng": 27.3676872,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11127534460,
+   "display_name": "1050. Sokak, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n730469609",
+  "name": "Umumi Tuvalet – Atatürk (6)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "Arkadiane, Atatürk Mahallesi",
+  "lat": 37.9431698,
+  "lng": 27.3411606,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 730469609,
+   "display_name": "Arkadiane, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1333715286",
+  "name": "Kipa AVM",
+  "category": "avm",
+  "district": "Torbalı",
+  "address": "5013. Sokak, Torbalı Mahallesi",
+  "lat": 38.1830336,
+  "lng": 27.351053,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1333715286,
+   "display_name": "Kipa AVM, 5013. Sokak, Torbalı Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35860, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12062620346",
+  "name": "AVLU TORBALI",
+  "category": "avm",
+  "district": "Torbalı",
+  "address": "İzmir-Aydın yolu, Torbalı Mahallesi",
+  "lat": 38.1762944,
+  "lng": 27.3558096,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12062620346,
+   "display_name": "AVLU TORBALI, İzmir-Aydın yolu, Torbalı Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35860, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9999731500",
+  "name": "Umumi Tuvalet – Selçuk (4)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "İzmir - Aydın Otoyolu",
+  "lat": 38.0698397,
+  "lng": 27.4099439,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9999731500,
+   "display_name": "İzmir - Aydın Otoyolu, Belevi Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35860, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n9999731501",
+  "name": "Umumi Tuvalet – Selçuk (5)",
+  "category": "diger",
+  "district": "Selçuk",
+  "address": "İzmir - Aydın Otoyolu",
+  "lat": 38.0707398,
+  "lng": 27.4123996,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 9999731501,
+   "display_name": "İzmir - Aydın Otoyolu, Belevi Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1525239510",
+  "name": "Umumi Tuvalet – Kazım Karabekir",
+  "category": "diger",
+  "district": "Torbalı",
+  "address": "Mustafa Kemal Atatürk Bulvarı, Kazım Karabekir Mahallesi",
+  "lat": 38.1978044,
+  "lng": 27.2397028,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1525239510,
+   "display_name": "Mustafa Kemal Atatürk Bulvarı, Kazım Karabekir Mahallesi, Pancar Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35865, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1219807516",
+  "name": "Umumi Tuvalet – Torbalı",
+  "category": "diger",
+  "district": "Torbalı",
+  "address": "Bayrak Caddesi",
+  "lat": 38.1243875,
+  "lng": 27.3257966,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1219807516,
+   "display_name": "Bayrak Caddesi, Yeniköy Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35860, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w282933410",
+  "name": "Park Bornova",
+  "category": "avm",
+  "district": "Bornova",
+  "address": "1592. Sokak, Doğanlar Mahallesi",
+  "lat": 38.4566655,
+  "lng": 27.2468325,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 282933410,
+   "display_name": "Park Bornova, 1592. Sokak, Doğanlar Mahallesi, Bornova, İzmir, Ege Bölgesi, 35050, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n6911846317",
+  "name": "Starbucks Bornova – Kazımdirik",
+  "category": "kafe",
+  "district": "Bornova",
+  "address": "372/11. Sokak, Kazımdirik Mahallesi",
+  "lat": 38.4530376,
+  "lng": 27.2153744,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 6911846317,
+   "display_name": "Starbucks, 372/11. Sokak, Özkanlar, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1062205068",
+  "name": "Umumi Tuvalet – Kızılay",
+  "category": "diger",
+  "district": "Bornova",
+  "address": "Yüzbaşı İbrahim Hakkı Caddesi, Kızılay Mahallesi",
+  "lat": 38.4676072,
+  "lng": 27.209319,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1062205068,
+   "display_name": "Yüzbaşı İbrahim Hakkı Caddesi, Kızılay Mahallesi, Bornova, İzmir, Ege Bölgesi, 35030, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1453729418",
+  "name": "Belediye Tuvaleti – Kazımdirik",
+  "category": "belediye",
+  "district": "Bornova",
+  "address": "Üniversite Caddesi, Kazımdirik Mahallesi",
+  "lat": 38.458442,
+  "lng": 27.2147932,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1453729418,
+   "display_name": "Üniversite Caddesi, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n5078998293",
+  "name": "Umumi Tuvalet – Erzene",
+  "category": "diger",
+  "district": "Bornova",
+  "address": "Manisa - İzmir Yolu, Erzene Mahallesi",
+  "lat": 38.4823381,
+  "lng": 27.242263,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 5078998293,
+   "display_name": "Manisa - İzmir Yolu, Erzene Mahallesi, Bornova, İzmir, Ege Bölgesi, 35040, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13174965260",
+  "name": "Umumi Tuvalet – Erzene (2)",
+  "category": "diger",
+  "district": "Bornova",
+  "address": "Ankara Caddesi, Erzene Mahallesi",
+  "lat": 38.4570467,
+  "lng": 27.2241892,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13174965260,
+   "display_name": "Ankara Caddesi, Erzene Mahallesi, Bornova, İzmir, Ege Bölgesi, 35040, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n11195499050",
+  "name": "Umumi Tuvalet – Yeşilova",
+  "category": "diger",
+  "district": "Bornova",
+  "address": "4174. Sokak, Yeşilova Mahallesi",
+  "lat": 38.4305262,
+  "lng": 27.2099016,
+  "hours": null,
+  "accessible": true,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 11195499050,
+   "display_name": "84, 4174. Sokak, Point Bornova, Yeşilova Mahallesi, Bornova, İzmir, Ege Bölgesi, 35080, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n2988168104",
+  "name": "Umumi Tuvalet – Kır",
+  "category": "diger",
+  "district": "Menemen",
+  "address": "Karagöl - Alaniçi yolu, Kır Mahallesi",
+  "lat": 38.5572573,
+  "lng": 27.2151976,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 2988168104,
+   "display_name": "Karagöl - Alaniçi yolu, Kır Mahallesi, Alaniçi Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n10015641580",
+  "name": "Umumi Tuvalet – Kemalpaşa",
+  "category": "diger",
+  "district": "Kemalpaşa",
+  "address": "Beşpınar Bağlantı Yolu Küme Evleri",
+  "lat": 38.5541917,
+  "lng": 27.4428242,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 10015641580,
+   "display_name": "Beşpınar Bağlantı Yolu Küme Evleri, Sütçüler Mahallesi, Kemalpaşa, İzmir, Ege Bölgesi, 35730, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w502157944",
+  "name": "Umumi Tuvalet – Camii",
+  "category": "diger",
+  "district": "Bayındır",
+  "address": "Pamuk Pazarı Sokak, Camii Mahallesi",
+  "lat": 38.2232746,
+  "lng": 27.6466433,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 502157944,
+   "display_name": "Pamuk Pazarı Sokak, Camii Mahallesi, Bayındır, İzmir, Ege Bölgesi, 35840, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w1216410712",
+  "name": "Umumi Tuvalet – 85. Yıl Cumhuriyet",
+  "category": "diger",
+  "district": "Kemalpaşa",
+  "address": "Ankara Caddesi, 85. Yıl Cumhuriyet Mahallesi",
+  "lat": 38.4475504,
+  "lng": 27.530376,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "way",
+   "id": 1216410712,
+   "display_name": "Ankara Caddesi, 85. Yıl Cumhuriyet Mahallesi, Çambel Mahallesi, Kemalpaşa, İzmir, Ege Bölgesi, 35737, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n12566204777",
+  "name": "Umumi Tuvalet – Kemalpaşa (2)",
+  "category": "diger",
+  "district": "Kemalpaşa",
+  "address": "Dereköy Yolu",
+  "lat": 38.3379993,
+  "lng": 27.4556676,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 12566204777,
+   "display_name": "Dereköy Yolu, Dereköy Mahallesi, Kemalpaşa, İzmir, Ege Bölgesi, 35730, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13909793508",
+  "name": "Umumi Tuvalet – Ödemiş",
+  "category": "diger",
+  "district": "Ödemiş",
+  "address": "Kızılca yolu",
+  "lat": 38.2974531,
+  "lng": 27.8437239,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13909793508,
+   "display_name": "Kızılca yolu, Kızılca Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14306544096",
+  "name": "Umumi Tuvalet – Tire",
+  "category": "diger",
+  "district": "Tire",
+  "address": "Tire-Kaplan Yolu",
+  "lat": 38.0696396,
+  "lng": 27.7238452,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14306544096,
+   "display_name": "Tire-Kaplan Yolu, Kaplan Mahallesi, Tire, İzmir, Ege Bölgesi, 35900, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14306544093",
+  "name": "Umumi Tuvalet – Dere",
+  "category": "diger",
+  "district": "Tire",
+  "address": "İncirliova - Tire Yolu, Dere",
+  "lat": 38.0711251,
+  "lng": 27.7442618,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14306544093,
+   "display_name": "İncirliova - Tire Yolu, Dere, Dere Mahallesi, Tire, İzmir, Ege Bölgesi, 35900, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14305373625",
+  "name": "Umumi Tuvalet – Ödemiş (2)",
+  "category": "diger",
+  "district": "Ödemiş",
+  "address": "35-41",
+  "lat": 38.0181397,
+  "lng": 28.0038707,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14305373625,
+   "display_name": "35-41, Küçükören Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13920791007",
+  "name": "Umumi Tuvalet – Ödemiş (3)",
+  "category": "diger",
+  "district": "Ödemiş",
+  "address": "Birgi-Kiraz Yolu",
+  "lat": 38.2524067,
+  "lng": 28.0654978,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13920791007,
+   "display_name": "Birgi-Kiraz Yolu, Birgi Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n1256853198",
+  "name": "Umumi Tuvalet – Ödemiş (4)",
+  "category": "diger",
+  "district": "Ödemiş",
+  "address": "Gölcük Yolu",
+  "lat": 38.2751069,
+  "lng": 28.0050919,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 1256853198,
+   "display_name": "Gölcük Yolu, Zeytinlik, Gölcük Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13920800537",
+  "name": "Umumi Tuvalet – Ödemiş (5)",
+  "category": "diger",
+  "district": "Ödemiş",
+  "address": "Şehit Güral Maden Caddesi",
+  "lat": 38.2570003,
+  "lng": 28.0664978,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13920800537,
+   "display_name": "Şehit Güral Maden Caddesi, Birgi Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n13917455443",
+  "name": "Umumi Tuvalet – Ödemiş (6)",
+  "category": "diger",
+  "district": "Ödemiş",
+  "address": "Bozdağ Kayak Tesisleri Yolu",
+  "lat": 38.2964557,
+  "lng": 28.141105,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 13917455443,
+   "display_name": "Bozdağ Kayak Tesisleri Yolu, Bozdağ Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-n14286240340",
+  "name": "Umumi Tuvalet – Beydağ",
+  "category": "diger",
+  "district": "Beydağ",
+  "address": "Beydağ - Nazilli yolu",
+  "lat": 38.0714081,
+  "lng": 28.2759074,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "osm": {
+   "type": "node",
+   "id": 14286240340,
+   "display_name": "Beydağ - Nazilli yolu, Cevizdibi, Palamutçuk Mahallesi, Beydağ, İzmir, Ege Bölgesi, 35790, Türkiye"
+  },
+  "approximate": false
+ }
+]

@@ -8,7 +8,7 @@ const SORTS: { value: SortMode; label: string; icon: typeof Navigation }[] = [
 
 export function Toggle({ on, tone = 'green' }: { on: boolean; tone?: 'green' | 'ink' }) {
   return (
-    <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? (tone === 'green' ? 'bg-green-500' : 'bg-ink') : 'bg-gray-300'}`}>
+    <span className={`relative h-6 w-11 shrink-0 rounded-full transition ${on ? (tone === 'green' ? 'bg-green-500' : 'bg-ink') : 'bg-ink-muted/40'}`}>
       <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
     </span>
   );

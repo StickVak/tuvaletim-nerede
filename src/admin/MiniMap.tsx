@@ -26,7 +26,7 @@ interface Props {
 /** Admin panelinde konum önizleme / düzenleme için küçük harita */
 export default function MiniMap({ center, category = 'diger', className = 'h-48', onPick }: Props) {
   return (
-    <div className={`relative z-0 overflow-hidden rounded-2xl ring-1 ring-black/5 ${className}`}>
+    <div className={`relative z-0 overflow-hidden rounded-2xl ring-1 ring-line ${className}`}>
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={16}

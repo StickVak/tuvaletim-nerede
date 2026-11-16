@@ -1,80 +1,68 @@
 export type ToiletCategory = 'avm' | 'kafe' | 'belediye' | 'park' | 'diger';
 
-/** free: herkese ücretsiz · customers: müşteriye ücretsiz · paid: ücretli */
-export type FeeType = 'free' | 'customers' | 'paid';
-
 export interface LatLng {
   lat: number;
   lng: number;
 }
 
-/** Ortak mekan alanları (places + pending_submissions) */
-export interface PlaceBase extends LatLng {
-  name: string;
-  category: ToiletCategory;
-  city?: string;
-  district?: string;
-  address?: string;
-  /** base64 data URL; yoksa temsili görsel üretilir */
-  photo?: string;
-  fee: FeeType;
-  price?: string;
-  hours?: string;
-  accessible?: boolean;
-  babyChanging?: boolean;
-}
-
-/** `places` tablosu */
-export interface Place extends PlaceBase {
-  id: string;
-  cleanlinessTotal: number;
-  comfortTotal: number;
-  ratingCount: number;
-  source: 'seed' | 'user';
-  createdAt: string;
-  updatedAt: string;
-}
-
-/** `reviews` tablosu */
-export interface Review {
-  id?: number;
-  placeId: string;
-  cleanliness: number;
-  comfort: number;
-  comment?: string;
-  voterId: string;
-  createdAt: string;
-}
-
-/** `pending_submissions` tablosu */
-export interface PendingSubmission extends PlaceBase {
-  id: string;
-  cleanliness: number;
-  comfort: number;
-  comment?: string;
-  voterId: string;
-  submittedAt: string;
-}
-
-/** `admin_users` tablosu */
-export interface AdminUser {
-  id?: number;
-  username: string;
-  passwordHash: string;
-  salt: string;
-  role: 'admin';
-  createdAt: string;
-  lastLoginAt?: string;
-  sessionToken?: string;
-  sessionExpires?: number;
-}
-
-/** Arayüzde kullanılan, puan ortalamaları ve mesafesi hesaplanmış mekan */
-export interface PlaceView extends Place {
+/** Oylardan sunucuda hesaplanır (server/stats.js) */
+export interface PlaceStats {
+  voteCount: number;
   cleanliness: number;
   comfort: number;
   rating: number;
-  distance: number;
+  isPaid: boolean;
+  avgPrice: number | null;
+}
+
+export interface Vote {
+  cleanliness: number;
+  comfort: number;
+  isPaid: boolean;
+  priceAmount: number | null;
+  comment: string | null;
+}
+
+export interface Place extends LatLng {
+  id: string;
+  name: string;
+  category: ToiletCategory;
+  district: string | null;
+  address: string | null;
+  /** Fotoğraf /api/places/:id/photo adresinden yüklenir */
+  hasPhoto: boolean;
+  hours: string | null;
+  accessible: boolean;
+  babyChanging: boolean;
+  source: 'seed' | 'user';
+  createdAt: string;
+  stats: PlaceStats;
+  /** Giriş yapan kullanıcının bu mekana verdiği oy */
+  myVote: Vote | null;
+}
+
+/** Konum bilinmiyorsa distance null */
+export interface PlaceView extends Place {
+  distance: number | null;
+}
+
+export interface User {
+  id: number;
+  username: string;
+  role: 'user' | 'admin';
+}
+
+/** POST /api/pending gövdesi */
+export interface PlaceDraft extends LatLng {
+  name: string;
+  category: ToiletCategory;
+  district?: string;
+  address?: string;
+  photo?: string;
+  hours?: string;
+  accessible: boolean;
+  babyChanging: boolean;
+  vote: Vote;
 }
 
 export type SortMode = 'distance' | 'cleanliness';
@@ -82,10 +70,6 @@ export type SortMode = 'distance' | 'cleanliness';
 export interface Filters {
   sort: SortMode;
   freeOnly: boolean;
-}
-
-export interface Settings {
-  forceDemoLocation: boolean;
 }
 
 export interface EmergencyState {

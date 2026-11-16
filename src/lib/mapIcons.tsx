@@ -1,6 +1,8 @@
 import L from 'leaflet';
 import { renderToStaticMarkup } from 'react-dom/server';
-import type { FeeType, ToiletCategory } from '../types';
+import type { ToiletCategory } from '../types';
+
+type FeeType = 'free' | 'paid';
 import { CATEGORIES } from './categories';
 
 export type PinState = 'normal' | 'selected' | 'emergency' | 'new';

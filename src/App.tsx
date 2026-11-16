@@ -1,17 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type L from 'leaflet';
-import { useLiveQuery } from 'dexie-react-hooks';
 import { Check, Crosshair, ListFilter, MapPin, Settings as SettingsIcon, Siren, X } from 'lucide-react';
-import type { EmergencyState, Filters, LatLng, PlaceView, Settings, ToastMessage } from './types';
-import { db } from './db/db';
-import { DEMO_LOCATION } from './db/seed';
-import { countMyVotes, submitPlace } from './db/repo';
-import { distanceMeters, pickEmergency, toView } from './lib/geo';
+import type { EmergencyState, Filters, LatLng, PlaceDraft, PlaceView, ToastMessage } from './types';
+import { api } from './api';
+import { usePlaces } from './hooks/usePlaces';
+import { useAuth } from './hooks/useAuth';
+import { IZMIR_CENTER, pickEmergency, toView } from './lib/geo';
 import { fetchWalkingRoute } from './lib/route';
 import { STORAGE_ERROR_EVENT, usePersistentState } from './hooks/usePersistentState';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useElementHeight } from './hooks/useElementHeight';
 import { useMediaQuery } from './hooks/useMediaQuery';
+import { useTheme } from './hooks/useTheme';
 import MapView, { type FlyCommand } from './components/MapView';
 import BottomSheet, { PEEK_HEIGHT, snapHeights, type SheetSnap } from './components/BottomSheet';
 import FloatingControls from './components/FloatingControls';
@@ -19,16 +19,16 @@ import ToiletListItem from './components/ToiletListItem';
 import PlaceDetail from './components/PlaceDetail';
 import EmergencyCard from './components/EmergencyCard';
 import SettingsDrawer from './components/SettingsDrawer';
-import AddToiletModal, { type PlaceDraft } from './components/AddToiletModal';
+import AddToiletModal from './components/AddToiletModal';
 import Sidebar from './components/Sidebar';
 import SearchBox from './components/SearchBox';
 import Toasts from './components/Toasts';
 import Logo from './components/Logo';
+import LocationBanner from './components/LocationBanner';
+import AuthModal from './components/AuthModal';
+import AccountButton from './components/AccountButton';
 
-const DEFAULT_SETTINGS: Settings = { forceDemoLocation: false };
 const DEFAULT_FILTERS: Filters = { sort: 'distance', freeOnly: false };
-/** GPS konumu en yakın kayıtlı mekana bu mesafeden uzaksa demo konumuna düşülür */
-const FAR_THRESHOLD_M = 30000;
 /** Masaüstü: kenar panel (16 + 400 + 16) */
 const SIDEBAR_SPACE = 432;
 const DETAIL_WIDTH = 400;
@@ -46,12 +46,13 @@ export default function App() {
     mapRef.current = m;
   }, []);
 
-  // ---------- Veritabanı (IndexedDB, canlı sorgu) ----------
-  const places = useLiveQuery(() => db.places.toArray(), []);
+  // ---------- Veriler (Express API) ----------
+  const auth = useAuth();
+  const [theme, setTheme] = useTheme();
+  const { places, error: placesError, replace: replacePlace } = usePlaces(auth.user?.id ?? null);
   const loading = places === undefined;
 
   // ---------- Kalıcı tercihler ----------
-  const [settings, setSettings] = usePersistentState<Settings>('tn.settings.v2', DEFAULT_SETTINGS);
   const [filters, setFilters] = usePersistentState<Filters>('tn.filters', DEFAULT_FILTERS);
 
   // ---------- UI durumu ----------
@@ -81,53 +82,48 @@ export default function App() {
 
   // ---------- Konum ----------
   const gps = useGeolocation();
-  const gpsFar = useMemo(() => {
-    if (!gps.position || !places?.length) return false;
-    return Math.min(...places.map((p) => distanceMeters(gps.position!, p))) > FAR_THRESHOLD_M;
-  }, [gps.position, places]);
+  // GPS yoksa kullanıcının haritada elle işaretlediği konum (yalnızca bu oturum)
+  const [manualLocation, setManualLocation] = useState<LatLng | null>(null);
+  const [remarking, setRemarking] = useState(false);
+  const located = gps.position ?? manualLocation;
+  const userLat = located?.lat;
+  const userLng = located?.lng;
+  const user = useMemo<LatLng | null>(() => (userLat != null && userLng != null ? { lat: userLat, lng: userLng } : null), [userLat, userLng]);
 
-  const usingDemo = settings.forceDemoLocation || !gps.position || gpsFar;
-  const userLat = usingDemo ? DEMO_LOCATION.lat : gps.position!.lat;
-  const userLng = usingDemo ? DEMO_LOCATION.lng : gps.position!.lng;
-  const user = useMemo<LatLng>(() => ({ lat: userLat, lng: userLng }), [userLat, userLng]);
-  const locationLabel = usingDemo ? 'Demo konumu' : 'Gerçek GPS';
+  const gpsUnavailable = !gps.position && (gps.status === 'denied' || gps.status === 'unsupported');
+  const markingLocation = remarking || (gpsUnavailable && !manualLocation);
 
-  const notifiedRef = useRef(false);
+  // İlk GPS konumu gelince haritayı ona odakla
+  const focusedRef = useRef(false);
   useEffect(() => {
-    if (notifiedRef.current || settings.forceDemoLocation || loading || gps.status === 'pending') return;
-    notifiedRef.current = true;
-    const useGps = gps.status === 'granted' && !gpsFar;
-    setFly({
-      key: Date.now(),
-      center: useGps ? gps.position! : DEMO_LOCATION,
-      zoom: 15,
-      offset: desktop ? [SIDEBAR_SPACE / 2, 0] : [0, -PEEK_HEIGHT / 2],
-    });
-    if (useGps) return;
-    toast(
-      gps.status === 'granted'
-        ? 'Yakınınızda kayıtlı tuvalet yok; demo konumu (İzmir, Alsancak) kullanılıyor.'
-        : 'Konum izni alınamadı, demo konumu (İzmir, Alsancak) kullanılıyor.',
-    );
-  }, [gps.status, gps.position, gpsFar, settings.forceDemoLocation, loading, toast, desktop]);
+    if (!gps.position || focusedRef.current) return;
+    focusedRef.current = true;
+    setFly({ key: Date.now(), center: gps.position, zoom: 16, offset: desktop ? [SIDEBAR_SPACE / 2, 0] : [0, -PEEK_HEIGHT / 2] });
+  }, [gps.position, desktop]);
+
+  useEffect(() => {
+    if (placesError) toast(placesError, 'error');
+  }, [placesError, toast]);
 
   // ---------- Görünüm modeli ----------
   const views: PlaceView[] = useMemo(() => (places ?? []).map((p) => toView(p, user)), [places, user]);
 
   const listed = useMemo(() => {
     const q = normalize(query.trim());
-    let items = filters.freeOnly ? views.filter((t) => t.fee === 'free') : [...views];
-    if (q) items = items.filter((t) => normalize([t.name, t.city, t.district, t.address].filter(Boolean).join(' ')).includes(q));
+    let items = filters.freeOnly ? views.filter((t) => !t.stats.isPaid) : [...views];
+    if (q) items = items.filter((t) => normalize([t.name, t.district, t.address].filter(Boolean).join(' ')).includes(q));
+    const byName = (a: PlaceView, b: PlaceView) => a.name.localeCompare(b.name, 'tr');
+    const byDistance = (a: PlaceView, b: PlaceView) => (a.distance !== null && b.distance !== null ? a.distance - b.distance : byName(a, b));
     items.sort((a, b) =>
       filters.sort === 'distance'
-        ? a.distance - b.distance
-        : b.cleanliness - a.cleanliness || b.rating - a.rating || a.distance - b.distance,
+        ? byDistance(a, b)
+        : b.stats.cleanliness - a.stats.cleanliness || b.stats.voteCount - a.stats.voteCount || byDistance(a, b),
     );
     return items;
   }, [views, filters, query]);
 
   const markers = useMemo(() => {
-    const base = filters.freeOnly ? views.filter((t) => t.fee === 'free') : views;
+    const base = filters.freeOnly ? views.filter((t) => !t.stats.isPaid) : views;
     const ensure = [emergency?.placeId, selectedId].filter(Boolean) as string[];
     const missing = ensure.filter((id) => !base.some((t) => t.id === id));
     return missing.length ? [...base, ...views.filter((t) => missing.includes(t.id))] : base;
@@ -169,18 +165,29 @@ export default function App() {
   }, [addOpen, picking, settingsOpen]);
 
   const locateMe = () => {
+    if (!gps.position) {
+      // GPS yok: izni yeniden dene ve konumu haritada yeniden işaretlet
+      gps.retry();
+      if (manualLocation) setRemarking(true);
+    }
+    if (!user) return;
     setFly({
       key: Date.now(),
       center: user,
       zoom: 16,
       offset: desktop ? [SIDEBAR_SPACE / 2, 0] : [0, -(heights[sheetSnap === 'full' ? 'half' : sheetSnap] / 2) + 30],
     });
-    if (usingDemo && !settings.forceDemoLocation) toast('Gerçek konum kullanılamıyor; demo konumuna odaklanıldı.');
   };
 
   const zoom = (d: 1 | -1) => (d > 0 ? mapRef.current?.zoomIn() : mapRef.current?.zoomOut());
 
   const startEmergency = async () => {
+    if (!user) {
+      // Konum yok ya da hâlâ bekleniyor: elle işaretleme modunu aç
+      setRemarking(true);
+      toast('Önce haritada konumunuzu işaretleyin.', 'error');
+      return;
+    }
     const target = pickEmergency(views);
     if (!target) {
       toast('Kayıtlı tuvalet bulunamadı.', 'error');
@@ -208,6 +215,7 @@ export default function App() {
   };
 
   const openAdd = () => {
+    if (!auth.requireAuth()) return;
     closeEmergency();
     setSelectedId(null);
     setDraftLocation(null);
@@ -226,24 +234,30 @@ export default function App() {
       setDraftLocation(p);
       return;
     }
+    if (markingLocation) {
+      setManualLocation(p);
+      setRemarking(false);
+      toast('Konumunuz işaretlendi.', 'success');
+      return;
+    }
     if (desktop && selectedId) setSelectedId(null);
     if (sheetSnap === 'full' || sheetSnap === 'half') setSheetSnap('peek');
   };
 
   const submitDraft = async (draft: PlaceDraft) => {
     try {
-      await submitPlace(draft);
+      await api('/pending', { method: 'POST', body: draft });
       closeAdd();
       toast('Teşekkürler! Mekanınız incelendikten sonra haritada yayınlanacak.', 'success');
-    } catch {
-      toast('Kayıt gönderilemedi. Fotoğraf çok büyük olabilir.', 'error');
+    } catch (e) {
+      toast((e as Error).message, 'error');
     }
   };
 
   // ---------- Ortak parçalar ----------
   const emptyState = (
     <div className="flex flex-col items-center px-8 py-10 text-center">
-      <ListFilter size={30} className="text-gray-300" />
+      <ListFilter size={30} className="text-ink-muted/60" />
       <p className="mt-3 font-bold">{loading ? 'Veriler yükleniyor…' : 'Sonuç bulunamadı'}</p>
       {!loading && (
         <button
@@ -252,7 +266,7 @@ export default function App() {
             setFilters(DEFAULT_FILTERS);
             setQuery('');
           }}
-          className="mt-3 rounded-full bg-brand px-4 py-2 text-sm font-bold"
+          className="mt-3 rounded-full bg-brand px-4 py-2 text-sm font-bold text-onbrand"
         >
           Filtreleri temizle
         </button>
@@ -263,9 +277,9 @@ export default function App() {
   const sortLabel = filters.sort === 'distance' ? 'En yakın' : 'En temiz';
 
   return (
-    <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-white">
+    <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-surface text-ink">
       <MapView
-        initialCenter={DEMO_LOCATION}
+        initialCenter={IZMIR_CENTER}
         places={markers}
         user={user}
         selectedId={selectedId}
@@ -289,7 +303,7 @@ export default function App() {
           query={query}
           onQueryChange={setQuery}
           selectedId={selectedId}
-          usingDemo={usingDemo}
+          hasLocation={Boolean(user)}
           onSelect={selectPlace}
           onEmergency={startEmergency}
           onOpenSettings={() => setSettingsOpen(true)}
@@ -303,13 +317,15 @@ export default function App() {
             type="button"
             onClick={() => setSettingsOpen(true)}
             aria-label="Ayarlar"
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white text-ink shadow-float transition active:scale-95"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface text-ink shadow-float transition active:scale-95"
           >
             <SettingsIcon size={21} />
           </button>
-          <div className="flex h-12 min-w-0 items-center gap-2 rounded-full bg-white/95 pl-1.5 pr-4 shadow-float backdrop-blur">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface shadow-float" title="Tuvaletim Nerede?">
             <Logo size={36} />
-            <span className="truncate text-[15px] font-extrabold tracking-tight">Tuvaletim Nerede?</span>
+          </span>
+          <div className="ml-auto">
+            <AccountButton variant="bar" />
           </div>
         </div>
       )}
@@ -342,7 +358,7 @@ export default function App() {
                 </p>
               </div>
               <span className="flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-[11px] font-bold text-ink-soft">
-                <MapPin size={12} className={usingDemo ? 'text-ink-muted' : 'text-blue-600'} /> {usingDemo ? 'Demo' : 'GPS'}
+                <MapPin size={12} className={user ? 'text-blue-600' : 'text-ink-muted'} /> {user ? 'Konumunuz' : 'Konum yok'}
               </span>
             </div>
           }
@@ -351,9 +367,9 @@ export default function App() {
               type="button"
               onClick={startEmergency}
               aria-label="Acil: en uygun tuvaleti bul"
-              className="sos-ring flex h-12 items-center gap-2 rounded-full bg-gradient-to-br from-red-500 to-red-600 pl-3.5 pr-5 text-base font-extrabold tracking-wide text-white ring-4 ring-white transition hover:from-red-600 hover:to-red-700 active:scale-95"
+              className="flex h-11 items-center gap-2 rounded-full bg-red-500 px-4 text-sm font-bold text-white transition-colors hover:bg-red-600"
             >
-              <Siren size={20} /> ACİL
+              <Siren size={18} /> Acil
             </button>
           }
         >
@@ -375,12 +391,12 @@ export default function App() {
       {/* Konum seçme modu */}
       {picking && (
         <div
-          className={`absolute z-40 animate-slide-down rounded-3xl bg-ink p-4 text-white shadow-float ${
+          className={`absolute z-40 animate-slide-down rounded-3xl bg-night p-4 text-white shadow-float ${
             desktop ? 'left-1/2 top-4 w-[440px] -translate-x-1/2' : 'inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))]'
           }`}
         >
           <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand text-ink">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand text-onbrand">
               <Crosshair size={20} />
             </span>
             <div className="flex-1">
@@ -398,7 +414,7 @@ export default function App() {
               type="button"
               disabled={!draftLocation}
               onClick={() => setPicking(false)}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand py-2.5 text-sm font-bold text-ink disabled:opacity-40"
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-brand py-2.5 text-sm font-bold text-onbrand disabled:opacity-40"
             >
               <Check size={15} /> Bu konumu kullan
             </button>
@@ -422,19 +438,29 @@ export default function App() {
       )}
 
       {selected && !picking && !addOpen && (
-        <PlaceDetail key={selected.id} place={selected} user={user} desktop={desktop} onClose={closeDetail} onToast={toast} />
+        <PlaceDetail key={selected.id} place={selected} user={user} desktop={desktop} onClose={closeDetail} onVoted={replacePlace} onToast={toast} />
+      )}
+
+      {markingLocation && !picking && !addOpen && !emergency && (
+        <LocationBanner
+          desktop={desktop}
+          title={manualLocation ? 'Konumunuzu yeniden işaretleyin' : gpsUnavailable ? 'Konumunuza erişemedik.' : 'Konumunuz henüz alınamadı.'}
+          onRetry={gps.retry}
+          onCancel={remarking ? () => setRemarking(false) : undefined}
+        />
       )}
 
       <Toasts toasts={toasts} desktop={desktop} />
 
+      <AuthModal onWelcome={(name) => toast(`Hoş geldin, ${name}!`, 'success')} />
+
       <SettingsDrawer
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
-        settings={settings}
-        onSettingsChange={setSettings}
-        locationLabel={locationLabel}
         placeCount={places?.length ?? 0}
-        myVoteCount={settingsOpen ? countMyVotes() : 0}
+        myVoteCount={places?.filter((p) => p.myVote).length ?? 0}
+        theme={theme}
+        onThemeChange={setTheme}
       />
 
       {addOpen && (
@@ -443,7 +469,7 @@ export default function App() {
           desktop={desktop}
           location={draftLocation}
           onRequestPick={() => setPicking(true)}
-          onUseMyLocation={() => setDraftLocation({ ...user })}
+          onUseMyLocation={() => (user ? setDraftLocation({ ...user }) : toast('Konumunuz henüz bilinmiyor; haritadan seçin.'))}
           onClose={closeAdd}
           onSubmit={submitDraft}
         />

@@ -63,7 +63,7 @@ function ClickHandler({ onClick }: { onClick: (p: LatLng) => void }) {
 interface Props {
   initialCenter: LatLng;
   places: PlaceView[];
-  user: LatLng;
+  user: LatLng | null;
   selectedId: string | null;
   emergencyId: string | null;
   route: LatLng[] | null;
@@ -98,7 +98,7 @@ export default function MapView({
     <div className={`absolute inset-0 z-0 ${picking ? 'picking' : ''}`}>
       <MapContainer
         center={[initialCenter.lat, initialCenter.lng]}
-        zoom={15}
+        zoom={13}
         zoomControl={false}
         attributionControl
         className="h-full w-full"
@@ -123,7 +123,7 @@ export default function MapView({
             position={[t.lat, t.lng]}
             icon={toiletIcon(
               t.category,
-              t.fee,
+              t.stats.isPaid ? 'paid' : 'free',
               t.id === emergencyId ? 'emergency' : t.id === selectedId ? 'selected' : 'normal',
             )}
             title={t.name}
@@ -142,7 +142,7 @@ export default function MapView({
           <Marker position={[pickedLocation.lat, pickedLocation.lng]} icon={toiletIcon('diger', 'paid', 'new')} zIndexOffset={2000} />
         )}
 
-        <Marker position={[user.lat, user.lng]} icon={userIcon} zIndexOffset={1500} interactive={false} />
+        {user && <Marker position={[user.lat, user.lng]} icon={userIcon} zIndexOffset={1500} interactive={false} />}
       </MapContainer>
     </div>
   );

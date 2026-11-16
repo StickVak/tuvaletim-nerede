@@ -1,5 +1,8 @@
 import type { LatLng, Place, PlaceView } from '../types';
 
+/** Konum bilinmezken harita merkezi: İzmir, Konak */
+export const IZMIR_CENTER: LatLng = { lat: 38.4189, lng: 27.1287 };
+
 const R = 6371000;
 const rad = (d: number) => (d * Math.PI) / 180;
 
@@ -32,59 +35,26 @@ export function formatScore(n: number): string {
   return n.toFixed(1).replace('.', ',');
 }
 
-export function placeAverages(p: Pick<Place, 'cleanlinessTotal' | 'comfortTotal' | 'ratingCount'>) {
-  const n = p.ratingCount || 0;
-  const cleanliness = n ? p.cleanlinessTotal / n : 0;
-  const comfort = n ? p.comfortTotal / n : 0;
-  return { cleanliness, comfort, rating: n ? (cleanliness + comfort) / 2 : 0 };
+export function toView(p: Place, user: LatLng | null): PlaceView {
+  return { ...p, distance: user ? distanceMeters(user, p) : null };
 }
 
-export function toView(p: Place, user: LatLng): PlaceView {
-  return { ...p, ...placeAverages(p), distance: distanceMeters(user, p) };
-}
-
-export function googleMapsDirections(from: LatLng, to: LatLng): string {
-  const p = new URLSearchParams({
-    api: '1',
-    origin: `${from.lat},${from.lng}`,
-    destination: `${to.lat},${to.lng}`,
-    travelmode: 'walking',
-  });
+/** Başlangıç noktası yoksa Google Maps kullanıcının kendi konumunu kullanır */
+export function googleMapsDirections(from: LatLng | null, to: LatLng): string {
+  const p = new URLSearchParams({ api: '1', destination: `${to.lat},${to.lng}`, travelmode: 'walking' });
+  if (from) p.set('origin', `${from.lat},${from.lng}`);
   return `https://www.google.com/maps/dir/?${p.toString()}`;
 }
 
 /**
- * ACİL modu: önce yakındaki ÜCRETSİZ mekanlar, yoksa "müşteriye ücretsiz", o da yoksa tümü.
- * Seçilen kademede yakın adaylar (en yakının 2 katı / en az 1,5 km çevresi) arasında
- * yakınlık %60 + puan %40 skoruyla en iyisi seçilir.
+ * ACİL: 2 km içindeki ÜCRETSİZ mekanlar arasından yakınlık (%70) + puan (%30) skoruyla seçer;
+ * oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz yoksa en yakın mekanı döner.
  */
-export function pickEmergency(places: PlaceView[]): PlaceView | null {
-  if (places.length === 0) return null;
-  const tiers: ((p: PlaceView) => boolean)[] = [
-    (p) => p.fee === 'free',
-    (p) => p.fee !== 'paid',
-    () => true,
-  ];
-  for (let i = 0; i < tiers.length; i++) {
-    const pool = places.filter(tiers[i]).sort((a, b) => a.distance - b.distance);
-    if (pool.length === 0) continue;
-    // Ücretsiz seçenek çok uzaktaysa (5 km+) bir sonraki kademeye bak
-    if (i < tiers.length - 1 && pool[0].distance > 5000) continue;
-    const limit = Math.max(1500, pool[0].distance * 2);
-    const candidates = pool.filter((p) => p.distance <= limit).slice(0, 10);
-    const maxD = Math.max(...candidates.map((p) => p.distance), 1);
-    let best = candidates[0];
-    let bestScore = -Infinity;
-    for (const p of candidates) {
-      const closeness = 1 - p.distance / maxD;
-      const quality = p.ratingCount ? (p.rating - 1) / 4 : 0.4;
-      const score = closeness * 0.6 + quality * 0.4;
-      if (score > bestScore) {
-        bestScore = score;
-        best = p;
-      }
-    }
-    return best;
-  }
-  return null;
+export function pickEmergency(places: PlaceView[], radiusM = 2000): PlaceView | null {
+  const known = places.filter((p) => p.distance !== null).sort((a, b) => a.distance! - b.distance!);
+  const free = known.filter((p) => !p.stats.isPaid && p.distance! <= radiusM);
+  if (free.length === 0) return known[0] ?? null;
+  const maxD = Math.max(...free.map((p) => p.distance!), 1);
+  const score = (p: PlaceView) => 0.7 * (1 - p.distance! / maxD) + 0.3 * (p.stats.voteCount ? (p.stats.rating - 1) / 4 : 0.5);
+  return free.reduce((best, p) => (score(p) > score(best) ? p : best));
 }
