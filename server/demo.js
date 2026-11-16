@@ -49,6 +49,8 @@ export function seedDemo(db, avatarDir) {
   db.tx(() => {
     const ids = {};
     USERS.forEach((u, i) => {
+      // Kullanıcı adı gerçek bir kullanıcıya aitse o örnek profil (ve oyları) atlanır
+      if (db.get('SELECT 1 FROM users WHERE username = ?', [u.username])) return;
       const created = new Date(now - (60 + i * 7) * day).toISOString();
       const { lastId } = db.run(
         'INSERT INTO users (username, display_name, bio, password_hash, role, is_demo, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)',
@@ -64,7 +66,7 @@ export function seedDemo(db, avatarDir) {
       }
     });
     for (const [user, place, c, k, paid, price, comment, daysAgo, type] of VOTES) {
-      if (!db.get('SELECT 1 FROM places WHERE id = ?', [place])) continue;
+      if (!ids[user] || !db.get('SELECT 1 FROM places WHERE id = ?', [place])) continue;
       const at = new Date(now - daysAgo * day).toISOString();
       db.run(
         `INSERT INTO votes (place_id, user_id, cleanliness, comfort, is_paid, price_amount, comment, toilet_type, created_at, updated_at)

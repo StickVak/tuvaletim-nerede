@@ -26,7 +26,7 @@ export interface PlaceStatus {
   crowded: number;
 }
 
-export type ReportType = 'closed' | 'no_supplies' | 'crowded';
+export type ReportType = 'closed' | 'no_supplies' | 'crowded' | 'open';
 
 export interface Vote {
   cleanliness: number;

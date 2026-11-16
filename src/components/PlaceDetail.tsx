@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Accessibility, AlertTriangle, Baby, Clock, Heart, KeyRound, LogIn, MapPin, MessageSquareText, Navigation, PackageX, Send, Sofa, Sparkles, Toilet, Users, Wallet, Wrench, X } from 'lucide-react';
+import { Accessibility, AlertTriangle, Baby, CheckCircle2, Clock, Heart, KeyRound, LogIn, MapPin, MessageSquareText, Navigation, PackageX, Send, Sofa, Sparkles, Toilet, Users, Wallet, Wrench, X } from 'lucide-react';
 import type { Place, PlaceView, ReportType, ToiletType, Vote } from '../types';
 import { relTime } from '../lib/time';
 import Avatar from './Avatar';
@@ -31,6 +31,7 @@ const REPORTS: { type: ReportType; label: string; icon: typeof Wrench }[] = [
   { type: 'closed', label: 'Temizlik / Tadilat Nedeniyle Kapalı', icon: Wrench },
   { type: 'no_supplies', label: 'Kağıt / Sabun Yok', icon: PackageX },
   { type: 'crowded', label: 'Çok Kalabalık', icon: Users },
+  { type: 'open', label: 'Şu An Açık / Sorun Yok', icon: CheckCircle2 },
 ];
 
 function ScoreBar({ label, icon: Icon, value }: { label: string; icon: typeof Sparkles; value: number }) {
@@ -217,7 +218,7 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
                     onClick={() => onReport(place.id, r.type)}
                     className="flex items-center gap-2 rounded-2xl bg-card px-3.5 py-2.5 text-left text-sm font-semibold text-ink ring-1 ring-line transition hover:ring-orange-500"
                   >
-                    <r.icon size={16} className="text-orange-600" /> {r.label}
+                    <r.icon size={16} className={r.type === 'open' ? 'text-green-600' : 'text-orange-600'} /> {r.label}
                   </button>
                 ))}
               </div>

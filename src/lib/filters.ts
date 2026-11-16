@@ -30,8 +30,11 @@ export function isOpenNow(hours: string | null, now: Date = new Date()): boolean
   if (!hours) return null;
   const h = hours.trim();
   if (/^(24\s*saat|24\/7)$/i.test(h)) return true;
-  const minute = now.getHours() * 60 + now.getMinutes();
-  const today = now.getDay();
+  // Cihazın saat diliminden bağımsız olarak Türkiye saati
+  const tr = new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Istanbul', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now);
+  const part = (t: string) => tr.find((x) => x.type === t)!.value;
+  const minute = Number(part('hour')) * 60 + Number(part('minute'));
+  const today = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(part('weekday'));
   const yesterday = (today + 6) % 7;
   const RANGE = /(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})/g;
 

@@ -2,14 +2,14 @@ import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startServer } from './helpers.js';
 
-const srv = await startServer({ seed: [{ id: 'p1', name: 'Mekan Bir', category: 'avm', lat: 38.4, lng: 27.1 }], limits: { auth: { windowMs: 60000, max: 3 }, write: { windowMs: 60000, max: 2 } } });
+const srv = await startServer({ seed: [{ id: 'p1', name: 'Mekan Bir', category: 'avm', lat: 38.4, lng: 27.1 }], limits: { login: { windowMs: 60000, max: 3 }, register: { windowMs: 60000, max: 0 }, write: { windowMs: 60000, max: 2 } } });
 after(() => srv.close());
 
 test('login brute force is throttled with 429 and Retry-After', async () => {
   const codes = [];
   for (let i = 0; i < 4; i++) codes.push((await srv.req('POST', '/api/auth/login', { username: 'x', password: 'y' })).status);
   assert.deepEqual(codes, [401, 401, 401, 429]);
-  const res = await fetch(srv.url + '/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  const res = await fetch(srv.url + '/api/auth/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); // register: max 0
   assert.equal(res.status, 429);
   assert.ok(Number(res.headers.get('retry-after')) > 0);
 });
@@ -26,4 +26,16 @@ test('vote / report / favorite spam is throttled', async () => {
   assert.deepEqual(codes, [200, 200, 429]);
   // okuma uçları sınırlanmaz
   assert.equal((await srv.req('GET', '/api/places')).status, 200);
+});
+
+test('successful logins do not consume the login budget', async () => {
+  const s2 = await startServer({ limits: { login: { windowMs: 60000, max: 2 } } });
+  await s2.req('POST', '/api/auth/register', { username: 'natkullanici', password: 'secret1' });
+  const ok = [];
+  for (let i = 0; i < 5; i++) ok.push((await s2.req('POST', '/api/auth/login', { username: 'natkullanici', password: 'secret1' })).status);
+  assert.deepEqual(ok, [200, 200, 200, 200, 200]);
+  const bad = [];
+  for (let i = 0; i < 3; i++) bad.push((await s2.req('POST', '/api/auth/login', { username: 'natkullanici', password: 'yanlis' })).status);
+  assert.deepEqual(bad, [401, 401, 429]);
+  s2.close();
 });

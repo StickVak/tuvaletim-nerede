@@ -238,7 +238,14 @@ export default function App() {
     try {
       const updated = await api<Place>(`/places/${id}/reports`, { method: 'POST', body: { type } });
       replacePlace(updated);
-      toast(updated.status.closed && type === 'closed' ? 'Teşekkürler! Mekan geçici olarak kapalı işaretlendi.' : 'Bildiriminiz alındı, teşekkürler!', 'success');
+      toast(
+        type === 'closed' && updated.status.closed
+          ? 'Teşekkürler! Mekan geçici olarak kapalı işaretlendi.'
+          : type === 'open'
+            ? 'Teşekkürler! Mekanın açık olduğu bildirildi.'
+            : 'Bildiriminiz alındı, teşekkürler!',
+        'success',
+      );
     } catch (e) {
       toast((e as Error).message, 'error');
     }

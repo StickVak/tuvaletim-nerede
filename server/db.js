@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS status_reports (
   id INTEGER PRIMARY KEY,
   place_id TEXT NOT NULL REFERENCES places(id) ON DELETE CASCADE,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  report_type TEXT NOT NULL CHECK (report_type IN ('closed', 'no_supplies', 'crowded')),
+  report_type TEXT NOT NULL CHECK (report_type IN ('closed', 'no_supplies', 'crowded', 'open')),
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reports_place_time ON status_reports(place_id, created_at);
@@ -95,6 +95,13 @@ export async function openDb(path, { seedFile } = {}) {
   const SQL = await initSqlJs();
   const db = existsSync(path) ? new SQL.Database(readFileSync(path)) : new SQL.Database();
   db.run('PRAGMA foreign_keys = ON');
+  // Önceki sürümde status_reports CHECK kısıtı 'open' içermiyordu: tabloyu yeniden kur
+  const reportsSql = db.exec("SELECT sql FROM sqlite_master WHERE name = 'status_reports'")[0]?.values[0][0];
+  if (reportsSql && !reportsSql.includes("'open'")) {
+    db.exec('ALTER TABLE status_reports RENAME TO status_reports_old');
+    db.exec(SCHEMA);
+    db.exec('INSERT INTO status_reports SELECT * FROM status_reports_old; DROP TABLE status_reports_old;');
+  }
   db.exec(SCHEMA);
   for (const [table, cols] of Object.entries(ADDED_COLUMNS)) {
     const have = new Set(db.exec(`PRAGMA table_info(${table})`)[0].values.map((r) => r[1]));

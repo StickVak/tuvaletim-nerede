@@ -33,7 +33,8 @@ export async function createApp({ dbPath, secret, seedFile, adminUsername, admin
 
   const pass = (_req, _res, next) => next();
   const L = limits === false ? null : { ...DEFAULT_LIMITS, ...limits };
-  const authLimit = L ? rateLimit(L.auth, 'Çok fazla giriş denemesi. Lütfen birkaç dakika sonra tekrar deneyin.') : pass;
+  const loginLimit = L ? rateLimit(L.login, 'Çok fazla hatalı giriş denemesi. Lütfen birkaç dakika sonra tekrar deneyin.', (s) => s >= 400) : pass;
+  const registerLimit = L ? rateLimit(L.register, 'Çok fazla kayıt denemesi. Lütfen daha sonra tekrar deneyin.') : pass;
   const writeLimit = L ? rateLimit(L.write) : pass;
 
   const app = express();
@@ -41,7 +42,7 @@ export async function createApp({ dbPath, secret, seedFile, adminUsername, admin
   app.set('trust proxy', 'loopback');
   app.use(express.json({ limit: '6mb' }));
   app.use(optionalUser(db, secret));
-  app.use('/api/auth', authRoutes(db, secret, authLimit));
+  app.use('/api/auth', authRoutes(db, secret, { loginLimit, registerLimit }));
   app.use('/api/places', placeRoutes(db, writeLimit));
   app.use('/api/favorites', favoriteRoutes(db, writeLimit));
   app.use('/api/pending', pendingRoutes(db, writeLimit));

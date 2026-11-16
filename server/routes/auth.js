@@ -4,9 +4,10 @@ import { hashPassword, publicUser, requireUser, signToken, verifyPassword } from
 const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function authRoutes(db, secret, limiter) {
+export function authRoutes(db, secret, { loginLimit, registerLimit }) {
   const r = Router();
-  r.use(['/register', '/login'], limiter);
+  r.use('/register', registerLimit);
+  r.use('/login', loginLimit);
   const respond = (res, status, user) => res.status(status).json({ token: signToken({ id: user.id, role: user.role }, secret), user: publicUser(user) });
 
   r.post('/register', (req, res) => {

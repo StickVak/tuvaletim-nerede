@@ -77,9 +77,15 @@ function ClusterLayer({ places, picking, onSelect, onPick }: { places: PlaceView
     };
   }, [map]);
 
+  // Yalnızca pinin görünümünü etkileyen alanlar değişince yeniden kur (konum güncellemesinde değil)
+  const signature = places.map((p) => `${p.id}|${p.category}|${p.stats.isPaid}|${p.status.closed}`).join(',');
+  const placesRef = useRef(places);
+  placesRef.current = places;
+
   useEffect(() => {
     const g = group.current;
     if (!g) return;
+    const places = placesRef.current;
     g.clearLayers();
     g.addLayers(
       places.map((p) => {
@@ -93,7 +99,7 @@ function ClusterLayer({ places, picking, onSelect, onPick }: { places: PlaceView
         return m;
       }),
     );
-  }, [places]);
+  }, [signature]);
 
   return null;
 }

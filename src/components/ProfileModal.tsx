@@ -9,7 +9,7 @@ import Avatar from './Avatar';
 import ModalShell from './ModalShell';
 
 const input = 'w-full rounded-2xl border-2 border-transparent bg-card px-4 py-2.5 text-sm font-medium text-ink outline-none focus:border-brand-dark';
-const REPORT_TEXT = { closed: 'kapalı bildirdiniz', no_supplies: 'kağıt/sabun yok bildirdiniz', crowded: 'çok kalabalık bildirdiniz' } as const;
+const REPORT_TEXT = { closed: 'kapalı bildirdiniz', no_supplies: 'kağıt/sabun yok bildirdiniz', crowded: 'çok kalabalık bildirdiniz', open: 'açık / sorun yok bildirdiniz' } as const;
 
 interface Props {
   onClose: () => void;

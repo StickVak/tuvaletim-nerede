@@ -5,14 +5,14 @@ import { pickEmergency } from './geo.ts';
 import type { PlaceView } from '../types';
 
 const at = (iso: string) => new Date(iso); // yerel saat
-const MON_10 = at('2026-11-16T10:00:00'); // Pazartesi
-const SUN_23 = at('2026-11-22T23:30:00'); // Pazar
+const MON_10 = at('2026-11-16T10:00:00+03:00'); // Pazartesi
+const SUN_23 = at('2026-11-22T23:30:00+03:00'); // Pazar
 
 test('isOpenNow: simple "HH:MM – HH:MM" ranges, overnight and 24h', () => {
   assert.equal(isOpenNow('10:00 – 22:00', MON_10), true);
-  assert.equal(isOpenNow('10:00 – 22:00', at('2026-11-16T09:59:00')), false);
-  assert.equal(isOpenNow('22:00-02:00', at('2026-11-16T01:30:00')), true);
-  assert.equal(isOpenNow('22:00-02:00', at('2026-11-16T03:00:00')), false);
+  assert.equal(isOpenNow('10:00 – 22:00', at('2026-11-16T09:59:00+03:00')), false);
+  assert.equal(isOpenNow('22:00-02:00', at('2026-11-16T01:30:00+03:00')), true);
+  assert.equal(isOpenNow('22:00-02:00', at('2026-11-16T03:00:00+03:00')), false);
   assert.equal(isOpenNow('24 saat', SUN_23), true);
   assert.equal(isOpenNow('24/7', SUN_23), true);
 });
@@ -77,4 +77,10 @@ test('pickEmergency skips places reported closed', () => {
   const closed = place('kapali', { distance: 100, status: { closed: true, closedReports: 2, noSupplies: 0, crowded: 0 } });
   assert.equal(pickEmergency([closed, place('acik', { distance: 600 })])?.id, 'acik');
   assert.equal(pickEmergency([closed]), null);
+});
+
+test('isOpenNow uses Turkey time regardless of device timezone', () => {
+  // 07:30Z = İstanbul 10:30 (UTC+3)
+  assert.equal(isOpenNow('10:00-22:00', new Date('2026-11-16T07:30:00Z')), true);
+  assert.equal(isOpenNow('10:00-22:00', new Date('2026-11-16T06:30:00Z')), false);
 });

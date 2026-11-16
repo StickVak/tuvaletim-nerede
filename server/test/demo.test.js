@@ -33,3 +33,16 @@ test('demo seed is idempotent and demo users cannot log in', async () => {
   const r = await srv.req('POST', '/api/auth/login', { username: 'ayse.karsiyaka', password: '' });
   assert.equal(r.status, 401);
 });
+
+test('seedDemo skips demo usernames already taken by real users instead of crashing', async () => {
+  const { openDb } = await import('../db.js');
+  const { seedDemo } = await import('../demo.js');
+  const { mkdtempSync } = await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const dir = mkdtempSync(join(tmpdir(), 'tn-demo-'));
+  const db = await openDb(join(dir, 'x.db'), { seedFile: new URL('../seed-places.json', import.meta.url).pathname });
+  db.run("INSERT INTO users (username, password_hash, role, created_at) VALUES ('elif.konak', 'x', 'user', '2026-01-01')");
+  assert.equal(seedDemo(db, join(dir, 'avatars')), true);
+  assert.equal(db.get("SELECT is_demo FROM users WHERE username = 'elif.konak'").is_demo, 0, 'gerçek kullanıcıya dokunulmaz');
+  assert.equal(db.get('SELECT COUNT(*) AS n FROM users WHERE is_demo = 1').n, 5);
+});

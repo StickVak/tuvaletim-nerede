@@ -22,3 +22,11 @@ test('no_supplies and crowded count distinct recent reporters', () => {
   const s = computeStatus([r(1, 'no_supplies', 5), r(2, 'no_supplies', 5), r(2, 'no_supplies', 50), r(3, 'crowded', 1)], NOW);
   assert.deepEqual(s, { closed: false, closedReports: 0, noSupplies: 2, crowded: 1 });
 });
+
+test('an "open" report cancels earlier closed reports', () => {
+  const s = computeStatus([r(1, 'closed', 60), r(2, 'closed', 50), r(3, 'open', 10)], NOW);
+  assert.equal(s.closed, false);
+  assert.equal(s.closedReports, 0);
+  // açık bildiriminden SONRA gelen kapalılar yine sayılır
+  assert.equal(computeStatus([r(3, 'open', 90), r(1, 'closed', 20), r(2, 'closed', 5)], NOW).closed, true);
+});
