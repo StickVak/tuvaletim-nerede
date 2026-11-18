@@ -12,7 +12,10 @@ interface AuthState {
   openAuth: (mode?: AuthMode) => void;
   closeAuth: () => void;
   login: (username: string, password: string) => Promise<User>;
-  register: (username: string, email: string, password: string) => Promise<User>;
+  /** Kayıt 1. adım: e-postaya 6 haneli doğrulama kodu gönderir */
+  sendCode: (email: string, username: string) => Promise<{ expiresIn: number; resendIn: number }>;
+  /** Kayıt 2. adım: kodu doğrular ve hesabı oluşturur */
+  register: (username: string, email: string, password: string, code: string) => Promise<User>;
   logout: () => void;
   /** Girişli değilse giriş penceresini açar ve false döner */
   requireAuth: () => boolean;
@@ -59,9 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (username: string, password: string) => finish(await api('/auth/login', { method: 'POST', body: { username, password } })),
     [],
   );
+  const sendCode = useCallback(
+    (email: string, username: string) =>
+      api<{ expiresIn: number; resendIn: number }>('/auth/send-code', { method: 'POST', body: { email, username } }),
+    [],
+  );
   const register = useCallback(
-    async (username: string, email: string, password: string) =>
-      finish(await api('/auth/register', { method: 'POST', body: { username, email, password } })),
+    async (username: string, email: string, password: string, code: string) =>
+      finish(await api('/auth/register', { method: 'POST', body: { username, email, password, code } })),
     [],
   );
   const logout = useCallback(() => {
@@ -77,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   return (
-    <AuthContext.Provider value={{ user, ready, authMode, openAuth, closeAuth, login, register, logout, requireAuth, updateUser: setUser }}>
+    <AuthContext.Provider value={{ user, ready, authMode, openAuth, closeAuth, login, sendCode, register, logout, requireAuth, updateUser: setUser }}>
       {children}
     </AuthContext.Provider>
   );

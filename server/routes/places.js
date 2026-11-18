@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { requireUser } from '../auth.js';
 import { computeStats } from '../stats.js';
 import { computeStatus, REPORT_TYPES, STATUS_WINDOW_MS } from '../status.js';
-import { PHOTO_RE } from '../validate.js';
+import { sendPhoto } from '../photos.js';
 
 export const TOILET_TYPES = ['alafranga', 'alaturka', 'ikisi'];
 
@@ -30,7 +30,7 @@ function placeJson(row, votes, reports, userId, favorite) {
     address: row.address,
     lat: row.lat,
     lng: row.lng,
-    hasPhoto: Boolean(row.photo),
+    hasPhoto: Boolean(row.photo_file),
     hours: row.hours,
     accessible: !!row.accessible,
     babyChanging: !!row.baby_changing,
@@ -131,7 +131,7 @@ export function parseVote(body) {
   };
 }
 
-export function placeRoutes(db, writeLimit) {
+export function placeRoutes(db, writeLimit, photosDir) {
   const r = Router();
   // Kalıcı kapalı mekanlar herkese açık uçlarda yok sayılır
   const exists = (id) => db.get('SELECT 1 FROM places WHERE id = ? AND closed_at IS NULL', [id]);
@@ -140,10 +140,8 @@ export function placeRoutes(db, writeLimit) {
 
   /** Mekan fotoğrafı (liste yanıtını küçük tutmak için ayrı uç nokta) */
   r.get('/:id/photo', (req, res) => {
-    const row = db.get('SELECT photo FROM places WHERE id = ?', [req.params.id]);
-    if (!row?.photo || !PHOTO_RE.test(row.photo)) return res.status(404).json({ error: 'Fotoğraf yok.' });
-    const [, type] = row.photo.match(/^data:image\/(\w+);/);
-    res.set('X-Content-Type-Options', 'nosniff').type(`image/${type}`).send(Buffer.from(row.photo.split(',')[1], 'base64'));
+    const row = db.get('SELECT photo_file FROM places WHERE id = ?', [req.params.id]);
+    sendPhoto(res, photosDir, row?.photo_file);
   });
 
   /** Yorumlu son 20 oy (herkese açık), yazarın görünen adı ve avatarıyla */

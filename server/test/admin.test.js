@@ -2,6 +2,8 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { startServer } from './helpers.js';
 
+const JPEG = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1, 0xff, 0xd9]).toString('base64');
+
 const SEED = [
   { id: 'seed-forum', name: 'Forum Bornova', category: 'avm', district: 'Bornova', lat: 38.45, lng: 27.21 },
   { id: 'seed-wc', name: 'Kordon WC', category: 'belediye', district: 'Konak', lat: 38.43, lng: 27.14 },
@@ -14,6 +16,7 @@ const submission = (o = {}) => ({
   district: 'Konak',
   accessible: true,
   vote: { cleanliness: 4, comfort: 5, isPaid: false, priceAmount: null, comment: 'Güzel' },
+  photo: JPEG,
   ...o,
 });
 
@@ -181,7 +184,8 @@ test('kullanıcı listesi ve ayrıntısı: oylar, ihbarlar, eklenen mekanlar', a
   assert.equal(u2.votes, 1);
   assert.ok(u2.reports >= 2);
   assert.equal(list.body.find((u) => u.username === 'basvuran').placesAdded, 1);
-  for (const k of ['password_hash', 'passwordHash', 'email']) assert.ok(!(k in u2), k);
+  for (const k of ['password_hash', 'passwordHash']) assert.ok(!(k in u2), k);
+  assert.equal(u2.email, 'ihbarci2@test.local', 'yönetici e-postayı görür (doğrulanmış kayıt)');
 
   const d = await srv.admin('GET', `/api/admin/users/${u2.id}`);
   assert.equal(d.status, 200);

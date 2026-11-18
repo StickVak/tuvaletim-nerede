@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Router } from 'express';
 import { parsePlaceFields } from '../validate.js';
 import { getPlace, listPlaces } from './places.js';
+import { PhotoError, removePhoto, savePhoto, sendPhoto } from '../photos.js';
 
 const COLUMN = { babyChanging: 'baby_changing', publicAccess: 'public_access', toiletType: 'toilet_type' };
 /** Şüpheli sayılan ihbar türleri ("open" = "sorun yok" bildirimi, kuyruğa girmez) */
@@ -14,8 +15,20 @@ const adminPlace = (db, id) => getPlace(db, id, null, { includeClosed: true });
 /**
  * Yönetim API'si (yalnızca X-Admin-Key ile; bkz. requireAdminKey). Arayüzü ayrı admin/ servisindedir.
  */
-export function adminRoutes(db) {
+export function adminRoutes(db, photosDir) {
   const r = Router();
+  /** Fotoğraf doğrulama hatalarını 400'e çevirir */
+  const withPhoto = (res, fn) => {
+    try {
+      return fn();
+    } catch (e) {
+      if (e instanceof PhotoError) {
+        res.status(400).json({ error: e.message });
+        return undefined;
+      }
+      throw e;
+    }
+  };
 
   /** Çözülmemiş ihbarlar, mekan başına gruplanmış; şüpheliler (≥2 farklı kullanıcı) önce */
   function reportQueue() {
@@ -100,11 +113,19 @@ export function adminRoutes(db) {
     res.json(
       rows.map((p) => ({
         id: p.id, name: p.name, category: p.category, district: p.district, address: p.address, lat: p.lat, lng: p.lng,
-        photo: p.photo, hours: p.hours, accessible: !!p.accessible, babyChanging: !!p.baby_changing,
+        // Dış mekan fotoğrafı: yönetim anahtarıyla korunan uç (panel sunucusu üzerinden görüntülenir)
+        photo: p.photo_file ? `/api/admin/pending/${encodeURIComponent(p.id)}/photo` : null,
+        hasPhoto: Boolean(p.photo_file),
+        hours: p.hours, accessible: !!p.accessible, babyChanging: !!p.baby_changing,
         submittedAt: p.submitted_at, username: p.username ?? null,
         vote: { cleanliness: p.cleanliness, comfort: p.comfort, isPaid: !!p.is_paid, priceAmount: p.price_amount, comment: p.comment },
       })),
     );
+  });
+
+  r.get('/pending/:id/photo', (req, res) => {
+    const row = db.get('SELECT photo_file FROM pending_places WHERE id = ?', [req.params.id]);
+    sendPhoto(res, photosDir, row?.photo_file, 'private, max-age=300');
   });
 
   r.post('/pending/:id/approve', (req, res) => {
@@ -113,10 +134,10 @@ export function adminRoutes(db) {
     const now = new Date().toISOString();
     db.tx(() => {
       db.run(
-        `INSERT INTO places (id, name, category, district, address, lat, lng, photo, hours, accessible, baby_changing, public_access,
+        `INSERT INTO places (id, name, category, district, address, lat, lng, photo_file, hours, accessible, baby_changing, public_access,
            added_by, source, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`,
-        [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.photo, p.hours, p.accessible, p.baby_changing,
+        [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.photo_file, p.hours, p.accessible, p.baby_changing,
           p.public_access, p.user_id, now, now],
       );
       if (p.user_id) {
@@ -132,8 +153,11 @@ export function adminRoutes(db) {
   });
 
   r.delete('/pending/:id', (req, res) => {
-    const { changes } = db.run('DELETE FROM pending_places WHERE id = ?', [req.params.id]);
-    res.status(changes ? 204 : 404).end();
+    const row = db.get('SELECT photo_file FROM pending_places WHERE id = ?', [req.params.id]);
+    if (!row) return res.status(404).end();
+    db.run('DELETE FROM pending_places WHERE id = ?', [req.params.id]);
+    removePhoto(photosDir, row.photo_file);
+    res.status(204).end();
   });
 
   // ---------------------------------------------------------------- mekanlar
@@ -142,13 +166,15 @@ export function adminRoutes(db) {
   r.post('/places', (req, res) => {
     const f = parsePlaceFields(req.body);
     if (typeof f === 'string') return res.status(400).json({ error: f });
+    const photoFile = f.photo ? withPhoto(res, () => savePhoto(photosDir, f.photo)) : null;
+    if (photoFile === undefined) return;
     const id = `admin-${randomUUID()}`;
     const now = new Date().toISOString();
     db.run(
-      `INSERT INTO places (id, name, category, district, address, lat, lng, photo, hours, accessible, baby_changing, public_access,
+      `INSERT INTO places (id, name, category, district, address, lat, lng, photo_file, hours, accessible, baby_changing, public_access,
          toilet_type, source, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'admin', ?, ?)`,
-      [id, f.name, f.category, f.district, f.address, f.lat, f.lng, f.photo, f.hours, f.accessible, f.babyChanging, f.publicAccess,
+      [id, f.name, f.category, f.district, f.address, f.lat, f.lng, photoFile, f.hours, f.accessible, f.babyChanging, f.publicAccess,
         f.toiletType ?? null, now, now],
     );
     res.status(201).json(adminPlace(db, id));
@@ -161,18 +187,30 @@ export function adminRoutes(db) {
     if (closed !== undefined && typeof closed !== 'boolean') return res.status(400).json({ error: 'Geçersiz kapalı durumu.' });
     const fields = parsePlaceFields(body, { partial: true });
     if (typeof fields === 'string') return res.status(400).json({ error: fields });
-    const sets = Object.keys(fields).map((k) => [`${COLUMN[k] ?? k} = ?`, fields[k]]);
+    const { photo, ...rest } = fields;
+    const sets = Object.keys(rest).map((k) => [`${COLUMN[k] ?? k} = ?`, rest[k]]);
     if (closed !== undefined) sets.push(['closed_at = ?', closed ? new Date().toISOString() : null]);
+    // photo: undefined → değişmez · null → kaldır · data URL → yeni dosya (eskisi silinir)
+    const oldPhoto = db.get('SELECT photo_file FROM places WHERE id = ?', [req.params.id]).photo_file;
+    let newPhoto;
+    if (photo !== undefined) {
+      newPhoto = photo ? withPhoto(res, () => savePhoto(photosDir, photo)) : null;
+      if (newPhoto === undefined) return;
+      sets.push(['photo_file = ?', newPhoto], ['photo = ?', null]);
+    }
     if (sets.length) {
       db.run(`UPDATE places SET ${sets.map(([s]) => s).join(', ')}, updated_at = ? WHERE id = ?`, [
         ...sets.map(([, v]) => v), new Date().toISOString(), req.params.id,
       ]);
     }
+    if (photo !== undefined && oldPhoto !== newPhoto) removePhoto(photosDir, oldPhoto);
     res.json(adminPlace(db, req.params.id));
   });
 
   r.delete('/places/:id', (req, res) => {
+    const file = db.get('SELECT photo_file FROM places WHERE id = ?', [req.params.id])?.photo_file;
     const changes = db.deletePlace(req.params.id);
+    if (changes) removePhoto(photosDir, file);
     res.status(changes ? 204 : 404).end();
   });
 
@@ -193,7 +231,7 @@ export function adminRoutes(db) {
   // ---------------------------------------------------------------- kullanıcı denetimi
   r.get('/users', (_req, res) => {
     const rows = db.all(
-      `SELECT u.id, u.username, u.display_name, u.avatar_url, u.created_at,
+      `SELECT u.id, u.username, u.email, u.display_name, u.avatar_url, u.created_at,
          (SELECT COUNT(*) FROM votes WHERE user_id = u.id) AS votes,
          (SELECT COUNT(*) FROM votes WHERE user_id = u.id AND comment IS NOT NULL) AS comments,
          (SELECT COUNT(*) FROM status_reports WHERE user_id = u.id) AS reports,
@@ -208,7 +246,7 @@ export function adminRoutes(db) {
 
   r.get('/users/:id', (req, res) => {
     const id = Number(req.params.id);
-    const u = db.get("SELECT id, username, display_name, avatar_url, created_at FROM users WHERE id = ? AND role = 'user'", [id]);
+    const u = db.get("SELECT id, username, email, display_name, avatar_url, created_at FROM users WHERE id = ? AND role = 'user'", [id]);
     if (!u) return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
     const votes = db.all(
       `SELECT v.*, u.username, u.display_name, p.name AS place_name FROM votes v
@@ -254,6 +292,7 @@ function userJson(u) {
   return {
     id: u.id,
     username: u.username,
+    email: u.email ?? null,
     displayName: u.display_name || u.username,
     avatarUrl: u.avatar_url ?? null,
     createdAt: u.created_at,

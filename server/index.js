@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { createApp } from './app.js';
 import { resolveAdminKey, resolveSecret } from './secret.js';
+import { createMailer } from './mailer.js';
 
 try {
   process.loadEnvFile();
@@ -18,7 +19,12 @@ if (generated) console.warn('[api] AUTH_SECRET tanımlı değil (ya da örnek de
 const { key: adminKey, generated: adminKeyGenerated } = resolveAdminKey(process.env.ADMIN_SECRET_KEY, here('./data'));
 if (adminKeyGenerated) console.warn('[api] ADMIN_SECRET_KEY tanımlı değil; yönetici anahtarı üretilip server/data/.admin-key dosyasına kaydedildi (admin paneline bu anahtarla girin).');
 
+const mailer = createMailer(process.env);
+if (mailer.kind === 'console') console.warn('[mail] RESEND_API_KEY / SMTP_* tanımlı değil: doğrulama kodları e-posta yerine bu konsola yazılacak.');
+else console.log(`[mail] e-posta servisi: ${mailer.kind}`);
+
 const app = await createApp({
+  mailer,
   dbPath: here('./data/tuvaletim.db'),
   seedFile: here('./seed-places.json'),
   secret,

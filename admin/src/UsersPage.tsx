@@ -12,7 +12,7 @@ export default function UsersPage({ users, act }: { users: AdminUser[]; act: Act
   const [openId, setOpenId] = useState<number | null>(null);
   const items = useMemo(() => {
     const needle = q.trim().toLocaleLowerCase('tr-TR');
-    return users.filter((u) => !needle || `${u.username} ${u.displayName}`.toLocaleLowerCase('tr-TR').includes(needle));
+    return users.filter((u) => !needle || `${u.username} ${u.displayName} ${u.email ?? ''}`.toLocaleLowerCase('tr-TR').includes(needle));
   }, [users, q]);
 
   return (
@@ -20,7 +20,7 @@ export default function UsersPage({ users, act }: { users: AdminUser[]; act: Act
       <PageHeader title="Kullanıcılar" subtitle={`${users.length} kayıtlı kullanıcı · son etkinliğe göre sıralı`} />
       <label className="mb-4 flex max-w-md items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 ring-1 ring-line focus-within:ring-2 focus-within:ring-brand-dark">
         <Search size={16} className="text-ink-muted" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kullanıcı adı ara" className="w-full bg-transparent text-sm outline-none" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Kullanıcı adı veya e-posta ara" className="w-full bg-transparent text-sm outline-none" />
       </label>
 
       {items.length === 0 ? (
@@ -45,7 +45,7 @@ export default function UsersPage({ users, act }: { users: AdminUser[]; act: Act
                   <td className="px-4 py-3">
                     <button type="button" className="text-left" onClick={() => setOpenId(u.id)}>
                       <span className="block font-bold">{u.displayName}</span>
-                      <span className="text-xs text-ink-muted">@{u.username} · üye {relTime(u.createdAt)}</span>
+                      <span className="text-xs text-ink-muted">@{u.username} · {u.email ?? 'e-posta yok'} · üye {relTime(u.createdAt)}</span>
                     </button>
                   </td>
                   <td className="px-2 py-3 text-right tabular-nums">{u.votes}</td>
@@ -87,7 +87,7 @@ function UserDetail({ id, act, onClose }: { id: number; act: Act; onClose: () =>
         <header className="flex items-center justify-between border-b border-line px-6 py-4">
           <div>
             <h2 className="text-lg font-extrabold">{data?.user.displayName ?? 'Kullanıcı'}</h2>
-            {data && <p className="text-xs text-ink-muted">@{data.user.username} · üye {relTime(data.user.createdAt)}</p>}
+            {data && <p className="text-xs text-ink-muted">@{data.user.username} · {data.user.email ?? 'e-posta yok'} · üye {relTime(data.user.createdAt)}</p>}
           </div>
           <button type="button" onClick={onClose} aria-label="Kapat" className="rounded-full bg-card p-2 hover:bg-line/60"><X size={18} /></button>
         </header>

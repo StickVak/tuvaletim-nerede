@@ -11,7 +11,11 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
   const dir = mkdtempSync(join(tmpdir(), 'tn-test-'));
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(seed));
+  /** Sahte posta kutusu: gönderilen doğrulama kodları */
+  const outbox = [];
+  const mailer = { kind: 'test', sendVerificationCode: async (to, code) => void outbox.push({ to, code }) };
   const app = await createApp({
+    mailer,
     dbPath: join(dir, 'test.db'),
     secret: SECRET,
     seedFile,
@@ -37,14 +41,20 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
     return { status: res.status, body: text ? JSON.parse(text) : null };
   }
 
-  async function register(username, password = 'secret1') {
-    const r = await req('POST', '/api/auth/register', { username, password });
-    return r.body.token;
+  /** Son gönderilen doğrulama kodu */
+  const lastCode = (email) => [...outbox].reverse().find((m) => m.to === email.toLowerCase())?.code;
+
+  /** Kod iste + kodla kayıt ol (OTP akışı) */
+  async function registerFull(username, password = 'secret1', email = `${username.toLowerCase()}@test.local`) {
+    const sent = await req('POST', '/api/auth/send-code', { email, username });
+    if (sent.status !== 200) throw new Error(`send-code ${sent.status}: ${sent.body?.error}`);
+    const r = await req('POST', '/api/auth/register', { username, email, password, code: lastCode(email) });
+    if (r.status !== 201) throw new Error(`register ${r.status}: ${r.body?.error}`);
+    return { token: r.body.token, user: r.body.user };
   }
 
-  async function registerFull(username, password = 'secret1') {
-    const r = await req('POST', '/api/auth/register', { username, password });
-    return { token: r.body.token, user: r.body.user };
+  async function register(username, password = 'secret1') {
+    return (await registerFull(username, password)).token;
   }
 
   /** Yönetim API'si: X-Admin-Key başlığıyla (key verilmezse sunucunun anahtarı) */
@@ -54,6 +64,8 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
     url,
     req,
     register,
+    outbox,
+    lastCode,
     registerFull,
     admin,
     db: app.locals.db,

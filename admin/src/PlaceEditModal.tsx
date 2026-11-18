@@ -5,7 +5,7 @@ import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../../src/lib/categories
 import { readImageAsDataUrl } from '../../src/lib/image';
 import { IZMIR_CENTER } from '../../src/lib/geo';
 import MiniMap from './MiniMap';
-import { inputCls } from './ui';
+import { inputCls, Lightbox } from './ui';
 
 type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging' | 'toiletType' | 'publicAccess'> & {
   /** undefined: değişmedi · null: kaldır · string: yeni fotoğraf */
@@ -30,6 +30,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const [zoom, setZoom] = useState<string | null>(null);
   const set = <K extends keyof EditFields>(k: K, v: EditFields[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async (e: React.FormEvent) => {
@@ -118,9 +119,19 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
               </div>
             </div>
             <div>
-              <span className="mb-1 block text-xs font-bold text-ink-soft">Fotoğraf</span>
+              <span className="mb-1 block text-xs font-bold text-ink-soft">Dış mekan fotoğrafı (giriş / bina cephesi)</span>
               <div className="relative overflow-hidden rounded-2xl">
-                <img src={form.photo === undefined && place ? placePhoto(place) : placePhoto({ ...form, photo: form.photo ?? null })} alt="" className="h-36 w-full bg-card object-cover" />
+                {(() => {
+                  const hasReal = form.photo ? true : form.photo === undefined && !!place?.hasPhoto;
+                  const src = form.photo === undefined && place ? placePhoto(place) : placePhoto({ ...form, photo: form.photo ?? null });
+                  return hasReal ? (
+                    <button type="button" onClick={() => setZoom(src)} className="block w-full" aria-label="Fotoğrafı büyüt">
+                      <img src={src} alt="Dış mekan fotoğrafı" className="h-64 w-full bg-card object-cover" />
+                    </button>
+                  ) : (
+                    <img src={src} alt="" className="h-40 w-full bg-card object-cover opacity-70" />
+                  );
+                })()}
                 <div className="absolute bottom-2 right-2 flex gap-1.5">
                   <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-onbrand shadow">
                     <Camera size={13} /> Değiştir
@@ -141,6 +152,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
           </div>
         </div>
 
+        {zoom && <Lightbox src={zoom} alt="Dış mekan fotoğrafı" onClose={() => setZoom(null)} />}
         <footer className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
           <p className="text-sm font-semibold text-red-600">{error}</p>
           <div className="flex gap-2">

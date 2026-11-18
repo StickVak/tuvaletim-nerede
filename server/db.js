@@ -75,6 +75,14 @@ CREATE TABLE IF NOT EXISTS status_reports (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reports_place_time ON status_reports(place_id, created_at);
+-- E-posta doğrulama kodları (kayıt): kod düz metin değil HMAC olarak saklanır; 10 dk geçerli, en fazla 5 hatalı deneme
+CREATE TABLE IF NOT EXISTS email_codes (
+  email TEXT PRIMARY KEY COLLATE NOCASE,
+  code_hash TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  sent_at TEXT NOT NULL
+);
 -- Yöneticinin sildiği seed mekanları: açılıştaki seed eşitlemesi bunları yeniden eklemez
 CREATE TABLE IF NOT EXISTS seed_removed (id TEXT PRIMARY KEY);
 `;
@@ -83,11 +91,12 @@ CREATE TABLE IF NOT EXISTS seed_removed (id TEXT PRIMARY KEY);
 const ADDED_COLUMNS = {
   users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0'],
   // closed_at: yönetici onaylı kalıcı kapalı (haritada gösterilmez)
-  places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT'],
+  places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
   status_reports: ['resolved_at TEXT'],
   votes: ['toilet_type TEXT'],
-  pending_places: ['toilet_type TEXT', 'public_access INTEGER'],
+  // photo_file: server/data/photos altındaki dış mekan fotoğrafı (photo sütunu eski base64 içindir, göçte boşaltılır)
+  pending_places: ['toilet_type TEXT', 'public_access INTEGER', 'photo_file TEXT'],
 };
 
 const norm = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0) : v);

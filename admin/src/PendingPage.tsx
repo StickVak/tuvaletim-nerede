@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { Accessibility, Baby, Check, Clock3, Inbox, MapPin, X } from 'lucide-react';
 import { api } from './api';
 import type { AdminPending } from './types';
-import { CATEGORIES, placePhoto } from '../../src/lib/categories';
+import { CATEGORIES } from '../../src/lib/categories';
 import StarRating from '../../src/components/StarRating';
 import MiniMap from './MiniMap';
-import { ConfirmDialog, EmptyState, PageHeader, relTime } from './ui';
+import { ConfirmDialog, EmptyState, OutdoorPhoto, PageHeader, relTime } from './ui';
 
 type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
 
@@ -25,8 +25,8 @@ export default function PendingPage({ pending, act }: { pending: AdminPending[];
             return (
               <article key={s.id} className="animate-slide-up overflow-hidden rounded-3xl bg-surface shadow-sm ring-1 ring-line">
                 <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
-                  <img src={placePhoto(s)} alt={s.name} className="h-48 w-full rounded-2xl bg-card object-cover" />
-                  <MiniMap center={s} category={s.category} />
+                  <OutdoorPhoto src={s.photo} alt={`${s.name} dış mekan fotoğrafı`} className="h-56" />
+                  <MiniMap center={s} category={s.category} className="h-56" />
                 </div>
                 <div className="px-5 pb-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">

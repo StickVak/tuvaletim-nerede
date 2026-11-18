@@ -21,7 +21,9 @@ export interface AdminPending {
   address: string | null;
   lat: number;
   lng: number;
+  /** Dış mekan fotoğrafının yönetim API adresi (yoksa null) */
   photo: string | null;
+  hasPhoto: boolean;
   hours: string | null;
   accessible: boolean;
   babyChanging: boolean;
@@ -61,6 +63,7 @@ export interface AdminReportGroup {
 export interface AdminUser {
   id: number;
   username: string;
+  email: string | null;
   displayName: string;
   avatarUrl: string | null;
   createdAt: string;

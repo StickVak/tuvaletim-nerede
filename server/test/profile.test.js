@@ -65,7 +65,7 @@ test('GET /api/profile returns stats and activity', async () => {
   await srv.req('PUT', '/api/places/seed-forum/vote', { cleanliness: 4, comfort: 4, isPaid: false, comment: 'İyi' }, me.token);
   await srv.req('PUT', '/api/favorites/seed-forum', null, me.token);
   await srv.req('POST', '/api/places/seed-forum/reports', { type: 'crowded' }, me.token);
-  await srv.req('POST', '/api/pending', { name: 'Yeni Yer WC', category: 'park', lat: 38.4, lng: 27.1, vote: { cleanliness: 3, comfort: 3, isPaid: false } }, me.token);
+  await srv.req('POST', '/api/pending', { name: 'Yeni Yer WC', category: 'park', lat: 38.4, lng: 27.1, vote: { cleanliness: 3, comfort: 3, isPaid: false }, photo: 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xd9]).toString('base64') }, me.token);
   const r = await srv.req('GET', '/api/profile', null, me.token);
   assert.equal(r.status, 200);
   assert.deepEqual(r.body.stats, { votes: 1, comments: 1, placesAdded: 0, pending: 1, favorites: 1, contributions: 2 }); // 1 oy + 1 bildirim

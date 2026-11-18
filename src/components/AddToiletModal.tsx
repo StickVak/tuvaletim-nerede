@@ -42,6 +42,7 @@ export default function AddToiletModal({
   const [photoLoading, setPhotoLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
+  const photoBoxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (location) setErrors((e) => ({ ...e, location: '' }));
@@ -67,13 +68,15 @@ export default function AddToiletModal({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: Record<string, string> = {};
+    if (!photo) errs.photo = 'Dış mekan fotoğrafı zorunlu: girişin ya da bina cephesinin fotoğrafını ekleyin.';
     if (name.trim().length < 3) errs.name = 'Mekan adı en az 3 karakter olmalı.';
     if (!location) errs.location = 'Haritadan bir konum seçin.';
     if (!cleanliness) errs.cleanliness = 'Temizlik puanı verin.';
     if (!comfort) errs.comfort = 'Konfor puanı verin.';
     if (isPaid === null) errs.fee = 'Ücretli mi ücretsiz mi, seçin.';
     setErrors(errs);
-    if (Object.values(errs).some(Boolean) || !location || isPaid === null) return;
+    if (!photo) photoBoxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (Object.values(errs).some(Boolean) || !location || isPaid === null || !photo) return;
 
     setSubmitting(true);
     try {
@@ -84,7 +87,7 @@ export default function AddToiletModal({
         lng: location.lng,
         district: district.trim() || undefined,
         address: address.trim() || undefined,
-        photo: photo ?? undefined,
+        photo,
         hours: hours.trim() || undefined,
         accessible,
         babyChanging,
@@ -118,12 +121,20 @@ export default function AddToiletModal({
         </header>
 
         <div className="no-scrollbar flex-1 space-y-5 overflow-y-auto px-5 pb-4">
-          {/* Fotoğraf */}
-          <div>
+          {/* Dış mekan fotoğrafı (zorunlu) */}
+          <div ref={photoBoxRef}>
+            <div className="mb-1.5 flex items-baseline justify-between gap-2">
+              <span className="text-sm font-bold">
+                Dış mekan fotoğrafı <span className="text-red-600" aria-hidden>*</span>
+              </span>
+              <span className="text-[11px] font-semibold text-ink-muted">Zorunlu</span>
+            </div>
+            <p className="mb-2 text-xs text-ink-muted">Girişin ya da bina cephesinin net bir fotoğrafı. Yöneticiler mekanı bu fotoğrafla doğrular.</p>
             <input
               ref={fileRef}
               type="file"
               accept="image/*"
+              aria-label="Dış mekan fotoğrafı seç"
               className="hidden"
               onChange={(e) => {
                 void handleFile(e.target.files?.[0]);
@@ -132,7 +143,8 @@ export default function AddToiletModal({
             />
             {photo ? (
               <div className="relative overflow-hidden rounded-3xl">
-                <img src={photo} alt="Önizleme" className="h-44 w-full object-cover" />
+                <img src={photo} alt="Dış mekan fotoğrafı önizlemesi" className="h-48 w-full object-cover" />
+                <span className="absolute left-3 top-3 rounded-full bg-green-600 px-2.5 py-1 text-[11px] font-bold text-white shadow">✓ Fotoğraf eklendi</span>
                 <div className="absolute bottom-3 right-3 flex gap-2">
                   <button
                     type="button"
@@ -155,18 +167,21 @@ export default function AddToiletModal({
               <button
                 type="button"
                 onClick={() => fileRef.current?.click()}
-                className="flex h-36 w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-line bg-card text-ink-soft transition hover:border-brand-dark hover:bg-brand-soft"
+                aria-describedby={errors.photo ? 'photo-error' : undefined}
+                className={`flex h-40 w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed bg-card text-ink-soft transition hover:border-brand-dark hover:bg-brand-soft ${
+                  errors.photo ? 'border-red-500 bg-red-500/5' : 'border-line'
+                }`}
               >
                 {photoLoading ? (
                   <span className="h-7 w-7 animate-spin rounded-full border-[3px] border-line border-t-ink" />
                 ) : (
                   <ImagePlus size={28} />
                 )}
-                <span className="text-sm font-bold">Mekan fotoğrafı yükle</span>
-                <span className="text-[11px] text-ink-muted">Kamera veya galeri · isteğe bağlı</span>
+                <span className="text-sm font-bold">Giriş / bina cephesi fotoğrafı ekle</span>
+                <span className="text-[11px] text-ink-muted">Kamera veya galeri · JPEG, PNG, WebP</span>
               </button>
             )}
-            {errors.photo && <p className="mt-1 text-xs font-semibold text-red-600">{errors.photo}</p>}
+            {errors.photo && <p id="photo-error" role="alert" className="mt-1 text-xs font-semibold text-red-600">{errors.photo}</p>}
           </div>
 
           {/* Konum */}

@@ -31,7 +31,7 @@ test('vote / report / favorite spam is throttled', async () => {
 
 test('successful logins do not consume the login budget', async () => {
   const s2 = await startServer({ limits: { login: { windowMs: 60000, max: 2 } } });
-  await s2.req('POST', '/api/auth/register', { username: 'natkullanici', password: 'secret1' });
+  await s2.register('natkullanici');
   const ok = [];
   for (let i = 0; i < 5; i++) ok.push((await s2.req('POST', '/api/auth/login', { username: 'natkullanici', password: 'secret1' })).status);
   assert.deepEqual(ok, [200, 200, 200, 200, 200]);

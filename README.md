@@ -48,6 +48,11 @@ npm run build:admin  # yönetim paneli derlemesi (admin/dist/)
 | `ADMIN_PORT` | Yönetim paneli sunucusunun portu (Render'da `PORT` kullanılır) | `3002` |
 | `MAIN_API_URL` | Panel sunucusunun bağlanacağı ana sunucu adresi | `http://localhost:3001` |
 | `MAIN_APP_URL` | Paneldeki “Uygulamayı aç” bağlantısı (verilmezse `MAIN_API_URL`) | — |
+| `RESEND_API_KEY` | Kayıt doğrulama kodlarını [Resend](https://resend.com) ile gönderir (öncelikli) | — |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Resend yoksa Nodemailer ile SMTP (465 → TLS) | port `587` |
+| `MAIL_FROM` | Gönderen adres (Resend'de doğrulanmış alan adı olmalı) | Resend: `onboarding@resend.dev`, SMTP: `SMTP_USER` |
+
+E-posta servisi tanımlı değilse doğrulama kodları **sunucu konsoluna** yazılır (`[mail] … için doğrulama kodu: 123456`) — yerel geliştirme için.
 | `TRUST_PROXY` | Ters vekil (Render vb.) arkasında gerçek istemci IP'si için Express `trust proxy` değeri, ör. `1` | — |
 
 ### Üretimde çalıştırma (Render: iki ücretsiz Web Service)
@@ -88,6 +93,8 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
 - **Acil:** 2 km içindeki **ücretsiz** tuvaletler arasından yakınlık (%70) ve puan (%30) ağırlıklı en uygununu seçer; oylanmamış mekan puanda nötr sayılır. 2 km içinde ücretsiz tuvalet yoksa en yakın tuvaleti gösterir. “Hemen Git” uygulama içi yol tarifine geçer.
 - **Uygulama içi yol tarifi:** Liste kartındaki, detay penceresindeki “Yol Tarifi” ve Acil'deki “Hemen Git” kullanıcıyı dışarı yönlendirmez; konumunuzdan tuvalete sokaklara oturan yaya rotası haritada çizilir. Üstteki kartta yürüme mesafesi, tahmini süre ve **Rotayı Bitir** bulunur. Rota motoru OSRM'dir ([`src/lib/route.ts`](src/lib/route.ts)): önce gerçek yaya profili olan `routing.openstreetmap.de`, yanıt vermezse `router.project-osrm.org` denenir. Genel demo sunucusu yalnızca araç profili çalıştırdığından orada süre yürüme hızından (4,8 km/sa) hesaplanır. İkisi de yanıt vermezse kesikli kuş uçuşu çizgi çizilir.
 - **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek, puan vermek, favori ve durum bildirimi için giriş gerekir.
+  - **E-posta doğrulamalı kayıt:** Kullanıcı adı, e-posta (zorunlu, benzersiz) ve şifre girilip **Kod Gönder** denir; e-postaya 6 haneli kod gelir. Kod 10 dakika geçerlidir, en fazla 5 hatalı deneme hakkı vardır; aynı adrese 60 saniyede bir kod istenebilir (geri sayımlı **Kodu Tekrar Gönder**). Kodlar veritabanında düz metin değil HMAC olarak tutulur.
+- **Tuvalet ekleme:** **Dış mekan fotoğrafı (giriş / bina cephesi) zorunludur**; fotoğrafsız başvuru gönderilemez. Görsel tarayıcıda küçültülür, sunucuda içerik baytları doğrulanıp rastgele adla `server/data/photos/` altına kaydedilir; veritabanında yalnızca dosya adı tutulur. Yönetim panelinde başvuru ve düzenleme ekranlarında büyük önizleme ve tam ekran görüntüleme vardır.
 - **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
 - **Herkese açık profiller:** Yorumlardaki ada/avatara tıklayınca kullanıcının fotoğrafı, adı, biyografisi, katılım tarihi, katkı sayıları ve tüm değerlendirmeleri görünür. Şifre, e-posta ve rol asla dönmez.
 - **Güzergah üzerinde bul:** Rota çizildiğinde rota çizgisine en fazla **150 m** uzaklıktaki diğer tuvaletler listede ve haritada **Rota Üzerinde 📍** rozetiyle öne çıkar (bu pinler kümeye girmez). Rota kartındaki **Yol Üstündekileri Göster** anahtarı listeyi ve haritayı yalnızca bunlara ve hedefe indirir ([`src/lib/corridor.ts`](src/lib/corridor.ts)).
@@ -121,7 +128,8 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
 | `users` | id, username, email, password_hash (scrypt), role (`user`), created_at |
 | `places` | Onaylı mekanlar: ad, tür, ilçe, adres, konum, fotoğraf, saatler, engelli erişimi, bebek bakım, kaynak (`seed` / `user` / `admin`), `closed_at` (kalıcı kapalı) |
 | `votes` | cleanliness, comfort, is_paid, price_amount, comment, toilet_type, user_id, place_id — `UNIQUE(user_id, place_id)` |
-| `pending_places` | `+` ile gönderilen, onay bekleyen mekanlar ve ekleyenin ilk oyu (onayda `votes`'a yazılır) |
+| `pending_places` | `+` ile gönderilen, onay bekleyen mekanlar, dış mekan fotoğrafı (`photo_file`) ve ekleyenin ilk oyu (onayda `votes`'a yazılır) |
+| `email_codes` | Kayıt doğrulama kodları: email, code_hash (HMAC), expires_at (10 dk), attempts (en fazla 5), sent_at |
 | `favorites` | user_id, place_id, created_at — birincil anahtar `(user_id, place_id)` |
 | `status_reports` | place_id, user_id, report_type (`closed` / `no_supplies` / `crowded` / `open`), created_at, `resolved_at` (yönetici onayladı/reddetti) |
 | `seed_removed` | Yöneticinin sildiği seed mekanları (seed eşitlemesi geri getirmez) |
@@ -154,7 +162,8 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 
 | Yöntem | Yol | Yetki | Açıklama |
 |---|---|---|---|
-| POST | `/api/auth/register` | — | `{ username, email?, password }` → `{ token, user }` |
+| POST | `/api/auth/send-code` | — | `{ email, username? }` → e-postaya 6 haneli kod (`409` kayıtlı e-posta/kullanıcı adı, `429` 60 sn dolmadan) |
+| POST | `/api/auth/register` | — | `{ username, email, password, code }` → `{ token, user }` |
 | POST | `/api/auth/login` | — | `{ username (veya e-posta), password }` → `{ token, user }` |
 | GET | `/api/auth/me` | kullanıcı | Oturumdaki kullanıcı |
 | GET | `/api/places` | — | Mekanlar + `stats` (+ girişliyse `myVote`) |
@@ -169,7 +178,7 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | GET | `/api/users/:id` | — | Herkese açık profil |
 | GET | `/api/avatars/:file` | — | Profil fotoğrafı (`nosniff`) |
 | PUT | `/api/places/:id/vote` | kullanıcı | `{ cleanliness, comfort, isPaid, priceAmount?, comment? }` — oy ekler/günceller |
-| POST | `/api/pending` | kullanıcı | Yeni mekan başvurusu (+ ilk oy) |
+| POST | `/api/pending` | kullanıcı | Yeni mekan başvurusu (+ ilk oy); `photo` (dış mekan, data URL) zorunlu |
 | GET | `/api/health` | — | Sağlık denetimi |
 
 **Yönetim API'si** — her istekte `X-Admin-Key: <ADMIN_SECRET_KEY>` gerekir (anahtarsız/yanlış → `401`, sunucuda anahtar yoksa `503`; hatalı denemeler IP başına 15 dakikada 10 ile sınırlı). Panel bu uçları kendi sunucusu üzerinden çağırır; tarayıcı anahtarı hiç görmez.
@@ -180,7 +189,8 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | GET | `/api/admin/reports` | Temiz Kalp ihbar kuyruğu (mekan başına; `flagged` = ≥2 farklı kullanıcı) |
 | POST | `/api/admin/reports/:placeId/approve` · `/reject` | Onayla (kalıcı kapat) / reddet |
 | DELETE | `/api/admin/report-items/:id` | Tek ihbarı sil |
-| GET | `/api/admin/pending` | Bekleyen başvurular |
+| GET | `/api/admin/pending` | Bekleyen başvurular (`photo`: fotoğrafın yönetim adresi) |
+| GET | `/api/admin/pending/:id/photo` | Başvurunun dış mekan fotoğrafı |
 | POST / DELETE | `/api/admin/pending/:id/approve`, `/api/admin/pending/:id` | Onayla / reddet |
 | GET / POST | `/api/admin/places` | Tüm mekanlar (kapalılar dahil) / yeni mekan |
 | PATCH / DELETE | `/api/admin/places/:id` | Düzenle (`{ closed: true \| false }` dahil) / kalıcı sil |
@@ -198,7 +208,8 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 - **Yönetim paneli ayrı servistir**; kullanıcı uygulamasının paketinde yönetim kodu yoktur. Yönetim API'si kullanıcı hesaplarıyla açılmaz, yalnızca `ADMIN_SECRET_KEY` ile (sabit süreli karşılaştırma).
 - Panel girişinde anahtar tarayıcıda saklanmaz: panel sunucusu anahtardan türetilen anahtarla imzalı, 12 saatlik `HttpOnly; SameSite=Strict` (HTTPS'te `Secure`) bir çerez verir. Çıkış oturumu sunucuda geçersiz kılar; anahtar değişince tüm oturumlar düşer. Değiştiren istekler ayrıca özel bir başlık ister (CSRF). Panel `X-Frame-Options: DENY`, sıkı CSP ve `noindex` ile sunulur; hatalı anahtar denemeleri sınırlıdır.
 - **Hız sınırı (IP başına, bellek içi):** giriş + kayıt 15 dakikada 20 istek; oy, bildirim, favori, başvuru ve profil yazma dakikada 60 istek. Aşılınca `429` ve `Retry-After`. Sunucu yalnızca kendi makinesindeki (loopback) vekilin `X-Forwarded-For` başlığına güvenir.
-- Profil fotoğrafları içerik baytları kontrol edilerek kabul edilir, rastgele adla `server/data/avatars/` altında tutulur.
+- Profil ve mekan fotoğrafları içerik baytları kontrol edilerek kabul edilir, rastgele adla `server/data/avatars/` ve `server/data/photos/` altında tutulur (eski sürümlerde veritabanına gömülü fotoğraflar açılışta dosyaya taşınır).
+- Doğrulama kodu isteği aynı adrese 60 saniyede bir ve IP başına 15 dakikada 10 ile sınırlıdır; kod düz metin saklanmaz.
 - HTTPS kurulumu bu projenin kapsamında değildir; internete açmadan önce bir ters vekil sunucu (reverse proxy) ile HTTPS ekleyin.
 - Telefonda gerçek GPS için tarayıcılar HTTPS ister (`localhost` hariç).
 

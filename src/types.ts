@@ -110,7 +110,8 @@ export interface PlaceDraft extends LatLng {
   category: ToiletCategory;
   district?: string;
   address?: string;
-  photo?: string;
+  /** Dış mekan (giriş / bina cephesi) fotoğrafı — zorunlu, data URL */
+  photo: string;
   hours?: string;
   accessible: boolean;
   babyChanging: boolean;

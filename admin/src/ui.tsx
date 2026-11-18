@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { AlertTriangle, X } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AlertTriangle, ImageOff, Maximize2, X } from 'lucide-react';
 
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
   return (
@@ -62,4 +62,46 @@ export function relTime(iso: string) {
   if (h < 24) return `${h} sa önce`;
   const d = Math.round(h / 24);
   return d < 30 ? `${d} gün önce` : new Date(iso).toLocaleDateString('tr-TR');
+}
+
+/** Tam ekran fotoğraf görüntüleyici (Esc veya tıklamayla kapanır) */
+export function Lightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+  return (
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/85 p-4" role="dialog" aria-modal="true" aria-label={alt} onClick={onClose}>
+      <img src={src} alt={alt} className="max-h-full max-w-full rounded-2xl object-contain shadow-2xl" />
+      <button type="button" onClick={onClose} aria-label="Kapat" className="absolute right-4 top-4 rounded-full bg-white/15 p-2.5 text-white hover:bg-white/25">
+        <X size={20} />
+      </button>
+    </div>
+  );
+}
+
+/** Dış mekan fotoğrafı: etiketli, tıklayınca tam ekran */
+export function OutdoorPhoto({ src, alt, className = 'h-56' }: { src: string | null; alt: string; className?: string }) {
+  const [open, setOpen] = useState(false);
+  if (!src) {
+    return (
+      <div className={`flex w-full flex-col items-center justify-center gap-1 rounded-2xl bg-card text-ink-muted ${className}`}>
+        <ImageOff size={24} />
+        <span className="text-xs font-semibold">Dış mekan fotoğrafı yok</span>
+      </div>
+    );
+  }
+  return (
+    <>
+      <button type="button" onClick={() => setOpen(true)} className={`group relative block w-full overflow-hidden rounded-2xl bg-card ${className}`} aria-label={`${alt} — büyüt`}>
+        <img src={src} alt={alt} className="h-full w-full object-cover transition group-hover:scale-[1.02]" />
+        <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white">Dış mekan fotoğrafı</span>
+        <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[11px] font-bold text-white">
+          <Maximize2 size={12} /> Büyüt
+        </span>
+      </button>
+      {open && <Lightbox src={src} alt={alt} onClose={() => setOpen(false)} />}
+    </>
+  );
 }

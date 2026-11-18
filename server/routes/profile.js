@@ -5,20 +5,12 @@ import { join } from 'node:path';
 import { hashPassword, publicUser, requireUser, verifyPassword } from '../auth.js';
 import { PHOTO_RE } from '../validate.js';
 import { contributionsOf } from './places.js';
+import { magicOk } from '../photos.js';
 
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const EXT = { jpeg: 'jpg', png: 'png', webp: 'webp', gif: 'gif' };
 const AVATAR_FILE_RE = /^\d+-[a-f0-9]+\.(jpg|png|webp|gif)$/;
 const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
-
-/** İlk baytlar bildirilen türle eşleşmeli (uzantısı değiştirilmiş betik/HTML reddedilir) */
-function magicOk(type, buf) {
-  if (type === 'jpeg') return buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff;
-  if (type === 'png') return buf.subarray(0, 4).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47]));
-  if (type === 'gif') return buf.subarray(0, 4).toString('latin1') === 'GIF8';
-  if (type === 'webp') return buf.subarray(0, 4).toString('latin1') === 'RIFF' && buf.subarray(8, 12).toString('latin1') === 'WEBP';
-  return false;
-}
 
 const avatarPath = (dir, url) => (url && url.startsWith('/api/avatars/') ? join(dir, url.split('/').pop()) : null);
 
