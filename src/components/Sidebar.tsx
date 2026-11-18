@@ -2,7 +2,6 @@ import { ListFilter, MapPin, Settings as SettingsIcon, Siren } from 'lucide-reac
 import type { Filters, PlaceView } from '../types';
 import ToiletListItem from './ToiletListItem';
 import SearchBox from './SearchBox';
-import Logo from './Logo';
 import AccountButton from './AccountButton';
 import FilterPanel from './FilterPanel';
 
@@ -28,28 +27,21 @@ export default function Sidebar({
 }: Props) {
   return (
     <aside className="absolute bottom-4 left-4 top-4 z-30 flex w-[400px] flex-col overflow-hidden rounded-[28px] bg-surface shadow-float ring-1 ring-line">
-      <header className="flex items-center gap-3 px-5 pb-3 pt-5">
-        <Logo size={42} />
+      <header className="flex items-center gap-2 px-5 pb-3 pt-5">
         <div className="min-w-0 flex-1">
-          <h1 className="text-lg font-extrabold leading-tight">Tuvaletim Nerede?</h1>
-          <p className="flex items-center gap-1 text-xs font-medium text-ink-muted">
-            <MapPin size={12} className={hasLocation ? 'text-blue-600' : ''} /> {hasLocation ? 'Konumunuz belirlendi' : 'Konum bekleniyor'}
-          </p>
+          <AccountButton variant="sidebar" onOpenProfile={onOpenProfile} />
         </div>
         <button
           type="button"
           onClick={onOpenSettings}
           aria-label="Ayarlar"
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-card text-ink transition hover:bg-line/60"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-card text-ink transition hover:bg-line/60"
         >
-          <SettingsIcon size={20} />
+          <SettingsIcon size={19} />
         </button>
       </header>
 
       <div className="px-5">
-        <div className="mb-3">
-          <AccountButton variant="sidebar" onOpenProfile={onOpenProfile} />
-        </div>
         <button
           type="button"
           onClick={onEmergency}
@@ -67,7 +59,12 @@ export default function Sidebar({
           <FilterPanel filters={filters} onChange={onFiltersChange} compact />
         </div>
 
-        <p className="mt-4 pb-2 text-xs font-semibold text-ink-muted">{places.length} mekan listeleniyor</p>
+        <p className="mt-4 flex items-center justify-between gap-2 pb-2 text-xs font-semibold text-ink-muted">
+          <span>{places.length} mekan listeleniyor</span>
+          <span className="flex items-center gap-1 font-medium">
+            <MapPin size={12} className={hasLocation ? 'text-blue-600' : ''} /> {hasLocation ? 'Konumunuz belirlendi' : 'Konum bekleniyor'}
+          </span>
+        </p>
       </div>
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 pb-5">

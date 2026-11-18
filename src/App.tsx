@@ -27,7 +27,6 @@ import AddToiletModal from './components/AddToiletModal';
 import Sidebar from './components/Sidebar';
 import SearchBox from './components/SearchBox';
 import Toasts from './components/Toasts';
-import Logo from './components/Logo';
 import LocationBanner from './components/LocationBanner';
 import AuthModal from './components/AuthModal';
 import AccountButton from './components/AccountButton';
@@ -392,7 +391,8 @@ export default function App() {
 
       {/* ---------------- MOBİL ---------------- */}
       {!desktop && !picking && !route && !selected && (
-        <div className="absolute inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-20 flex items-center gap-2.5">
+        // Boş orta alan haritaya dokunmayı engellemesin: yalnızca butonlar tıklanabilir
+        <div className="pointer-events-none absolute inset-x-4 top-[max(1rem,env(safe-area-inset-top))] z-20 flex items-center gap-2.5 [&>*]:pointer-events-auto">
           <button
             type="button"
             onClick={() => setSettingsOpen(true)}
@@ -401,9 +401,6 @@ export default function App() {
           >
             <SettingsIcon size={21} />
           </button>
-          <span className="shrink-0 drop-shadow-md" title="Tuvaletim Nerede?">
-            <Logo size={48} />
-          </span>
           <div className="ml-auto">
             <AccountButton variant="bar" onOpenProfile={() => setProfileOpen(true)} />
           </div>
