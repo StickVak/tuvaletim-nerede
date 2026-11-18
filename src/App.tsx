@@ -27,6 +27,7 @@ import AddToiletModal from './components/AddToiletModal';
 import Sidebar from './components/Sidebar';
 import SearchBox from './components/SearchBox';
 import Toasts from './components/Toasts';
+import InstallBanner from './components/InstallBanner';
 import LocationBanner from './components/LocationBanner';
 import AuthModal from './components/AuthModal';
 import AccountButton from './components/AccountButton';
@@ -540,6 +541,9 @@ export default function App() {
       )}
 
       <Toasts toasts={toasts} desktop={desktop} />
+
+      {/* Mobil tarayıcıda: ana ekrana ekleyip tam ekran kullanma yönlendirmesi (bir iş akışı açıkken gizli) */}
+      {!desktop && <InstallBanner hidden={addOpen || picking || Boolean(selected) || Boolean(route) || settingsOpen} />}
 
       {arrivalPlace && (
         <ArrivalModal

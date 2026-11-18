@@ -126,6 +126,7 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
   - Her kullanıcının her mekana **tek oyu** vardır; tekrar oy verirse oyu güncellenir.
   - Ücret durumu **oy çoğunluğuyla** belirlenir. Oy yokken veya eşitlikte tür varsayılanı geçerlidir: **AVM ücretsiz, diğer tüm türler ücretli**.
   - Ücretli görünen mekanda tutar girilmiş oyların ortalaması gösterilir: `Ücretli • Ort. 12,5 ₺`.
+- **Uygulama gibi tam ekran (PWA):** Manifest `display: standalone` (adres çubuğu yok), sarı tema rengi (`#FFD60A`) ve koyu açılış ekranı (`#1A1A1A`); iOS'ta saydam durum çubuğu, içerik çentik/güvenli alanlara göre hizalanır. Mobil tarayıcıda açanlara alttan kapatılabilir **“Uygulamayı Ana Ekrana Ekle (Tam Ekran Kullan)”** çubuğu çıkar: Android/Chrome'da `beforeinstallprompt` ile yerleşik kurulum penceresini açar, iOS Safari'de Paylaş → Ana Ekrana Ekle talimatını gösterir. Kapatılınca 14 gün gösterilmez; ana ekrandan açıldığında ve masaüstünde hiç görünmez.
 - **Tema:** Sistem / Açık / Koyu (Ayarlar). Varsayılan cihaz teması; koyu temada harita da koyulaşır.
 - **Düzen:** Masaüstünde (≥1024 px) tam ekran harita + sol kenar paneli; telefonda alt panel.
 - **Yönetim paneli (ayrı servis, [`admin/`](admin/)):** Kullanıcı uygulamasında yönetim kodu yoktur. Panel yalnızca `ADMIN_SECRET_KEY` ile açılır:
