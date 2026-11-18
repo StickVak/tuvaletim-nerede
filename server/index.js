@@ -1,4 +1,6 @@
+import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import express from 'express';
 import { createApp } from './app.js';
 import { resolveSecret } from './secret.js';
 
@@ -22,5 +24,23 @@ const app = await createApp({
   // Yeni veritabanında örnek kullanıcı ve yorumlar (kapatmak için SEED_DEMO_DATA=false)
   demo: process.env.SEED_DEMO_DATA !== 'false',
 });
+
+// Render gibi bir ters vekil arkasında gerçek istemci IP'si (hız sınırı için), ör. TRUST_PROXY=1
+if (process.env.TRUST_PROXY) {
+  const v = process.env.TRUST_PROXY;
+  app.set('trust proxy', /^\d+$/.test(v) ? Number(v) : v === 'true' ? true : v);
+}
+
+// Üretim: `npm run build` çıktısını (dist/) aynı sunucudan yayınla.
+// /api dışındaki her GET isteği index.html'e düşer (React yönlendirmesi, /admin vb.).
+const distDir = here('../dist');
+if (existsSync(distDir)) {
+  const indexHtml = here('../dist/index.html');
+  app.use('/assets', express.static(here('../dist/assets'), { immutable: true, maxAge: '1y' }));
+  app.use('/assets', (_req, res) => res.sendStatus(404)); // eksik JS/CSS için HTML döndürme
+  app.use(express.static(distDir));
+  app.get(/^\/(?!api(\/|$)).*/, (_req, res) => res.sendFile(indexHtml));
+  console.log('[web] dist/ klasörü sunuluyor');
+}
 
 app.listen(PORT, () => console.log(`[api] http://localhost:${PORT}`));

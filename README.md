@@ -42,6 +42,22 @@ npm run seed:demo # mevcut veritabanına örnek kullanıcı + yorum ekler (sunuc
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Yönetici hesabı; sunucu her açılışta bu hesabı oluşturur veya şifresini eşitler | `admin` / `admin123` |
 | `PORT` | API portu | `3001` |
 | `SEED_DEMO_DATA` | `false` ise yeni veritabanına örnek kullanıcı ve yorum eklenmez | `true` |
+| `TRUST_PROXY` | Ters vekil (Render vb.) arkasında gerçek istemci IP'si için Express `trust proxy` değeri, ör. `1` | — |
+
+### Üretimde çalıştırma (Render vb.)
+
+`npm run build` sonrası `npm start` tek bir Express süreci başlatır: `/api` isteklerini karşılar,
+`dist/` klasörünü statik olarak sunar ve diğer tüm GET isteklerini (`/`, `/admin`…) `index.html`'e yönlendirir.
+
+| Render ayarı | Değer |
+|---|---|
+| Build Command | `npm install && npm run build` |
+| Start Command | `npm start` |
+| Environment | `AUTH_SECRET` (uzun rastgele değer), `ADMIN_PASSWORD`, `TRUST_PROXY=1` |
+
+Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yeniden başlatma/dağıtımda
+`server/data/` (veritabanı) sıfırlanır. Verilerin kalması için bir Persistent Disk bağlayıp
+`server/data` klasörüne yönlendirin.
 
 ## Özellikler
 
