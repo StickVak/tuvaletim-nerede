@@ -69,8 +69,7 @@ test('me with expired token → 401', async () => {
   assert.equal(r.status, 401);
 });
 
-test('env admin can login with role admin', async () => {
+test('artık kullanıcı tabanlı yönetici hesabı yok (eski admin/admin123 girişi çalışmaz)', async () => {
   const r = await srv.req('POST', '/api/auth/login', { username: 'admin', password: 'admin123' });
-  assert.equal(r.status, 200);
-  assert.equal(r.body.user.role, 'admin');
+  assert.equal(r.status, 401);
 });

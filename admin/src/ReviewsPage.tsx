@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { MessageSquareOff, Search, Trash2 } from 'lucide-react';
-import { api } from '../api';
+import { api } from './api';
 import type { AdminVote } from './types';
-import StarRating from '../components/StarRating';
-import { Toggle } from '../components/FilterPanel';
+import StarRating from '../../src/components/StarRating';
+import { Toggle } from '../../src/components/FilterPanel';
 import { ConfirmDialog, EmptyState, PageHeader, relTime } from './ui';
 
 type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;

@@ -39,6 +39,7 @@ function placeJson(row, votes, reports, userId, favorite) {
     publicAccess: row.public_access == null ? row.category !== 'kafe' : !!row.public_access,
     source: row.source,
     createdAt: row.created_at,
+    closedAt: row.closed_at ?? null,
     stats: computeStats(row.category, votes),
     status: computeStatus(reports),
     isFavorite: !!favorite,
@@ -82,23 +83,24 @@ const group = (rows) => {
   return m;
 };
 
-export function listPlaces(db, userId) {
+export function listPlaces(db, userId, { includeClosed = false } = {}) {
   const votes = group(db.all('SELECT * FROM votes'));
-  const reports = group(db.all('SELECT * FROM status_reports WHERE created_at >= ?', [since()]));
+  const reports = group(db.all('SELECT * FROM status_reports WHERE created_at >= ? AND resolved_at IS NULL', [since()]));
   const favs = new Set(userId ? db.all('SELECT place_id FROM favorites WHERE user_id = ?', [userId]).map((f) => f.place_id) : []);
   return db
-    .all('SELECT * FROM places ORDER BY name')
+    .all(`SELECT * FROM places ${includeClosed ? '' : 'WHERE closed_at IS NULL'} ORDER BY name`)
     .map((p) => placeJson(p, votes.get(p.id) ?? [], reports.get(p.id) ?? [], userId, favs.has(p.id)));
 }
 
-export function getPlace(db, id, userId) {
+/** includeClosed: yönetim için kalıcı kapalı mekanları da döndür (closedAt alanıyla) */
+export function getPlace(db, id, userId, { includeClosed = false } = {}) {
   const row = db.get('SELECT * FROM places WHERE id = ?', [id]);
-  if (!row) return null;
+  if (!row || (row.closed_at && !includeClosed)) return null;
   const fav = userId && db.get('SELECT 1 FROM favorites WHERE user_id = ? AND place_id = ?', [userId, id]);
   return placeJson(
     row,
     db.all('SELECT * FROM votes WHERE place_id = ?', [id]),
-    db.all('SELECT * FROM status_reports WHERE place_id = ? AND created_at >= ?', [id, since()]),
+    db.all('SELECT * FROM status_reports WHERE place_id = ? AND created_at >= ? AND resolved_at IS NULL', [id, since()]),
     userId,
     fav,
   );
@@ -131,7 +133,8 @@ export function parseVote(body) {
 
 export function placeRoutes(db, writeLimit) {
   const r = Router();
-  const exists = (id) => db.get('SELECT 1 FROM places WHERE id = ?', [id]);
+  // Kalıcı kapalı mekanlar herkese açık uçlarda yok sayılır
+  const exists = (id) => db.get('SELECT 1 FROM places WHERE id = ? AND closed_at IS NULL', [id]);
 
   r.get('/', (req, res) => res.json(listPlaces(db, req.user?.id)));
 

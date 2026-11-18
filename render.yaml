@@ -1,0 +1,45 @@
+# Render Blueprint: iki ücretsiz Web Service
+#   1) tuvaletim-nerede : kullanıcı uygulaması + API (SQLite bu serviste)
+#   2) tuvaletim-admin  : bağımsız yönetim paneli; verilere ana API'nin /api/admin uçlarından,
+#                         ADMIN_SECRET_KEY ile erişir (iki servis disk paylaşamaz).
+# Render → New → Blueprint → bu depoyu seçin. Ardından admin servisinde MAIN_API_URL'i girin.
+services:
+  - type: web
+    name: tuvaletim-nerede
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: AUTH_SECRET
+        generateValue: true
+      # Yönetim API'sinin anahtarı; admin servisi aynı değeri aşağıda buradan alır.
+      # Panele girerken bu değeri kullanın (Render → tuvaletim-nerede → Environment'ta görünür).
+      - key: ADMIN_SECRET_KEY
+        generateValue: true
+
+  - type: web
+    name: tuvaletim-admin
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build:admin
+    startCommand: npm run start:admin
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ADMIN_SECRET_KEY
+        fromService:
+          type: web
+          name: tuvaletim-nerede
+          envVarKey: ADMIN_SECRET_KEY
+      # Ana servisin herkese açık adresi, ör. https://tuvaletim-nerede.onrender.com (ilk kurulumda sorulur)
+      - key: MAIN_API_URL
+        sync: false

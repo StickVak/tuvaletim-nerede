@@ -82,7 +82,10 @@ CREATE TABLE IF NOT EXISTS seed_removed (id TEXT PRIMARY KEY);
 /** Sonradan eklenen sütunlar: yeni ve eski veritabanları aynı göçten geçer */
 const ADDED_COLUMNS = {
   users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0'],
-  places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL'],
+  // closed_at: yönetici onaylı kalıcı kapalı (haritada gösterilmez)
+  places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT'],
+  // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
+  status_reports: ['resolved_at TEXT'],
   votes: ['toilet_type TEXT'],
   pending_places: ['toilet_type TEXT', 'public_access INTEGER'],
 };

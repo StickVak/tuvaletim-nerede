@@ -1,24 +1,15 @@
-import { StrictMode, Suspense, lazy } from 'react';
+import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
 import App from './App';
 import { AuthProvider } from './hooks/useAuth';
 
-// Yönetim paneli ayrı bir sayfadır (/admin) ve normal kullanıcı paketine dahil edilmez.
-const AdminApp = lazy(() => import('./admin/AdminApp'));
-const isAdmin = /^\/admin\/?$/.test(window.location.pathname);
-
+// Yönetim paneli bu uygulamada değil: ayrı servis (admin/), bkz. README.
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <AuthProvider>
-      {isAdmin ? (
-        <Suspense fallback={null}>
-          <AdminApp />
-        </Suspense>
-      ) : (
-        <App />
-      )}
+      <App />
     </AuthProvider>
   </StrictMode>,
 );

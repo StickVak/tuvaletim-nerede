@@ -1,8 +1,8 @@
-import { ArrowRight, Building2, Inbox, MessageSquareText, Sparkles, Users } from 'lucide-react';
-import type { Place } from '../types';
+import { AlertTriangle, ArrowRight, Building2, Inbox, MessageSquareText, Sparkles, Users } from 'lucide-react';
+import type { Place } from '../../src/types';
 import type { AdminStats, AdminVote } from './types';
-import { formatScore } from '../lib/geo';
-import StarRating from '../components/StarRating';
+import { formatScore } from '../../src/lib/geo';
+import StarRating from '../../src/components/StarRating';
 import { PageHeader, relTime } from './ui';
 import type { AdminTab } from './AdminPanel';
 
@@ -11,6 +11,7 @@ interface Props {
   places: Place[];
   votes: AdminVote[];
   pendingCount: number;
+  flaggedCount: number;
   onNavigate: (t: AdminTab) => void;
 }
 
@@ -29,11 +30,12 @@ function Stat({ label, value, sub, icon: Icon, tone }: { label: string; value: s
   );
 }
 
-export default function Dashboard({ stats, places, votes, pendingCount, onNavigate }: Props) {
+export default function Dashboard({ stats, places, votes, pendingCount, flaggedCount, onNavigate }: Props) {
   const n = (v: number | undefined) => (v ?? 0).toLocaleString('tr-TR');
-  const userPlaces = places.filter((p) => p.source === 'user').length;
+  const open = places.filter((p) => !p.closedAt);
+  const userPlaces = open.filter((p) => p.source === 'user').length;
   const districts = Object.entries(
-    places.reduce<Record<string, number>>((acc, p) => {
+    open.reduce<Record<string, number>>((acc, p) => {
       const d = p.district || 'Belirtilmemiş';
       acc[d] = (acc[d] ?? 0) + 1;
       return acc;
@@ -45,8 +47,9 @@ export default function Dashboard({ stats, places, votes, pendingCount, onNaviga
     <>
       <PageHeader title="Genel Bakış" subtitle="Veritabanındaki güncel durum özeti" />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <Stat label="Onaylı tuvalet" value={n(stats?.places)} sub={`${userPlaces} topluluk eklemesi`} icon={Building2} tone="bg-brand/20 text-ink" />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <Stat label="Haritadaki tuvalet" value={n(stats?.places)} sub={`${userPlaces} topluluk eklemesi · ${n(stats?.closedPlaces)} kalıcı kapalı`} icon={Building2} tone="bg-brand/20 text-ink" />
+        <Stat label="Şüpheli mekan" value={n(stats?.flaggedPlaces)} sub={`${n(stats?.reports)} mekanda açık ihbar`} icon={AlertTriangle} tone="bg-red-500/10 text-red-500" />
         <Stat label="Bekleyen başvuru" value={n(stats?.pending)} sub={stats?.pending ? 'İnceleme bekliyor' : 'Kuyruk boş'} icon={Inbox} tone="bg-red-500/10 text-red-500" />
         <Stat label="Toplam oy" value={n(stats?.votes)} sub={`${votes.filter((v) => v.comment).length} yorumlu`} icon={MessageSquareText} tone="bg-blue-500/10 text-blue-500" />
         <Stat label="Ortalama temizlik" value={stats?.votes ? `${formatScore(stats.avgCleanliness)} / 5` : '–'} sub="Tüm oyların ortalaması" icon={Sparkles} tone="bg-green-500/10 text-green-600" />
@@ -54,6 +57,18 @@ export default function Dashboard({ stats, places, votes, pendingCount, onNaviga
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {flaggedCount > 0 && (
+          <button type="button" onClick={() => onNavigate('reports')} className="flex items-center gap-4 rounded-3xl bg-red-600 p-5 text-left text-white xl:col-span-3">
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+              <AlertTriangle size={22} />
+            </span>
+            <span className="flex-1">
+              <span className="block font-extrabold">{flaggedCount} mekan için birden fazla kullanıcı sorun bildirdi</span>
+              <span className="block text-sm text-white/80">Temiz Kalp ihbarlarını inceleyip onaylayın ya da reddedin.</span>
+            </span>
+            <ArrowRight size={20} />
+          </button>
+        )}
         {pendingCount > 0 && (
           <button type="button" onClick={() => onNavigate('pending')} className="flex items-center gap-4 rounded-3xl bg-[#1A1A1A] p-5 text-left text-white xl:col-span-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand text-onbrand">

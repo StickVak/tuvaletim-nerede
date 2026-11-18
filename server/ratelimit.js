@@ -29,6 +29,8 @@ export function rateLimit({ windowMs, max }, message = 'Çok fazla istek. Lütfe
 export const DEFAULT_LIMITS = {
   /** giriş: IP başına 15 dakikada 10 BAŞARISIZ deneme (başarılı girişler sayılmaz; NAT arkasındakiler kilitlenmez) */
   login: { windowMs: 15 * 60 * 1000, max: 10 },
+  /** yönetim anahtarı: IP başına 15 dakikada 10 BAŞARISIZ deneme */
+  adminAuth: { windowMs: 15 * 60 * 1000, max: 10 },
   /** kayıt: IP başına saatte 10 */
   register: { windowMs: 60 * 60 * 1000, max: 10 },
   /** oy, bildirim, favori, başvuru, profil yazma: IP başına dakikada 60 */

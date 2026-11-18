@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { createApp } from './app.js';
-import { resolveSecret } from './secret.js';
+import { resolveAdminKey, resolveSecret } from './secret.js';
 
 try {
   process.loadEnvFile();
@@ -15,12 +15,14 @@ const PORT = Number(process.env.PORT) || 3001;
 const { secret, generated } = resolveSecret(process.env.AUTH_SECRET, here('./data'));
 if (generated) console.warn('[api] AUTH_SECRET tanımlı değil (ya da örnek değer); rastgele bir anahtar üretilip server/data/.auth-secret dosyasına kaydedildi.');
 
+const { key: adminKey, generated: adminKeyGenerated } = resolveAdminKey(process.env.ADMIN_SECRET_KEY, here('./data'));
+if (adminKeyGenerated) console.warn('[api] ADMIN_SECRET_KEY tanımlı değil; yönetici anahtarı üretilip server/data/.admin-key dosyasına kaydedildi (admin paneline bu anahtarla girin).');
+
 const app = await createApp({
   dbPath: here('./data/tuvaletim.db'),
   seedFile: here('./seed-places.json'),
   secret,
-  adminUsername: process.env.ADMIN_USERNAME || 'admin',
-  adminPassword: process.env.ADMIN_PASSWORD || 'admin123',
+  adminKey,
 });
 
 // Render gibi bir ters vekil arkasında gerçek istemci IP'si (hız sınırı için), ör. TRUST_PROXY=1
@@ -30,7 +32,7 @@ if (process.env.TRUST_PROXY) {
 }
 
 // Üretim: `npm run build` çıktısını (dist/) aynı sunucudan yayınla.
-// /api dışındaki her GET isteği index.html'e düşer (React yönlendirmesi, /admin vb.).
+// /api dışındaki her GET isteği index.html'e düşer (React yönlendirmesi). Yönetim paneli ayrı servistir (admin/).
 const distDir = here('../dist');
 if (existsSync(distDir)) {
   const indexHtml = here('../dist/index.html');

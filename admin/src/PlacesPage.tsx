@@ -1,23 +1,23 @@
 import { useMemo, useState } from 'react';
-import { ExternalLink, MapPinOff, Pencil, Search, Trash2 } from 'lucide-react';
-import type { Place, ToiletCategory } from '../types';
-import type { AdminVote } from './types';
-import { api } from '../api';
-import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../lib/categories';
-import { formatScore } from '../lib/geo';
-import { PriceBadge } from '../components/Badges';
+import { Ban, ExternalLink, MapPinOff, Pencil, Plus, RotateCcw, Search, Trash2 } from 'lucide-react';
+import type { Place, ToiletCategory } from '../../src/types';
+import type { Act, AdminVote } from './types';
+import { api } from './api';
+import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../../src/lib/categories';
+import { formatScore } from '../../src/lib/geo';
+import { PriceBadge } from '../../src/components/Badges';
 import PlaceEditModal from './PlaceEditModal';
 import { ConfirmDialog, EmptyState, PageHeader, selectCls } from './ui';
-
-type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
 
 export default function PlacesPage({ places, votes, act }: { places: Place[]; votes: AdminVote[]; act: Act }) {
   const [q, setQ] = useState('');
   const [district, setDistrict] = useState('');
   const [category, setCategory] = useState<ToiletCategory | ''>('');
   const [fee, setFee] = useState<'' | 'paid' | 'free'>('');
-  const [source, setSource] = useState<'' | 'seed' | 'user'>('');
+  const [source, setSource] = useState<'' | 'seed' | 'user' | 'admin'>('');
+  const [state, setState] = useState<'' | 'open' | 'closed'>('');
   const [editing, setEditing] = useState<Place | null>(null);
+  const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Place | null>(null);
 
   const districts = useMemo(() => [...new Set(places.map((p) => p.district).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'tr')), [places]);
@@ -34,13 +34,22 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
       .filter((p) => !category || p.category === category)
       .filter((p) => !fee || p.stats.isPaid === (fee === 'paid'))
       .filter((p) => !source || p.source === source)
+      .filter((p) => !state || (state === 'closed') === Boolean(p.closedAt))
       .filter((p) => !needle || [p.name, p.district, p.address].join(' ').toLocaleLowerCase('tr-TR').includes(needle))
       .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-  }, [places, q, district, category, fee, source]);
+  }, [places, q, district, category, fee, source, state]);
 
   return (
     <>
-      <PageHeader title="Tüm Mekanlar" subtitle={`${items.length} / ${places.length} mekan gösteriliyor`} />
+      <PageHeader
+        title="Tüm Mekanlar"
+        subtitle={`${items.length} / ${places.length} mekan gösteriliyor`}
+        actions={
+          <button type="button" onClick={() => setCreating(true)} className="flex items-center gap-1.5 rounded-xl bg-brand px-4 py-2.5 text-sm font-extrabold text-onbrand hover:bg-brand-dark">
+            <Plus size={16} /> Yeni mekan
+          </button>
+        }
+      />
 
       <div className="mb-4 flex flex-wrap gap-2">
         <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 ring-1 ring-line focus-within:ring-2 focus-within:ring-brand-dark">
@@ -60,10 +69,16 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
           <option value="paid">Ücretli</option>
           <option value="free">Ücretsiz</option>
         </select>
-        <select value={source} onChange={(e) => setSource(e.target.value as '' | 'seed' | 'user')} className={selectCls} aria-label="Kaynak">
+        <select value={source} onChange={(e) => setSource(e.target.value as '' | 'seed' | 'user' | 'admin')} className={selectCls} aria-label="Kaynak">
           <option value="">Tüm kaynaklar</option>
           <option value="seed">Başlangıç (OSM)</option>
           <option value="user">Topluluk</option>
+          <option value="admin">Yönetici</option>
+        </select>
+        <select value={state} onChange={(e) => setState(e.target.value as '' | 'open' | 'closed')} className={selectCls} aria-label="Durum">
+          <option value="">Tüm durumlar</option>
+          <option value="open">Haritada</option>
+          <option value="closed">Kalıcı kapalı</option>
         </select>
       </div>
 
@@ -80,6 +95,7 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
                     <div className="flex items-center gap-2">
                       <span className="font-bold">{p.name}</span>
                       {p.source === 'user' && <span className="rounded-md bg-[#1A1A1A] px-1.5 py-0.5 text-[10px] font-bold text-white">Topluluk</span>}
+                      {p.closedAt && <span className="rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">Kalıcı kapalı</span>}
                     </div>
                     <div className="mt-0.5 text-xs text-ink-muted">
                       {CATEGORIES[p.category].label} · {p.district || '—'}
@@ -97,6 +113,17 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
                       className="rounded-xl p-2.5 text-ink-soft hover:bg-card" aria-label="Haritada aç" title="Haritada aç">
                       <ExternalLink size={16} />
                     </a>
+                    {p.closedAt ? (
+                      <button type="button" onClick={() => void act(() => api(`/admin/places/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { closed: false } }), `“${p.name}” yeniden haritada.`)}
+                        className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-green-700 hover:bg-green-500/10 dark:text-green-400">
+                        <RotateCcw size={15} /> Yeniden aç
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => void act(() => api(`/admin/places/${encodeURIComponent(p.id)}`, { method: 'PATCH', body: { closed: true } }), `“${p.name}” kalıcı kapalı işaretlendi.`)}
+                        className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold text-ink-soft hover:bg-card" title="Haritadan gizle (silmez)">
+                        <Ban size={15} /> Kapat
+                      </button>
+                    )}
                     <button type="button" onClick={() => setEditing(p)} className="flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold hover:bg-card">
                       <Pencil size={15} /> Düzenle
                     </button>
@@ -115,7 +142,13 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
         <PlaceEditModal
           place={editing}
           onClose={() => setEditing(null)}
-          onSave={(changes) => act(() => api(`/admin/places/${editing.id}`, { method: 'PATCH', body: changes }), 'Mekan güncellendi.').then((ok) => ok && setEditing(null))}
+          onSave={(changes) => act(() => api(`/admin/places/${encodeURIComponent(editing.id)}`, { method: 'PATCH', body: changes }), 'Mekan güncellendi.').then((ok) => ok && setEditing(null))}
+        />
+      )}
+      {creating && (
+        <PlaceEditModal
+          onClose={() => setCreating(false)}
+          onSave={(fields) => act(() => api('/admin/places', { method: 'POST', body: fields }), `“${fields.name}” eklendi.`).then((ok) => ok && setCreating(false))}
         />
       )}
       {deleting && (
@@ -131,7 +164,7 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
           onConfirm={() => {
             const { id, name } = deleting;
             setDeleting(null);
-            void act(() => api(`/admin/places/${id}`, { method: 'DELETE' }), `“${name}” silindi.`);
+            void act(() => api(`/admin/places/${encodeURIComponent(id)}`, { method: 'DELETE' }), `“${name}” silindi.`);
           }}
         />
       )}

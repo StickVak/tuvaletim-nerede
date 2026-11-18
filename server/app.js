@@ -1,6 +1,6 @@
 import express from 'express';
 import { openDb } from './db.js';
-import { hashPassword, optionalUser, verifyPassword } from './auth.js';
+import { MIN_ADMIN_KEY_LENGTH, optionalUser, requireAdminKey } from './auth.js';
 import { authRoutes } from './routes/auth.js';
 import { placeRoutes } from './routes/places.js';
 import { pendingRoutes } from './routes/pending.js';
@@ -10,16 +10,6 @@ import { avatarRoutes, profileRoutes, userRoutes } from './routes/profile.js';
 import { DEFAULT_LIMITS, rateLimit } from './ratelimit.js';
 import { existsSync, rmSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
-
-/** .env'deki yönetici hesabını oluşturur ya da rolünü/şifresini eşitler. */
-function ensureAdmin(db, username, password) {
-  const existing = db.get('SELECT * FROM users WHERE username = ?', [username]);
-  if (!existing) {
-    db.run('INSERT INTO users (username, password_hash, role, created_at) VALUES (?, ?, ?, ?)', [username, hashPassword(password), 'admin', new Date().toISOString()]);
-  } else if (existing.role !== 'admin' || !verifyPassword(password, existing.password_hash)) {
-    db.run('UPDATE users SET role = ?, password_hash = ? WHERE id = ?', ['admin', hashPassword(password), existing.id]);
-  }
-}
 
 /**
  * Önceki sürümlerin eklediği örnek (demo) kullanıcıları, oylarını (CASCADE) ve avatarlarını siler.
@@ -38,10 +28,17 @@ export function removeDemoData(db, avatarDir) {
   return demos.length;
 }
 
-/** limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar. */
-export async function createApp({ dbPath, secret, seedFile, adminUsername, adminPassword, limits = {} }) {
+/**
+ * adminKey: ADMIN_SECRET_KEY (yönetim API'si yalnızca bu anahtarla açılır; boşsa API kapalı).
+ * limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar.
+ */
+export async function createApp({ dbPath, secret, seedFile, adminKey = '', limits = {} }) {
+  if (adminKey && adminKey.length < MIN_ADMIN_KEY_LENGTH) {
+    throw new Error(`ADMIN_SECRET_KEY en az ${MIN_ADMIN_KEY_LENGTH} karakter olmalı.`);
+  }
   const db = await openDb(dbPath, { seedFile });
-  ensureAdmin(db, adminUsername, adminPassword);
+  // Eski sürümlerde yönetici bir kullanıcı hesabıydı (admin/admin123); artık yetkisi yok, hesabı kaldır
+  db.run("DELETE FROM users WHERE role = 'admin'");
   const avatarDir = join(dirname(dbPath), 'avatars');
   removeDemoData(db, avatarDir);
 
@@ -50,8 +47,10 @@ export async function createApp({ dbPath, secret, seedFile, adminUsername, admin
   const loginLimit = L ? rateLimit(L.login, 'Çok fazla hatalı giriş denemesi. Lütfen birkaç dakika sonra tekrar deneyin.', (s) => s >= 400) : pass;
   const registerLimit = L ? rateLimit(L.register, 'Çok fazla kayıt denemesi. Lütfen daha sonra tekrar deneyin.') : pass;
   const writeLimit = L ? rateLimit(L.write) : pass;
+  const adminAuthLimit = L ? rateLimit(L.adminAuth, 'Çok fazla hatalı yönetici anahtarı denemesi.', (s) => s === 401) : pass;
 
   const app = express();
+  app.locals.db = db;
   // Vite proxy (127.0.0.1) arkasında gerçek istemci IP'si X-Forwarded-For'dan okunur
   app.set('trust proxy', 'loopback');
   app.use(express.json({ limit: '6mb' }));
@@ -63,7 +62,8 @@ export async function createApp({ dbPath, secret, seedFile, adminUsername, admin
   app.use('/api/profile', profileRoutes(db, { avatarDir, writeLimit }));
   app.use('/api/users', userRoutes(db));
   app.use('/api/avatars', avatarRoutes(avatarDir));
-  app.use('/api/admin', adminRoutes(db));
+  app.use('/api/admin', adminAuthLimit, requireAdminKey(adminKey), adminRoutes(db));
+  app.get('/api/health', (_req, res) => res.json({ ok: true }));
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Bulunamadı.' }));
   // eslint-disable-next-line no-unused-vars
   app.use((err, _req, res, _next) => {

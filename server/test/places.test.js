@@ -97,8 +97,7 @@ test('GET /api/places/:id/reviews lists only commented votes, newest first, with
 
 test('list omits photo data (hasPhoto flag) and photo is served separately as an image', async () => {
   const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-  const admin = await srv.adminToken();
-  assert.equal((await srv.req('PATCH', '/api/admin/places/seed-sb', { photo: png }, admin)).status, 200);
+  assert.equal((await srv.admin('PATCH', '/api/admin/places/seed-sb', { photo: png })).status, 200);
   const list = (await srv.req('GET', '/api/places')).body;
   const sb = list.find((p) => p.id === 'seed-sb');
   assert.equal(sb.photo, undefined);

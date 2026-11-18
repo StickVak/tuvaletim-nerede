@@ -4,9 +4,10 @@ import { join } from 'node:path';
 import { createApp } from '../app.js';
 
 export const SECRET = 'test-secret';
+export const ADMIN_KEY = 'test-admin-key-1234567890';
 
 /** Geçici veritabanıyla uygulamayı rastgele portta başlatır. */
-export async function startServer({ seed = [], limits = false } = {}) {
+export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'tn-test-'));
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(seed));
@@ -14,8 +15,7 @@ export async function startServer({ seed = [], limits = false } = {}) {
     dbPath: join(dir, 'test.db'),
     secret: SECRET,
     seedFile,
-    adminUsername: 'admin',
-    adminPassword: 'admin123',
+    adminKey,
     limits,
   });
   const server = await new Promise((resolve) => {
@@ -23,12 +23,13 @@ export async function startServer({ seed = [], limits = false } = {}) {
   });
   const url = `http://127.0.0.1:${server.address().port}`;
 
-  async function req(method, path, body, token) {
+  async function req(method, path, body, token, headers = {}) {
     const res = await fetch(url + path, {
       method,
       headers: {
         ...(body ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
     });
@@ -46,17 +47,16 @@ export async function startServer({ seed = [], limits = false } = {}) {
     return { token: r.body.token, user: r.body.user };
   }
 
-  async function adminToken() {
-    const r = await req('POST', '/api/auth/login', { username: 'admin', password: 'admin123' });
-    return r.body.token;
-  }
+  /** Yönetim API'si: X-Admin-Key başlığıyla (key verilmezse sunucunun anahtarı) */
+  const admin = (method, path, body, key = adminKey) => req(method, path, body, null, key ? { 'X-Admin-Key': key } : {});
 
   return {
     url,
     req,
     register,
     registerFull,
-    adminToken,
+    admin,
+    db: app.locals.db,
     dir,
     close: () => {
       server.close();

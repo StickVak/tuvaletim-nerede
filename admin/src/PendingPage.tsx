@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Accessibility, Baby, Check, Clock3, Inbox, MapPin, X } from 'lucide-react';
-import { api } from '../api';
+import { api } from './api';
 import type { AdminPending } from './types';
-import { CATEGORIES, placePhoto } from '../lib/categories';
-import StarRating from '../components/StarRating';
+import { CATEGORIES, placePhoto } from '../../src/lib/categories';
+import StarRating from '../../src/components/StarRating';
 import MiniMap from './MiniMap';
 import { ConfirmDialog, EmptyState, PageHeader, relTime } from './ui';
 

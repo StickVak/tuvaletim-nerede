@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 
 const TOKEN_TTL_S = 7 * 24 * 60 * 60;
 
@@ -63,8 +63,19 @@ export function requireUser(req, res, next) {
   next();
 }
 
-export function requireAdmin(req, res, next) {
-  if (!req.user) return res.status(401).json({ error: 'Bu işlem için giriş yapmalısınız.' });
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Bu işlem için yönetici yetkisi gerekir.' });
-  next();
+export const MIN_ADMIN_KEY_LENGTH = 16;
+const digest = (s) => createHash('sha256').update(String(s)).digest();
+
+/**
+ * Yönetim API'si yalnızca X-Admin-Key başlığındaki ADMIN_SECRET_KEY ile açılır (kullanıcı hesapları yetkisizdir).
+ * Anahtar tanımlı değilse API tamamen kapalıdır (503). Karşılaştırma sabit sürelidir.
+ */
+export function requireAdminKey(key) {
+  const expected = key ? digest(key) : null;
+  return (req, res, next) => {
+    if (!expected) return res.status(503).json({ error: "Yönetim API'si kapalı: sunucuda ADMIN_SECRET_KEY tanımlı değil." });
+    const given = req.get('x-admin-key');
+    if (!given || !timingSafeEqual(digest(given), expected)) return res.status(401).json({ error: 'Geçersiz yönetici anahtarı.' });
+    next();
+  };
 }

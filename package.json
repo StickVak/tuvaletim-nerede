@@ -4,11 +4,13 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n api,web -c yellow,cyan \"node --watch server/index.js\" \"vite --host\"",
+    "dev": "concurrently -k -n api,web,admin,admin-web -c yellow,cyan,magenta,blue \"node --watch server/index.js\" \"vite --host\" \"node --watch admin/server/index.js\" \"vite --config admin/vite.config.ts\"",
     "build": "tsc -b && vite build",
+    "build:admin": "tsc -p admin/tsconfig.json && vite build --config admin/vite.config.ts",
     "preview": "vite preview --host",
     "start": "node server/index.js",
-    "test": "node --test \"server/test/*.test.js\" && node --experimental-strip-types --test src/lib/geo.test.ts src/lib/route.test.ts src/lib/filters.test.ts src/lib/corridor.test.ts"
+    "start:admin": "node admin/server/index.js",
+    "test": "node --test \"server/test/*.test.js\" \"admin/test/*.test.js\" && node --experimental-strip-types --test src/lib/geo.test.ts src/lib/route.test.ts src/lib/filters.test.ts src/lib/corridor.test.ts"
   },
   "dependencies": {
     "express": "4.21.2",

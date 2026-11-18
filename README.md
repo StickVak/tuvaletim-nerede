@@ -15,13 +15,17 @@ cp .env.example .env      # Windows (cmd): copy .env.example .env
 npm run dev
 ```
 
-`npm run dev` tek komutla iki süreci birlikte başlatır (`concurrently`):
+`npm run dev` tek komutla dört süreci birlikte başlatır (`concurrently`):
 
 | Süreç | Adres |
 |---|---|
-| Arayüz (Vite) | <http://localhost:5173> |
-| Yönetim paneli | <http://localhost:5173/admin> |
+| Uygulama (Vite) | <http://localhost:5173> |
 | API (Express) | <http://localhost:3001/api> — Vite `/api` isteklerini buraya yönlendirir |
+| Yönetim paneli arayüzü (Vite) | <http://localhost:5174> |
+| Yönetim paneli sunucusu (Express) | <http://localhost:3002> — panelin `/api` ve `/auth` isteklerini karşılar |
+
+Yönetim paneline **yönetici anahtarı** (`ADMIN_SECRET_KEY`) ile girilir. `.env`'de tanımlı değilse ana sunucu ilk açılışta
+rastgele bir anahtar üretip `server/data/.admin-key` dosyasına yazar; panele bu dosyadaki değerle girin.
 
 İlk açılışta `server/data/tuvaletim.db` oluşturulur ve İzmir başlangıç verisi yüklenir.
 Veritabanını sıfırlamak için sunucuyu durdurup `server/data/` klasörünü silmeniz yeterli.
@@ -29,8 +33,9 @@ Veritabanını sıfırlamak için sunucuyu durdurup `server/data/` klasörünü 
 Diğer komutlar:
 
 ```bash
-npm test          # sunucu (node:test) + Acil, rota, koridor, filtre testleri
-npm run build     # üretim derlemesi (dist/)
+npm test             # sunucu + admin paneli sunucusu (node:test) + Acil, rota, koridor, filtre testleri
+npm run build        # uygulama derlemesi (dist/)
+npm run build:admin  # yönetim paneli derlemesi (admin/dist/)
 ```
 
 ### Ortam değişkenleri (`.env`, yalnızca sunucu okur)
@@ -38,20 +43,40 @@ npm run build     # üretim derlemesi (dist/)
 | Değişken | Açıklama | Varsayılan |
 |---|---|---|
 | `AUTH_SECRET` | Oturum belirteçlerini imzalayan gizli anahtar. Tanımlı değilse ya da `.env.example`'daki örnek değer bırakılmışsa sunucu rastgele bir anahtar üretip `server/data/.auth-secret`'e kaydeder. | otomatik üretilir |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Yönetici hesabı; sunucu her açılışta bu hesabı oluşturur veya şifresini eşitler | `admin` / `admin123` |
+| `ADMIN_SECRET_KEY` | Yönetim API'sinin ve panelin tek anahtarı (en az 16 karakter). **Ana servis ve admin servisinde aynı olmalı.** Yerelde tanımsızsa `server/data/.admin-key`'e üretilir. | otomatik üretilir (yerel) |
 | `PORT` | API portu | `3001` |
+| `ADMIN_PORT` | Yönetim paneli sunucusunun portu (Render'da `PORT` kullanılır) | `3002` |
+| `MAIN_API_URL` | Panel sunucusunun bağlanacağı ana sunucu adresi | `http://localhost:3001` |
+| `MAIN_APP_URL` | Paneldeki “Uygulamayı aç” bağlantısı (verilmezse `MAIN_API_URL`) | — |
 | `TRUST_PROXY` | Ters vekil (Render vb.) arkasında gerçek istemci IP'si için Express `trust proxy` değeri, ör. `1` | — |
 
-### Üretimde çalıştırma (Render vb.)
+### Üretimde çalıştırma (Render: iki ücretsiz Web Service)
 
-`npm run build` sonrası `npm start` tek bir Express süreci başlatır: `/api` isteklerini karşılar,
-`dist/` klasörünü statik olarak sunar ve diğer tüm GET isteklerini (`/`, `/admin`…) `index.html`'e yönlendirir.
+Uygulama ve yönetim paneli **iki ayrı servistir**. Veritabanı (SQLite) yalnızca ana serviste durur; panel verilere
+ana servisin `/api/admin` uçlarından, `X-Admin-Key: <ADMIN_SECRET_KEY>` başlığıyla erişir.
 
-| Render ayarı | Değer |
-|---|---|
-| Build Command | `npm install && npm run build` |
-| Start Command | `npm start` |
-| Environment | `AUTH_SECRET` (uzun rastgele değer), `ADMIN_PASSWORD`, `TRUST_PROXY=1` |
+```
+tarayıcı ──► tuvaletim-admin (admin/server)  ──X-Admin-Key──►  tuvaletim-nerede (server/)  ──► SQLite
+             anahtarla giriş, httpOnly çerez                     /api/admin/* yalnızca anahtarla
+```
+
+**Kolay yol: Blueprint.** Render → **New → Blueprint** → bu depoyu seçin. [`render.yaml`](render.yaml) iki servisi oluşturur,
+`AUTH_SECRET` ve `ADMIN_SECRET_KEY`'i üretir ve anahtarı admin servisine de aktarır. Kurulumda yalnızca admin servisinin
+`MAIN_API_URL` değeri sorulur: ana servisin adresini girin (ör. `https://tuvaletim-nerede.onrender.com`).
+Panele girmek için anahtarı Render → tuvaletim-nerede → **Environment** → `ADMIN_SECRET_KEY` alanından kopyalayın.
+
+**Elle kurulum** (ana servis zaten varsa):
+
+| | Ana servis (mevcut) | Admin servisi (yeni Web Service, aynı depo) |
+|---|---|---|
+| Build Command | `npm install && npm run build` | `npm install && npm run build:admin` |
+| Start Command | `npm start` | `npm run start:admin` |
+| Environment | `AUTH_SECRET`, `ADMIN_SECRET_KEY`, `TRUST_PROXY=1` | **aynı** `ADMIN_SECRET_KEY`, `MAIN_API_URL=https://<ana-servis>.onrender.com`, `TRUST_PROXY=1` |
+
+Anahtar üretmek için: `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"`.
+Ana serviste `ADMIN_SECRET_KEY` tanımlı değilse yönetim API'si erişilemez olur (Render'da her dağıtımda değişen bir anahtar üretilir).
+
+Ücretsiz planda servisler 15 dakika boşta kalınca uyur; panel ilk istekte ana servisi uyandırır (~1 dakika).
 
 Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yeniden başlatma/dağıtımda
 `server/data/` (veritabanı) sıfırlanır. Verilerin kalması için bir Persistent Disk bağlayıp
@@ -80,7 +105,12 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
   - Ücretli görünen mekanda tutar girilmiş oyların ortalaması gösterilir: `Ücretli • Ort. 12,5 ₺`.
 - **Tema:** Sistem / Açık / Koyu (Ayarlar). Varsayılan cihaz teması; koyu temada harita da koyulaşır.
 - **Düzen:** Masaüstünde (≥1024 px) tam ekran harita + sol kenar paneli; telefonda alt panel.
-- **Yönetim paneli (`/admin`):** Yalnızca `role = admin` hesaplar. Genel bakış; başvuruları onaylama/reddetme (fotoğraf ve konum önizlemesiyle); mekan arama, düzenleme ve kalıcı silme; oy/yorum moderasyonu (silinen oy istatistiklerden düşer).
+- **Yönetim paneli (ayrı servis, [`admin/`](admin/)):** Kullanıcı uygulamasında yönetim kodu yoktur. Panel yalnızca `ADMIN_SECRET_KEY` ile açılır:
+  - **Temiz Kalp ihbarları:** Kullanıcıların “Kapalı / Kağıt-sabun yok / Çok kalabalık” bildirimleri mekan başına gruplanır; aynı sorunu **en az 2 farklı kullanıcı** bildirdiyse mekan *şüpheli* sayılır ve üstte listelenir. **Onayla** → mekan *kalıcı kapalı* işaretlenir ve haritadan gizlenir (silinmez, Mekanlar'dan yeniden açılabilir). **Reddet** → ihbarlar çözülür, mekanın canlı durumunu artık etkilemez (kullanıcının katkı sayısında kalır). Tek tek ihbar silinebilir.
+  - **Mekanlar:** arama/filtre, yeni mekan ekleme (haritadan konum seçerek), düzenleme, kalıcı kapatma/yeniden açma, kalıcı silme.
+  - **Başvurular:** `+` ile gönderilen mekanları onaylama/reddetme.
+  - **Kullanıcılar:** oy, yorum, ihbar, eklenen mekan ve son etkinlik; kullanıcı ayrıntısında tek tek oy/ihbar silme ya da kullanıcıyı silme.
+  - **Oylar:** oy/yorum moderasyonu (silinen oy istatistiklerden düşer).
 
 ## Veritabanı (SQLite)
 
@@ -88,13 +118,15 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
 
 | Tablo | İçerik |
 |---|---|
-| `users` | id, username, email, password_hash (scrypt), role (`user` / `admin`), created_at |
-| `places` | Onaylı mekanlar: ad, tür, ilçe, adres, konum, fotoğraf, saatler, engelli erişimi, bebek bakım, kaynak (`seed` / `user`) |
+| `users` | id, username, email, password_hash (scrypt), role (`user`), created_at |
+| `places` | Onaylı mekanlar: ad, tür, ilçe, adres, konum, fotoğraf, saatler, engelli erişimi, bebek bakım, kaynak (`seed` / `user` / `admin`), `closed_at` (kalıcı kapalı) |
 | `votes` | cleanliness, comfort, is_paid, price_amount, comment, toilet_type, user_id, place_id — `UNIQUE(user_id, place_id)` |
 | `pending_places` | `+` ile gönderilen, onay bekleyen mekanlar ve ekleyenin ilk oyu (onayda `votes`'a yazılır) |
 | `favorites` | user_id, place_id, created_at — birincil anahtar `(user_id, place_id)` |
-| `status_reports` | place_id, user_id, report_type (`closed` / `no_supplies` / `crowded`), created_at |
+| `status_reports` | place_id, user_id, report_type (`closed` / `no_supplies` / `crowded` / `open`), created_at, `resolved_at` (yönetici onayladı/reddetti) |
+| `seed_removed` | Yöneticinin sildiği seed mekanları (seed eşitlemesi geri getirmez) |
 
+Eski sürümlerin `role = admin` hesabı (admin/admin123) açılışta silinir; yönetim artık yalnızca anahtarla yapılır.
 `users` ayrıca display_name, avatar_url, bio, is_demo; `places` ayrıca toilet_type, public_access, added_by içerir. Bu sütunlar eski veritabanlarına açılışta `ALTER TABLE` ile eklenir.
 
 Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stats.js`](server/stats.js)).
@@ -105,7 +137,7 @@ Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stat
 
 - Koordinatlar OpenStreetMap / **Nominatim**'den alınmıştır ve gerçek OSM nesnelerine aittir. Her kaydın `osm` alanında OSM kimliği yer alır.
 - Engelli erişimi, bebek bakım ve çalışma saatleri, varsa OSM etiketlerinden gelir. Puan veya oy sayısı **yoktur**.
-- Adı istenen 24 noktanın 22'si doğrudan bir OSM kaydına oturur. Şu ikisinin yakınında OSM'de kayıtlı tuvalet olmadığından referans noktasına **yaklaşık** yerleştirilmiştir (`approximate: true`, adreste “(yaklaşık konum)” yazar): *Bornova Merkez Meydan Belediye WC* (Cumhuriyet Meydanı) ve *Karşıyaka İskele / Çarşı Belediye WC* (Karşıyaka Vapur İskelesi). Doğru konum `/admin` → Mekanlar → Düzenle'den haritaya tıklanarak düzeltilebilir.
+- Adı istenen 24 noktanın 22'si doğrudan bir OSM kaydına oturur. Şu ikisinin yakınında OSM'de kayıtlı tuvalet olmadığından referans noktasına **yaklaşık** yerleştirilmiştir (`approximate: true`, adreste “(yaklaşık konum)” yazar): *Bornova Merkez Meydan Belediye WC* (Cumhuriyet Meydanı) ve *Karşıyaka İskele / Çarşı Belediye WC* (Karşıyaka Vapur İskelesi). Doğru konum yönetim paneli → Mekanlar → Düzenle'den haritaya tıklanarak düzeltilebilir.
 - AVM'ler: il genelinde OSM'de `shop=mall` etiketli ve adı olan tüm kayıtlar (iş hanı, pasaj, çarşı gibi AVM olmayanlar hariç). Migros'un işlettiği AVM'ler OSM'de yalnızca “Migros” adıyla kayıtlı olduğundan “Migros AVM ‹ilçe›” olarak adlandırılır.
 - Starbucks: il genelinde OSM'de kayıtlı tüm Starbucks şubeleri. OSM'de olmayan şubeler (özellikle AVM içindekiler) listede yoktur; kullanıcılar sarı **+** butonuyla ekleyebilir.
 - Operatörü belediye olarak işaretlenmemiş, adsız kamu tuvaletleri “Umumi Tuvalet – ‹mahalle›” adıyla eklenmiştir.
@@ -116,7 +148,7 @@ Veriyi yeniden üretmek için (Nominatim kullanım kuralına uygun: saniyede en 
 node scripts/geocode-seed.mjs > server/seed-places.json
 ```
 
-Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ekler; böylece seed'e eklenen yeni mekanlar mevcut kurulumlara da gelir. Yöneticinin `/admin`'den sildiği seed mekanları `seed_removed` tablosuna yazılır ve yeniden eklenmez.
+Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ekler; böylece seed'e eklenen yeni mekanlar mevcut kurulumlara da gelir. Yöneticinin panelden sildiği seed mekanları `seed_removed` tablosuna yazılır ve yeniden eklenmez.
 
 ## API
 
@@ -138,11 +170,23 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | GET | `/api/avatars/:file` | — | Profil fotoğrafı (`nosniff`) |
 | PUT | `/api/places/:id/vote` | kullanıcı | `{ cleanliness, comfort, isPaid, priceAmount?, comment? }` — oy ekler/günceller |
 | POST | `/api/pending` | kullanıcı | Yeni mekan başvurusu (+ ilk oy) |
-| GET | `/api/admin/stats` | admin | Özet sayılar |
-| GET | `/api/admin/pending` | admin | Bekleyen başvurular |
-| POST / DELETE | `/api/admin/pending/:id/approve`, `/api/admin/pending/:id` | admin | Onayla / reddet |
-| PATCH / DELETE | `/api/admin/places/:id` | admin | Düzenle / kalıcı sil (oylarıyla birlikte) |
-| GET / DELETE | `/api/admin/votes`, `/api/admin/votes/:id` | admin | Oy listesi / oy sil |
+| GET | `/api/health` | — | Sağlık denetimi |
+
+**Yönetim API'si** — her istekte `X-Admin-Key: <ADMIN_SECRET_KEY>` gerekir (anahtarsız/yanlış → `401`, sunucuda anahtar yoksa `503`; hatalı denemeler IP başına 15 dakikada 10 ile sınırlı). Panel bu uçları kendi sunucusu üzerinden çağırır; tarayıcı anahtarı hiç görmez.
+
+| Yöntem | Yol | Açıklama |
+|---|---|---|
+| GET | `/api/admin/stats` | Özet sayılar (haritadaki/kalıcı kapalı mekan, şüpheli mekan, başvuru, oy, kullanıcı) |
+| GET | `/api/admin/reports` | Temiz Kalp ihbar kuyruğu (mekan başına; `flagged` = ≥2 farklı kullanıcı) |
+| POST | `/api/admin/reports/:placeId/approve` · `/reject` | Onayla (kalıcı kapat) / reddet |
+| DELETE | `/api/admin/report-items/:id` | Tek ihbarı sil |
+| GET | `/api/admin/pending` | Bekleyen başvurular |
+| POST / DELETE | `/api/admin/pending/:id/approve`, `/api/admin/pending/:id` | Onayla / reddet |
+| GET / POST | `/api/admin/places` | Tüm mekanlar (kapalılar dahil) / yeni mekan |
+| PATCH / DELETE | `/api/admin/places/:id` | Düzenle (`{ closed: true \| false }` dahil) / kalıcı sil |
+| GET / DELETE | `/api/admin/votes`, `/api/admin/votes/:id` | Oy listesi / oy sil |
+| GET | `/api/admin/users`, `/api/admin/users/:id` | Kullanıcı etkinlik özeti / ayrıntı (oylar, ihbarlar, eklenen mekanlar) |
+| DELETE | `/api/admin/users/:id` | Kullanıcıyı sil (oyları ve ihbarlarıyla) |
 
 Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 
@@ -151,7 +195,8 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 - Şifreler `scrypt` ile tuzlanarak saklanır. Oturum, `AUTH_SECRET` ile HMAC-SHA256 imzalı 7 günlük bir belirteçtir; tarayıcıda `localStorage`'da tutulur. Kullanıcının rolü her istekte veritabanından okunur.
 - Örnek (herkese açık) anahtar asla kullanılmaz; yoksa rastgele üretilir.
 - Fotoğraflar yalnızca JPEG / PNG / WebP / GIF olabilir (SVG reddedilir) ve `X-Content-Type-Options: nosniff` ile sunulur.
-- Yönetici bilgileri yalnızca sunucudadır, tarayıcıya gönderilen JS paketinde bulunmaz.
+- **Yönetim paneli ayrı servistir**; kullanıcı uygulamasının paketinde yönetim kodu yoktur. Yönetim API'si kullanıcı hesaplarıyla açılmaz, yalnızca `ADMIN_SECRET_KEY` ile (sabit süreli karşılaştırma).
+- Panel girişinde anahtar tarayıcıda saklanmaz: panel sunucusu anahtardan türetilen anahtarla imzalı, 12 saatlik `HttpOnly; SameSite=Strict` (HTTPS'te `Secure`) bir çerez verir. Çıkış oturumu sunucuda geçersiz kılar; anahtar değişince tüm oturumlar düşer. Değiştiren istekler ayrıca özel bir başlık ister (CSRF). Panel `X-Frame-Options: DENY`, sıkı CSP ve `noindex` ile sunulur; hatalı anahtar denemeleri sınırlıdır.
 - **Hız sınırı (IP başına, bellek içi):** giriş + kayıt 15 dakikada 20 istek; oy, bildirim, favori, başvuru ve profil yazma dakikada 60 istek. Aşılınca `429` ve `Retry-After`. Sunucu yalnızca kendi makinesindeki (loopback) vekilin `X-Forwarded-For` başlığına güvenir.
 - Profil fotoğrafları içerik baytları kontrol edilerek kabul edilir, rastgele adla `server/data/avatars/` altında tutulur.
 - HTTPS kurulumu bu projenin kapsamında değildir; internete açmadan önce bir ters vekil sunucu (reverse proxy) ile HTTPS ekleyin.
@@ -162,7 +207,7 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 ```
 server/
   index.js            # .env okur, uygulamayı 3001'de başlatır
-  app.js              # createApp(): Express + yönetici hesabı
+  app.js              # createApp(): Express, yönetim API'si (ADMIN_SECRET_KEY)
   db.js               # sql.js aç/kaydet, şema, seed
   auth.js  stats.js  validate.js
   routes/             # auth, places, pending, admin
@@ -173,8 +218,12 @@ src/
   api.ts              # fetch sarmalayıcı
   hooks/              # useAuth, usePlaces, useGeolocation, useTheme, …
   components/         # MapView, Sidebar, BottomSheet, PlaceDetail, AuthModal, LocationBanner, …
-  admin/              # /admin paneli
   lib/geo.ts          # mesafe + Acil algoritması (geo.test.ts)
   lib/route.ts        # OSRM yaya rotası + kuş uçuşu yedeği (route.test.ts)
+admin/                # bağımsız yönetim paneli (ikinci Render servisi)
+  server/             # Express: anahtarla giriş, httpOnly oturum, ana API'ye vekil, admin/dist sunumu
+  src/                # React arayüzü (İhbarlar, Başvurular, Mekanlar, Kullanıcılar, Oylar)
+  test/               # panel sunucusu entegrasyon testleri
+render.yaml           # iki servisli Render Blueprint
 docs/superpowers/     # tasarım ve uygulama planı
 ```

@@ -1,18 +1,22 @@
 import { useCallback, useState } from 'react';
-import { Building2, CheckCircle2, ExternalLink, Inbox, LayoutDashboard, LogOut, MessageSquareText } from 'lucide-react';
+import { Building2, CheckCircle2, ExternalLink, HeartHandshake, Inbox, LayoutDashboard, LogOut, MessageSquareText, RefreshCw, Users } from 'lucide-react';
 import { useAdminData } from './useAdminData';
-import Logo from '../components/Logo';
+import Logo from './Logo';
 import Dashboard from './Dashboard';
 import PendingPage from './PendingPage';
 import PlacesPage from './PlacesPage';
 import ReviewsPage from './ReviewsPage';
+import ReportsPage from './ReportsPage';
+import UsersPage from './UsersPage';
 
-export type AdminTab = 'dashboard' | 'pending' | 'places' | 'reviews';
+export type AdminTab = 'dashboard' | 'reports' | 'pending' | 'places' | 'users' | 'reviews';
 
 const TABS: { id: AdminTab; label: string; icon: typeof Inbox }[] = [
   { id: 'dashboard', label: 'Genel Bakış', icon: LayoutDashboard },
+  { id: 'reports', label: 'İhbarlar', icon: HeartHandshake },
   { id: 'pending', label: 'Başvurular', icon: Inbox },
   { id: 'places', label: 'Mekanlar', icon: Building2 },
+  { id: 'users', label: 'Kullanıcılar', icon: Users },
   { id: 'reviews', label: 'Oylar', icon: MessageSquareText },
 ];
 
@@ -21,10 +25,10 @@ function readTab(): AdminTab {
   return TABS.some((t) => t.id === h) ? h : 'dashboard';
 }
 
-export default function AdminPanel({ username, onLogout }: { username: string; onLogout: () => void }) {
+export default function AdminPanel({ appUrl, onLogout }: { appUrl?: string; onLogout: () => void }) {
   const [tab, setTabState] = useState<AdminTab>(readTab);
   const [toast, setToast] = useState<{ id: number; text: string } | null>(null);
-  const { stats, pending, places, votes, error, reload } = useAdminData();
+  const { stats, pending, places, votes, reports, users, error, loading, reload } = useAdminData();
 
   const setTab = (t: AdminTab) => {
     setTabState(t);
@@ -55,7 +59,7 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
     [reload, showToast],
   );
 
-  const badge = (id: AdminTab) => (id === 'pending' ? pending.length : 0);
+  const badge = (id: AdminTab) => (id === 'pending' ? pending.length : id === 'reports' ? reports.filter((r) => r.flagged).length : 0);
 
   return (
     <div className="min-h-[100dvh] bg-card text-ink lg:pl-[260px]">
@@ -88,12 +92,17 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
           ))}
         </nav>
         <div className="mt-auto space-y-2">
-          <a href="/" target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/10">
-            <ExternalLink size={16} /> Uygulamayı aç
-          </a>
+          {appUrl && (
+            <a href={appUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/10">
+              <ExternalLink size={16} /> Uygulamayı aç
+            </a>
+          )}
+          <button type="button" onClick={() => void reload().then(() => showToast('Veriler yenilendi.'))} className="flex w-full items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white/75 hover:bg-white/10">
+            <RefreshCw size={16} /> Verileri yenile
+          </button>
           <div className="rounded-2xl bg-white/5 p-3">
             <div className="text-xs text-white/50">Oturum açık</div>
-            <div className="font-bold">{username}</div>
+            <div className="font-bold">Yönetici</div>
             <button type="button" onClick={onLogout} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-white/10 py-2 text-sm font-bold hover:bg-white/20">
               <LogOut size={15} /> Çıkış yap
             </button>
@@ -130,10 +139,13 @@ export default function AdminPanel({ username, onLogout }: { username: string; o
       </header>
 
       <main className="mx-auto max-w-6xl p-4 sm:p-6 lg:p-8">
-        {error && <p className="mb-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
-        {tab === 'dashboard' && <Dashboard stats={stats} places={places} votes={votes} pendingCount={pending.length} onNavigate={setTab} />}
+        {error && <p role="alert" className="mb-4 rounded-2xl bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-600">{error}</p>}
+        {loading && !stats && <p className="mb-4 text-sm text-ink-muted">Ana sunucudan veriler alınıyor… (uyku modundaysa ~1 dk sürebilir)</p>}
+        {tab === 'dashboard' && <Dashboard stats={stats} places={places} votes={votes} pendingCount={pending.length} flaggedCount={reports.filter((r) => r.flagged).length} onNavigate={setTab} />}
+        {tab === 'reports' && <ReportsPage reports={reports} act={act} />}
         {tab === 'pending' && <PendingPage pending={pending} act={act} />}
         {tab === 'places' && <PlacesPage places={places} votes={votes} act={act} />}
+        {tab === 'users' && <UsersPage users={users} act={act} />}
         {tab === 'reviews' && <ReviewsPage votes={votes} act={act} />}
       </main>
 

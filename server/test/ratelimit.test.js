@@ -17,7 +17,8 @@ test('login brute force is throttled with 429 and Retry-After', async () => {
 test('vote / report / favorite spam is throttled', async () => {
   // auth kotası doldu; belirteci doğrudan üret
   const { signToken } = await import('../auth.js');
-  const token = signToken({ id: 1, role: 'admin' }, 'test-secret');
+  const { lastId } = srv.db.run("INSERT INTO users (username, password_hash, role, created_at) VALUES ('spamci', 'x', 'user', '2026-01-01')");
+  const token = signToken({ id: lastId, role: 'user' }, 'test-secret');
   const body = { cleanliness: 3, comfort: 3, isPaid: false };
   const codes = [];
   codes.push((await srv.req('PUT', '/api/places/p1/vote', body, token)).status);

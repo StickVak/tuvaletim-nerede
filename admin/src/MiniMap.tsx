@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import type { LatLng, ToiletCategory } from '../types';
-import { OSM_TILE, toiletIcon } from '../lib/mapIcons';
+import type { LatLng, ToiletCategory } from '../../src/types';
+import { OSM_TILE, toiletIcon } from '../../src/lib/mapIcons';
 
 function Recenter({ center }: { center: LatLng }) {
   const map = useMap();

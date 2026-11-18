@@ -52,8 +52,10 @@ export interface Place extends LatLng {
   toiletType: ToiletType | null;
   /** Şifresiz / herkese açık */
   publicAccess: boolean;
-  source: 'seed' | 'user';
+  source: 'seed' | 'user' | 'admin';
   createdAt: string;
+  /** Yönetici onaylı kalıcı kapalı (yalnızca yönetim API'sinde dolu) */
+  closedAt?: string | null;
   stats: PlaceStats;
   status: PlaceStatus;
   isFavorite: boolean;
@@ -69,7 +71,7 @@ export interface PlaceView extends Place {
 export interface User {
   id: number;
   username: string;
-  role: 'user' | 'admin';
+  role: 'user';
   displayName: string;
   avatarUrl: string | null;
 }
