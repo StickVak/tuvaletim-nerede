@@ -401,8 +401,8 @@ export default function App() {
           >
             <SettingsIcon size={21} />
           </button>
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface shadow-float" title="Tuvaletim Nerede?">
-            <Logo size={36} />
+          <span className="shrink-0 drop-shadow-md" title="Tuvaletim Nerede?">
+            <Logo size={48} />
           </span>
           <div className="ml-auto">
             <AccountButton variant="bar" onOpenProfile={() => setProfileOpen(true)} />

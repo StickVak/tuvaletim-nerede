@@ -1,12 +1,12 @@
 /* Tuvaletim Nerede? — basit service worker
  * Uygulama kabuğu: network-first (çevrimdışıyken önbellekten)
  * Harita karoları: cache-first (gezilen bölgeler çevrimdışı da görünür) */
-const APP_CACHE = 'tn-app-v4';
+const APP_CACHE = 'tn-app-v5';
 const TILE_CACHE = 'tn-tiles-v4';
 const MAX_TILES = 400;
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(['/', '/manifest.json', '/icon.svg', '/icon-192.png', '/icon-512.png'])));
+  event.waitUntil(caches.open(APP_CACHE).then((c) => c.addAll(['/', '/manifest.json', '/logo.png', '/favicon.png', '/icon-192.png', '/icon-512.png'])));
   self.skipWaiting();
 });
 

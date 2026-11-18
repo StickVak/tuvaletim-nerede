@@ -17,7 +17,8 @@ body,
   --c-ink-soft: 74 74 74;
   --c-ink-muted: 138 138 138;
   --c-brand-soft: 255 246 199;
-  color-scheme: light;
+  /* "only": tarayıcı otomatik koyulaştırma uygulamasın (tema seçimini uygulama yönetir) */
+  color-scheme: only light;
 }
 
 /* Koyu tema: antrasit zemin, sarı vurgular aynı kalır */
@@ -29,7 +30,7 @@ body,
   --c-ink-soft: 200 200 200;
   --c-ink-muted: 150 150 150;
   --c-brand-soft: 74 63 10;
-  color-scheme: dark;
+  color-scheme: only dark;
 }
 
 body {
