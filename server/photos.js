@@ -1,16 +1,22 @@
 /**
- * Mekan fotoğrafları diskte (server/data/photos) rastgele adlarla saklanır; veritabanında yalnızca dosya adı tutulur.
- * İstemci görseli tarayıcıda küçültüp JPEG'e sıkıştırarak data URL olarak gönderir (bkz. src/lib/image.ts).
+ * Fotoğraf deposu (mekan dış mekan fotoğrafları ve profil fotoğrafları).
+ *
+ * - CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET tanımlıysa görsel Cloudinary'ye
+ *   imzalı istekle yüklenir ve veritabanına kalıcı `secure_url` yazılır; silmede Cloudinary'den de silinir.
+ * - Tanımlı değilse yerel diske (server/data/photos, server/data/avatars) rastgele adla yazılır.
+ * Her iki durumda da içerik baytları bildirilen görsel türüyle eşleşmeli (SVG/HTML reddedilir).
+ * Veritabanında iki tür referans bir arada bulunabilir (yerel dosya adı ya da https://res.cloudinary.com/... adresi).
  */
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { PHOTO_RE } from './validate.js';
 
-export const PHOTO_FILE_RE = /^[a-f0-9]{32}\.(jpg|png|webp|gif)$/;
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const EXT = { jpeg: 'jpg', png: 'png', webp: 'webp', gif: 'gif' };
 const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
+/** Yerel dosya adı: [kullanıcıId-]rastgeleHex.uzantı */
+export const LOCAL_FILE_RE = /^(\d+-)?[a-f0-9]{16,32}\.(jpg|png|webp|gif)$/;
+const CLOUD_RE = /^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//;
 
 /** İlk baytlar bildirilen türle eşleşmeli (uzantısı değiştirilmiş betik/HTML reddedilir) */
 export function magicOk(type, buf) {
@@ -21,44 +27,142 @@ export function magicOk(type, buf) {
   return false;
 }
 
-export class PhotoError extends Error {}
+export class PhotoError extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.status = status;
+  }
+}
 
-/** data URL'yi doğrulayıp dosyaya yazar; dosya adını döner. Geçersizse PhotoError. */
-export function savePhoto(dir, dataUrl) {
+/** data URL'yi doğrular → { type, buf } */
+export function decodePhoto(dataUrl, maxBytes) {
   if (typeof dataUrl !== 'string' || !PHOTO_RE.test(dataUrl)) throw new PhotoError('Fotoğraf JPEG, PNG, WebP ya da GIF olmalı.');
   const type = dataUrl.match(/^data:image\/(\w+);/)[1];
   const buf = Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1), 'base64');
-  if (!buf.length || buf.length > MAX_PHOTO_BYTES) throw new PhotoError('Fotoğraf en fazla 5 MB olabilir.');
+  if (!buf.length) throw new PhotoError('Fotoğraf boş.');
+  if (buf.length > maxBytes) throw new PhotoError(`Fotoğraf en fazla ${Math.round(maxBytes / 1024 / 1024)} MB olabilir.`, 413);
   if (!magicOk(type, buf)) throw new PhotoError('Dosya içeriği bir görsel değil.');
-  mkdirSync(dir, { recursive: true });
-  const file = `${randomBytes(16).toString('hex')}.${EXT[type]}`;
-  writeFileSync(join(dir, file), buf, { mode: 0o644 });
-  return file;
+  return { type, buf };
 }
 
-export function removePhoto(dir, file) {
-  if (file && PHOTO_FILE_RE.test(file) && existsSync(join(dir, file))) unlinkSync(join(dir, file));
+/** CLOUDINARY_* üçü de varsa Cloudinary ayarı, yoksa null */
+export function cloudinaryConfig(env = process.env) {
+  const { CLOUDINARY_CLOUD_NAME: cloudName, CLOUDINARY_API_KEY: apiKey, CLOUDINARY_API_SECRET: apiSecret } = env;
+  return cloudName && apiKey && apiSecret ? { cloudName, apiKey, apiSecret } : null;
 }
 
-/** Yalnızca bilinen ad kalıbındaki dosyalar, nosniff ile */
-export function sendPhoto(res, dir, file, cache = 'public, max-age=86400') {
-  if (!file || !PHOTO_FILE_RE.test(file) || !existsSync(join(dir, file))) return res.status(404).json({ error: 'Fotoğraf yok.' });
-  res.set({ 'X-Content-Type-Options': 'nosniff', 'Cache-Control': cache });
-  res.type(MIME[file.split('.').pop()]).sendFile(join(dir, file));
+/** İmzaya girmeyen parametreler (Cloudinary belgesi) */
+const UNSIGNED = new Set(['file', 'api_key', 'cloud_name', 'resource_type']);
+
+/** Cloudinary imzası: file/api_key/cloud_name/resource_type hariç parametreler alfabetik, k=v&… + api_secret → SHA-1 */
+export function cloudinarySignature(params, apiSecret) {
+  const base = Object.keys(params)
+    .filter((k) => !UNSIGNED.has(k) && params[k] !== undefined && params[k] !== '')
+    .sort()
+    .map((k) => `${k}=${params[k]}`)
+    .join('&');
+  return createHash('sha1').update(base + apiSecret).digest('hex');
 }
 
-/** Eski sürümlerde places/pending_places.photo sütununa gömülü base64 görselleri dosyaya taşır */
-export function migrateInlinePhotos(db, dir) {
+/** secure_url → public_id (…/image/upload/v123/klasor/ad.jpg → klasor/ad) */
+export function publicIdFromUrl(url) {
+  const m = String(url).match(/\/image\/upload\/(?:[^/]*,[^/]*\/)*(?:v\d+\/)?(.+?)(?:\.[a-z0-9]+)?$/i);
+  return m ? m[1] : null;
+}
+
+/**
+ * @param dir   yerel klasör (Cloudinary yoksa)
+ * @param folder Cloudinary klasörü, ör. "tuvaletim/places"
+ * @param cloudinary cloudinaryConfig() sonucu ya da null
+ */
+export function createPhotoStore({ dir, folder, cloudinary = null, maxBytes = 5 * 1024 * 1024, fetchImpl = fetch, log = console }) {
+  const isCloud = (ref) => typeof ref === 'string' && CLOUD_RE.test(ref);
+  const isLocal = (ref) => typeof ref === 'string' && LOCAL_FILE_RE.test(ref);
+
+  async function cloudCall(action, params) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signed = { ...params, timestamp };
+    const form = new FormData();
+    for (const [k, v] of Object.entries(signed)) form.append(k, String(v));
+    form.append('api_key', cloudinary.apiKey);
+    form.append('signature', cloudinarySignature(signed, cloudinary.apiSecret));
+    const res = await fetchImpl(`https://api.cloudinary.com/v1_1/${encodeURIComponent(cloudinary.cloudName)}/image/${action}`, {
+      method: 'POST',
+      body: form,
+      signal: AbortSignal.timeout(30000),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(`Cloudinary ${action} ${res.status}: ${body?.error?.message ?? ''}`);
+    return body;
+  }
+
+  return {
+    kind: cloudinary ? 'cloudinary' : 'local',
+    isCloud,
+
+    /** Doğrular ve kaydeder; referans döner (yerel dosya adı ya da Cloudinary secure_url). prefix yalnızca yerel adlarda. */
+    async save(dataUrl, { prefix = '' } = {}) {
+      const { type, buf } = decodePhoto(dataUrl, maxBytes);
+      const id = randomBytes(16).toString('hex');
+      if (cloudinary) {
+        try {
+          // Görsel olduğu doğrulanmış data URL doğrudan yüklenir; public_id bizim üretimimiz (tahmin edilemez)
+          const r = await cloudCall('upload', { file: dataUrl, public_id: `${folder}/${prefix}${id}`, overwrite: 'false' });
+          if (!isCloud(r.secure_url)) throw new Error('Cloudinary secure_url dönmedi.');
+          return r.secure_url;
+        } catch (e) {
+          log.error?.('[foto] Cloudinary yükleme hatası:', e.message);
+          throw new PhotoError('Fotoğraf yüklenemedi. Lütfen biraz sonra tekrar deneyin.', 502);
+        }
+      }
+      mkdirSync(dir, { recursive: true });
+      const file = `${prefix}${id}.${EXT[type]}`;
+      writeFileSync(join(dir, file), buf, { mode: 0o644 });
+      return file;
+    },
+
+    /** En iyi çabayla siler (hata işlemi durdurmaz, loglanır) */
+    async remove(ref) {
+      if (!ref) return;
+      if (isCloud(ref)) {
+        if (!cloudinary) return log.warn?.('[foto] Cloudinary ayarı yok; uzak görsel silinemedi:', ref);
+        const publicId = publicIdFromUrl(ref);
+        if (!publicId) return;
+        try {
+          await cloudCall('destroy', { public_id: publicId, invalidate: 'true' });
+        } catch (e) {
+          log.error?.('[foto] Cloudinary silme hatası:', e.message);
+        }
+        return;
+      }
+      if (isLocal(ref) && existsSync(join(dir, ref))) unlinkSync(join(dir, ref));
+    },
+
+    /** Yerel dosyayı nosniff ile sunar; Cloudinary görselini (otomatik biçim/kalite ile) oraya yönlendirir */
+    send(res, ref, cache = 'public, max-age=86400') {
+      if (isCloud(ref)) {
+        res.set('Cache-Control', cache);
+        return res.redirect(302, ref.replace('/image/upload/', '/image/upload/f_auto,q_auto/'));
+      }
+      if (!isLocal(ref) || !existsSync(join(dir, ref))) return res.status(404).json({ error: 'Fotoğraf yok.' });
+      res.set({ 'X-Content-Type-Options': 'nosniff', 'Cache-Control': cache });
+      res.type(MIME[ref.split('.').pop()]).sendFile(join(dir, ref));
+    },
+  };
+}
+
+/** Eski sürümlerde places/pending_places.photo sütununa gömülü base64 görselleri depoya taşır */
+export async function migrateInlinePhotos(db, store) {
   for (const table of ['places', 'pending_places']) {
-    const rows = db.all(`SELECT id, photo FROM ${table} WHERE photo IS NOT NULL`);
+    const rows = await db.all(`SELECT id, photo FROM ${table} WHERE photo IS NOT NULL`);
     for (const row of rows) {
-      let file = null;
+      let ref = null;
       try {
-        file = savePhoto(dir, row.photo);
+        ref = await store.save(row.photo);
       } catch {
         /* geçersiz eski görsel: atılır */
       }
-      db.run(`UPDATE ${table} SET photo = NULL, photo_file = ? WHERE id = ?`, [file, row.id]);
+      await db.run(`UPDATE ${table} SET photo = NULL, photo_file = ? WHERE id = ?`, [ref, row.id]);
     }
   }
 }

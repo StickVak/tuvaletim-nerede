@@ -150,6 +150,27 @@ test('güvenlik başlıkları ve SPA sunumu', async () => {
   assert.equal((await call('GET', '/healthz')).text, 'ok');
 });
 
+test('Cloudinary fotoğraf yönlendirmesi tarayıcıya iletilir; başka adrese yönlendirme iletilmez', async () => {
+  const express = (await import('express')).default;
+  const fake = express();
+  fake.get('/api/admin/pending/p1/photo', (_req, res) => res.redirect(302, 'https://res.cloudinary.com/demo/image/upload/f_auto,q_auto/v1/tuvaletim/places/abc.jpg'));
+  fake.get('/api/admin/pending/p2/photo', (_req, res) => res.redirect(302, 'https://kotu.example.com/x'));
+  const up = await listen(fake);
+  const other = createAdminServer({ getKey: () => key, mainApiUrl: `http://127.0.0.1:${up.address().port}`, limits: false });
+  const s = await listen(other);
+  const u = `http://127.0.0.1:${s.address().port}`;
+  const lr = await fetch(u + '/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key }) });
+  const cookie = lr.headers.get('set-cookie').split(';')[0];
+  const r = await fetch(u + '/api/admin/pending/p1/photo', { headers: { Cookie: cookie }, redirect: 'manual' });
+  assert.equal(r.status, 302);
+  assert.match(r.headers.get('location'), /^https:\/\/res\.cloudinary\.com\//);
+  assert.match(r.headers.get('content-security-policy'), /img-src[^;]*https:\/\/res\.cloudinary\.com/);
+  const bad = await fetch(u + '/api/admin/pending/p2/photo', { headers: { Cookie: cookie }, redirect: 'manual' });
+  assert.equal(bad.status, 502);
+  s.close();
+  up.close();
+});
+
 test('anahtar yapılandırılmamışsa giriş 503', async () => {
   const other = createAdminServer({ getKey: () => '', mainApiUrl: main.url, limits: false });
   const s = await listen(other);

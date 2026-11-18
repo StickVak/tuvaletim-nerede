@@ -4,6 +4,7 @@ import express from 'express';
 import { createApp } from './app.js';
 import { resolveAdminKey, resolveSecret } from './secret.js';
 import { createMailer } from './mailer.js';
+import { cloudinaryConfig } from './photos.js';
 
 try {
   process.loadEnvFile();
@@ -23,9 +24,22 @@ const mailer = createMailer(process.env);
 if (mailer.kind === 'console') console.warn('[mail] RESEND_API_KEY / SMTP_* tanımlı değil: doğrulama kodları e-posta yerine bu konsola yazılacak.');
 else console.log(`[mail] e-posta servisi: ${mailer.kind}`);
 
+// Kalıcı depolama: TURSO_DATABASE_URL varsa Turso, yoksa yerel SQLite; CLOUDINARY_* varsa Cloudinary, yoksa yerel disk
+const dbUrl = process.env.TURSO_DATABASE_URL || undefined;
+const cloudinary = cloudinaryConfig(process.env);
+console.log(`[db] ${dbUrl ? `Turso (${new URL(dbUrl).host})` : 'yerel SQLite: server/data/tuvaletim.db'}`);
+console.log(`[foto] ${cloudinary ? `Cloudinary (${cloudinary.cloudName})` : 'yerel disk: server/data/photos'}`);
+if (process.env.RENDER && (!dbUrl || !cloudinary)) {
+  console.warn('[uyarı] Render ücretsiz planında yerel disk kalıcı değildir: TURSO_* ve CLOUDINARY_* değişkenlerini tanımlayın.');
+}
+
 const app = await createApp({
   mailer,
   dbPath: here('./data/tuvaletim.db'),
+  dbUrl,
+  dbAuthToken: process.env.TURSO_AUTH_TOKEN,
+  dataDir: here('./data'),
+  cloudinary,
   seedFile: here('./seed-places.json'),
   secret,
   adminKey,

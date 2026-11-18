@@ -25,14 +25,14 @@ test('kod iste → 6 haneli kod e-postaya gider; kodla kayıt → 201', async ()
   assert.equal(r.body.user.username, 'ayse');
   assert.equal(r.body.user.role, 'user');
   assert.equal(r.body.user.password_hash, undefined);
-  assert.equal(srv.db.get("SELECT email FROM users WHERE username = 'ayse'").email, 'ayse@example.com', 'küçük harfe çevrilir');
+  assert.equal((await srv.db.get("SELECT email FROM users WHERE username = 'ayse'")).email, 'ayse@example.com', 'küçük harfe çevrilir');
   // kod tek kullanımlık
   assert.equal((await reg({ username: 'ayse2', email: 'ayse@example.com', code })).status, 409);
 });
 
 test('kod saklanırken düz metin tutulmaz', async () => {
   await send('gizli@example.com');
-  const row = srv.db.get("SELECT * FROM email_codes WHERE email = 'gizli@example.com'");
+  const row = (await srv.db.get("SELECT * FROM email_codes WHERE email = 'gizli@example.com'"));
   assert.ok(row);
   assert.ok(!JSON.stringify(row).includes(srv.lastCode('gizli@example.com')));
 });
@@ -64,7 +64,7 @@ test('aynı adrese 60 saniyede ikinci kod → 429 + Retry-After', async () => {
   assert.ok(Number(res.headers.get('retry-after')) > 50);
   // 60 sn geçmiş gibi yap → yeni kod, eski kod geçersiz
   const old = srv.lastCode('acele@example.com');
-  srv.db.run("UPDATE email_codes SET sent_at = ? WHERE email = 'acele@example.com'", [new Date(Date.now() - 61000).toISOString()]);
+  (await srv.db.run("UPDATE email_codes SET sent_at = ? WHERE email = 'acele@example.com'", [new Date(Date.now() - 61000).toISOString()]));
   assert.equal((await send('acele@example.com')).status, 200);
   const fresh = srv.lastCode('acele@example.com');
   if (fresh !== old) assert.equal((await reg({ username: 'acele', email: 'acele@example.com', code: old })).status, 400);
@@ -73,7 +73,7 @@ test('aynı adrese 60 saniyede ikinci kod → 429 + Retry-After', async () => {
 
 test('süresi dolmuş kod (10 dk) reddedilir', async () => {
   await send('gec@example.com');
-  srv.db.run("UPDATE email_codes SET expires_at = ? WHERE email = 'gec@example.com'", [new Date(Date.now() - 1000).toISOString()]);
+  (await srv.db.run("UPDATE email_codes SET expires_at = ? WHERE email = 'gec@example.com'", [new Date(Date.now() - 1000).toISOString()]));
   const r = await reg({ username: 'gec', email: 'gec@example.com', code: srv.lastCode('gec@example.com') });
   assert.equal(r.status, 400);
   assert.match(r.body.error, /süresi/i);
@@ -101,7 +101,7 @@ test('mail gönderilemezse 502 ve kod kaydı silinir', async () => {
   s2.outbox.push = () => { throw new Error('SMTP kapalı'); };
   const r = await s2.req('POST', '/api/auth/send-code', { email: 'hata@example.com' });
   assert.equal(r.status, 502);
-  assert.equal(s2.db.get("SELECT COUNT(*) AS n FROM email_codes").n, 0);
+  assert.equal((await s2.db.get("SELECT COUNT(*) AS n FROM email_codes")).n, 0);
   s2.close();
 });
 

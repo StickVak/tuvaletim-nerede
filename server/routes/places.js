@@ -1,8 +1,7 @@
-import { Router } from 'express';
+import { asyncRouter } from '../async.js';
 import { requireUser } from '../auth.js';
 import { computeStats } from '../stats.js';
 import { computeStatus, REPORT_TYPES, STATUS_WINDOW_MS } from '../status.js';
-import { sendPhoto } from '../photos.js';
 
 export const TOILET_TYPES = ['alafranga', 'alaturka', 'ikisi'];
 
@@ -49,16 +48,16 @@ function placeJson(row, votes, reports, userId, favorite) {
 
 const since = () => new Date(Date.now() - STATUS_WINDOW_MS).toISOString();
 
-/** Aynı kullanıcının aynı türdeki bildirimi 3 saat içinde tekrar sayılmaz */
-function addReport(db, placeId, userId, type) {
-  const dup = db.get(
-    'SELECT 1 FROM status_reports WHERE place_id = ? AND user_id = ? AND report_type = ? AND created_at >= ?',
-    [placeId, userId, type, since()],
-  );
-  if (!dup) {
-    db.run('INSERT INTO status_reports (place_id, user_id, report_type, created_at) VALUES (?, ?, ?, ?)', [placeId, userId, type, new Date().toISOString()]);
-  }
-}
+/**
+ * Bildirim ekleme ifadesi: aynı kullanıcının aynı türdeki bildirimi 3 saat içinde tekrar sayılmaz
+ * (kontrol ve ekleme tek SQL'de; batch içinde de kullanılabilir).
+ */
+const addReportStmt = (placeId, userId, type) => [
+  `INSERT INTO status_reports (place_id, user_id, report_type, created_at)
+   SELECT ?, ?, ?, ? WHERE NOT EXISTS (
+     SELECT 1 FROM status_reports WHERE place_id = ? AND user_id = ? AND report_type = ? AND created_at >= ?)`,
+  [placeId, userId, type, new Date().toISOString(), placeId, userId, type, since()],
+];
 
 const UPSERT_VOTE = `INSERT INTO votes (place_id, user_id, cleanliness, comfort, is_paid, price_amount, comment, toilet_type, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -68,10 +67,10 @@ const UPSERT_VOTE = `INSERT INTO votes (place_id, user_id, cleanliness, comfort,
          updated_at = excluded.updated_at`;
 
 /** Katkı = verdiği oy sayısı + gönderdiği durum bildirimi sayısı */
-export function contributionsOf(db, userId) {
+export async function contributionsOf(db, userId) {
   return (
-    db.get('SELECT COUNT(*) AS n FROM votes WHERE user_id = ?', [userId]).n +
-    db.get('SELECT COUNT(*) AS n FROM status_reports WHERE user_id = ?', [userId]).n
+    (await db.get('SELECT COUNT(*) AS n FROM votes WHERE user_id = ?', [userId])).n +
+    (await db.get('SELECT COUNT(*) AS n FROM status_reports WHERE user_id = ?', [userId])).n
   );
 }
 const group = (rows) => {
@@ -83,27 +82,30 @@ const group = (rows) => {
   return m;
 };
 
-export function listPlaces(db, userId, { includeClosed = false } = {}) {
-  const votes = group(db.all('SELECT * FROM votes'));
-  const reports = group(db.all('SELECT * FROM status_reports WHERE created_at >= ? AND resolved_at IS NULL', [since()]));
-  const favs = new Set(userId ? db.all('SELECT place_id FROM favorites WHERE user_id = ?', [userId]).map((f) => f.place_id) : []);
-  return db
-    .all(`SELECT * FROM places ${includeClosed ? '' : 'WHERE closed_at IS NULL'} ORDER BY name`)
-    .map((p) => placeJson(p, votes.get(p.id) ?? [], reports.get(p.id) ?? [], userId, favs.has(p.id)));
+export async function listPlaces(db, userId, { includeClosed = false } = {}) {
+  // Turso'da her sorgu bir ağ isteği: dördü paralel
+  const [placeRows, voteRows, reportRows, favRows] = await Promise.all([
+    db.all(`SELECT * FROM places ${includeClosed ? '' : 'WHERE closed_at IS NULL'} ORDER BY name`),
+    db.all('SELECT * FROM votes'),
+    db.all('SELECT * FROM status_reports WHERE created_at >= ? AND resolved_at IS NULL', [since()]),
+    userId ? db.all('SELECT place_id FROM favorites WHERE user_id = ?', [userId]) : [],
+  ]);
+  const votes = group(voteRows);
+  const reports = group(reportRows);
+  const favs = new Set(favRows.map((f) => f.place_id));
+  return placeRows.map((p) => placeJson(p, votes.get(p.id) ?? [], reports.get(p.id) ?? [], userId, favs.has(p.id)));
 }
 
 /** includeClosed: yönetim için kalıcı kapalı mekanları da döndür (closedAt alanıyla) */
-export function getPlace(db, id, userId, { includeClosed = false } = {}) {
-  const row = db.get('SELECT * FROM places WHERE id = ?', [id]);
-  if (!row || (row.closed_at && !includeClosed)) return null;
-  const fav = userId && db.get('SELECT 1 FROM favorites WHERE user_id = ? AND place_id = ?', [userId, id]);
-  return placeJson(
-    row,
+export async function getPlace(db, id, userId, { includeClosed = false } = {}) {
+  const [row, votes, reports, fav] = await Promise.all([
+    db.get('SELECT * FROM places WHERE id = ?', [id]),
     db.all('SELECT * FROM votes WHERE place_id = ?', [id]),
     db.all('SELECT * FROM status_reports WHERE place_id = ? AND created_at >= ? AND resolved_at IS NULL', [id, since()]),
-    userId,
-    fav,
-  );
+    userId ? db.get('SELECT 1 FROM favorites WHERE user_id = ? AND place_id = ?', [userId, id]) : null,
+  ]);
+  if (!row || (row.closed_at && !includeClosed)) return null;
+  return placeJson(row, votes, reports, userId, fav);
 }
 
 /**
@@ -131,23 +133,23 @@ export function parseVote(body) {
   };
 }
 
-export function placeRoutes(db, writeLimit, photosDir) {
-  const r = Router();
+export function placeRoutes(db, writeLimit, photos) {
+  const r = asyncRouter();
   // Kalıcı kapalı mekanlar herkese açık uçlarda yok sayılır
   const exists = (id) => db.get('SELECT 1 FROM places WHERE id = ? AND closed_at IS NULL', [id]);
 
-  r.get('/', (req, res) => res.json(listPlaces(db, req.user?.id)));
+  r.get('/', async (req, res) => res.json(await listPlaces(db, req.user?.id)));
 
   /** Mekan fotoğrafı (liste yanıtını küçük tutmak için ayrı uç nokta) */
-  r.get('/:id/photo', (req, res) => {
-    const row = db.get('SELECT photo_file FROM places WHERE id = ?', [req.params.id]);
-    sendPhoto(res, photosDir, row?.photo_file);
+  r.get('/:id/photo', async (req, res) => {
+    const row = await db.get('SELECT photo_file FROM places WHERE id = ?', [req.params.id]);
+    photos.send(res, row?.photo_file);
   });
 
   /** Yorumlu son 20 oy (herkese açık), yazarın görünen adı ve avatarıyla */
-  r.get('/:id/reviews', (req, res) => {
-    if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
-    const rows = db.all(
+  r.get('/:id/reviews', async (req, res) => {
+    if (!(await exists(req.params.id))) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+    const rows = await db.all(
       `SELECT v.*, u.username, u.display_name, u.avatar_url FROM votes v JOIN users u ON u.id = v.user_id
        WHERE v.place_id = ? AND v.comment IS NOT NULL ORDER BY v.updated_at DESC LIMIT 20`,
       [req.params.id],
@@ -164,61 +166,61 @@ export function placeRoutes(db, writeLimit, photosDir) {
     );
   });
 
-  r.put('/:id/vote', writeLimit, requireUser, (req, res) => {
-    if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+  r.put('/:id/vote', writeLimit, requireUser, async (req, res) => {
+    if (!(await exists(req.params.id))) return res.status(404).json({ error: 'Mekan bulunamadı.' });
     const v = parseVote(req.body);
     if (typeof v === 'string') return res.status(400).json({ error: v });
     const now = new Date().toISOString();
-    db.run(UPSERT_VOTE, [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, v.comment, v.toiletType, now, now]);
-    res.json(getPlace(db, req.params.id, req.user.id));
+    await db.run(UPSERT_VOTE, [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, v.comment, v.toiletType, now, now]);
+    res.json(await getPlace(db, req.params.id, req.user.id));
   });
 
   /** Canlı durum bildirimi; aynı kullanıcının aynı türdeki bildirimi 3 saat içinde tekrar sayılmaz */
-  r.post('/:id/reports', writeLimit, requireUser, (req, res) => {
-    if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+  r.post('/:id/reports', writeLimit, requireUser, async (req, res) => {
+    if (!(await exists(req.params.id))) return res.status(404).json({ error: 'Mekan bulunamadı.' });
     const type = req.body?.type;
     if (!REPORT_TYPES.includes(type)) return res.status(400).json({ error: 'Geçersiz bildirim türü.' });
-    addReport(db, req.params.id, req.user.id, type);
-    res.json(getPlace(db, req.params.id, req.user.id));
+    await db.run(...addReportStmt(req.params.id, req.user.id, type));
+    res.json(await getPlace(db, req.params.id, req.user.id));
   });
 
   /**
    * Yolculuk sonu değerlendirmesi. Açıksa oy (upsert) + "open" bildirimi; kapalıysa yalnızca "closed".
    * Kağıt yoksa "no_supplies". Hepsi tek işlemde.
    */
-  r.post('/:id/arrival', writeLimit, requireUser, (req, res) => {
-    if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+  r.post('/:id/arrival', writeLimit, requireUser, async (req, res) => {
+    if (!(await exists(req.params.id))) return res.status(404).json({ error: 'Mekan bulunamadı.' });
     const { wasOpen, hadPaper = null } = req.body ?? {};
     if (typeof wasOpen !== 'boolean') return res.status(400).json({ error: '“Açık mıydı?” sorusunu yanıtlayın.' });
     if (hadPaper !== null && typeof hadPaper !== 'boolean') return res.status(400).json({ error: 'Geçersiz “Kağıt var mıydı?” yanıtı.' });
     const v = wasOpen ? parseVote({ ...req.body, comment: null, toiletType: null }) : null;
     if (typeof v === 'string') return res.status(400).json({ error: v });
     const now = new Date().toISOString();
-    db.tx(() => {
-      if (v) {
-        // Var olan oydaki yorum ve tuvalet tipi korunur
-        const prev = db.get('SELECT comment, toilet_type FROM votes WHERE place_id = ? AND user_id = ?', [req.params.id, req.user.id]);
-        db.run(UPSERT_VOTE, [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, prev?.comment ?? null, prev?.toilet_type ?? null, now, now]);
-      }
-      addReport(db, req.params.id, req.user.id, wasOpen ? 'open' : 'closed');
-      if (wasOpen && hadPaper === false) addReport(db, req.params.id, req.user.id, 'no_supplies');
-    });
-    res.json({ place: getPlace(db, req.params.id, req.user.id), contributions: contributionsOf(db, req.user.id) });
+    const stmts = [];
+    if (v) {
+      // Var olan oydaki yorum ve tuvalet tipi korunur
+      const prev = await db.get('SELECT comment, toilet_type FROM votes WHERE place_id = ? AND user_id = ?', [req.params.id, req.user.id]);
+      stmts.push([UPSERT_VOTE, [req.params.id, req.user.id, v.cleanliness, v.comfort, v.isPaid, v.priceAmount, prev?.comment ?? null, prev?.toilet_type ?? null, now, now]]);
+    }
+    stmts.push(addReportStmt(req.params.id, req.user.id, wasOpen ? 'open' : 'closed'));
+    if (wasOpen && hadPaper === false) stmts.push(addReportStmt(req.params.id, req.user.id, 'no_supplies'));
+    await db.batch(stmts); // tek işlem
+    res.json({ place: await getPlace(db, req.params.id, req.user.id), contributions: await contributionsOf(db, req.user.id) });
   });
 
   return r;
 }
 
 export function favoriteRoutes(db, writeLimit) {
-  const r = Router();
+  const r = asyncRouter();
   r.use(writeLimit, requireUser);
-  r.put('/:placeId', (req, res) => {
-    if (!db.get('SELECT 1 FROM places WHERE id = ?', [req.params.placeId])) return res.status(404).json({ error: 'Mekan bulunamadı.' });
-    db.run('INSERT OR IGNORE INTO favorites (user_id, place_id, created_at) VALUES (?, ?, ?)', [req.user.id, req.params.placeId, new Date().toISOString()]);
+  r.put('/:placeId', async (req, res) => {
+    if (!(await db.get('SELECT 1 FROM places WHERE id = ?', [req.params.placeId]))) return res.status(404).json({ error: 'Mekan bulunamadı.' });
+    await db.run('INSERT OR IGNORE INTO favorites (user_id, place_id, created_at) VALUES (?, ?, ?)', [req.user.id, req.params.placeId, new Date().toISOString()]);
     res.status(204).end();
   });
-  r.delete('/:placeId', (req, res) => {
-    db.run('DELETE FROM favorites WHERE user_id = ? AND place_id = ?', [req.user.id, req.params.placeId]);
+  r.delete('/:placeId', async (req, res) => {
+    await db.run('DELETE FROM favorites WHERE user_id = ? AND place_id = ?', [req.user.id, req.params.placeId]);
     res.status(204).end();
   });
   return r;

@@ -3,7 +3,7 @@
 İzmir'de yakınındaki en uygun tuvaleti bulan, puanların ve ücret bilgisinin **kullanıcı oylarıyla** oluştuğu, PWA uyumlu web uygulaması.
 
 - **Arayüz:** React 18 · Vite · TypeScript · Tailwind CSS · Leaflet (OpenStreetMap) · Lucide
-- **Sunucu:** Node.js · Express · SQLite (**sql.js** — saf WebAssembly, Windows dahil hiçbir sistemde C++ derlemesi gerektirmez)
+- **Sunucu:** Node.js · Express · SQLite / **libSQL** (`@libsql/client`: yerelde dosya, canlıda **Turso** bulut veritabanı) · fotoğraflar yerelde diskte, canlıda **Cloudinary**'de
 
 ## Kurulum
 
@@ -45,6 +45,8 @@ npm run build:admin  # yönetim paneli derlemesi (admin/dist/)
 | `AUTH_SECRET` | Oturum belirteçlerini imzalayan gizli anahtar. Tanımlı değilse ya da `.env.example`'daki örnek değer bırakılmışsa sunucu rastgele bir anahtar üretip `server/data/.auth-secret`'e kaydeder. | otomatik üretilir |
 | `ADMIN_SECRET_KEY` | Yönetim API'sinin ve panelin tek anahtarı (en az 16 karakter). **Ana servis ve admin servisinde aynı olmalı.** Yerelde tanımsızsa `server/data/.admin-key`'e üretilir. | otomatik üretilir (yerel) |
 | `PORT` | API portu | `3001` |
+| `TURSO_DATABASE_URL` / `TURSO_AUTH_TOKEN` | Tanımlıysa veritabanı **Turso** bulutunda (`libsql://…`); yoksa yerel `server/data/tuvaletim.db` | — (yerel dosya) |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Üçü de tanımlıysa mekan ve profil fotoğrafları **Cloudinary**'ye yüklenir, veritabanına kalıcı `secure_url` yazılır; yoksa `server/data/photos` ve `server/data/avatars` | — (yerel disk) |
 | `ADMIN_PORT` | Yönetim paneli sunucusunun portu (Render'da `PORT` kullanılır) | `3002` |
 | `MAIN_API_URL` | Panel sunucusunun bağlanacağı ana sunucu adresi | `http://localhost:3001` |
 | `MAIN_APP_URL` | Paneldeki “Uygulamayı aç” bağlantısı (verilmezse `MAIN_API_URL`) | — |
@@ -83,9 +85,23 @@ Ana serviste `ADMIN_SECRET_KEY` tanımlı değilse yönetim API'si erişilemez o
 
 Ücretsiz planda servisler 15 dakika boşta kalınca uyur; panel ilk istekte ana servisi uyandırır (~1 dakika).
 
-Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yeniden başlatma/dağıtımda
-`server/data/` (veritabanı) sıfırlanır. Verilerin kalması için bir Persistent Disk bağlayıp
-`server/data` klasörüne yönlendirin.
+### Kalıcı veri: Turso + Cloudinary (Render ücretsiz planı için gerekli)
+
+Render'ın ücretsiz planında yerel disk kalıcı değildir: uyku, yeniden başlatma ya da dağıtımda `server/data/` sıfırlanır.
+Bu yüzden canlıda veritabanı ve fotoğraflar harici servislerde tutulur (ikisinin de ücretsiz planı yeterlidir):
+
+1. **Turso** (veritabanı): <https://turso.tech> → hesap açın → yeni veritabanı oluşturun (bölge olarak Render servisinize yakın olanı seçin).
+   Veritabanı sayfasından **URL**'yi (`libsql://…turso.io`) ve **Create Token** ile bir erişim belirteci alın.
+   CLI ile: `turso db create tuvaletim` · `turso db show tuvaletim --url` · `turso db tokens create tuvaletim`.
+2. **Cloudinary** (fotoğraflar): <https://cloudinary.com> → hesap açın → **Dashboard / API Keys** sayfasındaki
+   *Cloud name*, *API Key* ve *API Secret* değerlerini alın.
+3. Render → **ana servis** → **Environment**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`, `CLOUDINARY_CLOUD_NAME`,
+   `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` ekleyin (Blueprint ilk kurulumda bunları sorar). Admin servisine gerekmez.
+4. Açılış loglarında `[db] Turso (…)` ve `[foto] Cloudinary (…)` satırlarını görmelisiniz. Şema ve İzmir başlangıç
+   verisi Turso'ya ilk açılışta otomatik kurulur.
+
+Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaletim --from-file server/data/tuvaletim.db`
+(yerel fotoğraflar Cloudinary'ye taşınmaz; yerelde kalır).
 
 ## Özellikler
 
@@ -94,7 +110,7 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
 - **Uygulama içi yol tarifi:** Liste kartındaki, detay penceresindeki “Yol Tarifi” ve Acil'deki “Hemen Git” kullanıcıyı dışarı yönlendirmez; konumunuzdan tuvalete sokaklara oturan yaya rotası haritada çizilir. Üstteki kartta yürüme mesafesi, tahmini süre ve **Rotayı Bitir** bulunur. Rota motoru OSRM'dir ([`src/lib/route.ts`](src/lib/route.ts)): önce gerçek yaya profili olan `routing.openstreetmap.de`, yanıt vermezse `router.project-osrm.org` denenir. Genel demo sunucusu yalnızca araç profili çalıştırdığından orada süre yürüme hızından (4,8 km/sa) hesaplanır. İkisi de yanıt vermezse kesikli kuş uçuşu çizgi çizilir.
 - **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek, puan vermek, favori ve durum bildirimi için giriş gerekir.
   - **E-posta doğrulamalı kayıt:** Kullanıcı adı, e-posta (zorunlu, benzersiz) ve şifre girilip **Kod Gönder** denir; e-postaya 6 haneli kod gelir. Kod 10 dakika geçerlidir, en fazla 5 hatalı deneme hakkı vardır; aynı adrese 60 saniyede bir kod istenebilir (geri sayımlı **Kodu Tekrar Gönder**). Kodlar veritabanında düz metin değil HMAC olarak tutulur.
-- **Tuvalet ekleme:** **Dış mekan fotoğrafı (giriş / bina cephesi) zorunludur**; fotoğrafsız başvuru gönderilemez. Görsel tarayıcıda küçültülür, sunucuda içerik baytları doğrulanıp rastgele adla `server/data/photos/` altına kaydedilir; veritabanında yalnızca dosya adı tutulur. Yönetim panelinde başvuru ve düzenleme ekranlarında büyük önizleme ve tam ekran görüntüleme vardır.
+- **Tuvalet ekleme:** **Dış mekan fotoğrafı (giriş / bina cephesi) zorunludur**; fotoğrafsız başvuru gönderilemez. Görsel tarayıcıda küçültülür, sunucuda içerik baytları doğrulanır; Cloudinary tanımlıysa oraya yüklenip kalıcı `secure_url` kaydedilir (gösterimde otomatik biçim/kalite `f_auto,q_auto`), değilse rastgele adla `server/data/photos/` altına yazılır. Mekan silinince ya da başvuru reddedilince görsel Cloudinary'den de silinir. Yönetim panelinde başvuru ve düzenleme ekranlarında büyük önizleme ve tam ekran görüntüleme vardır.
 - **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
 - **Herkese açık profiller:** Yorumlardaki ada/avatara tıklayınca kullanıcının fotoğrafı, adı, biyografisi, katılım tarihi, katkı sayıları ve tüm değerlendirmeleri görünür. Şifre, e-posta ve rol asla dönmez.
 - **Güzergah üzerinde bul:** Rota çizildiğinde rota çizgisine en fazla **150 m** uzaklıktaki diğer tuvaletler listede ve haritada **Rota Üzerinde 📍** rozetiyle öne çıkar (bu pinler kümeye girmez). Rota kartındaki **Yol Üstündekileri Göster** anahtarı listeyi ve haritayı yalnızca bunlara ve hedefe indirir ([`src/lib/corridor.ts`](src/lib/corridor.ts)).
@@ -119,7 +135,7 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
   - **Kullanıcılar:** oy, yorum, ihbar, eklenen mekan ve son etkinlik; kullanıcı ayrıntısında tek tek oy/ihbar silme ya da kullanıcıyı silme.
   - **Oylar:** oy/yorum moderasyonu (silinen oy istatistiklerden düşer).
 
-## Veritabanı (SQLite)
+## Veritabanı (SQLite / libSQL / Turso)
 
 Şema: [`server/db.js`](server/db.js)
 
@@ -208,7 +224,8 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 - **Yönetim paneli ayrı servistir**; kullanıcı uygulamasının paketinde yönetim kodu yoktur. Yönetim API'si kullanıcı hesaplarıyla açılmaz, yalnızca `ADMIN_SECRET_KEY` ile (sabit süreli karşılaştırma).
 - Panel girişinde anahtar tarayıcıda saklanmaz: panel sunucusu anahtardan türetilen anahtarla imzalı, 12 saatlik `HttpOnly; SameSite=Strict` (HTTPS'te `Secure`) bir çerez verir. Çıkış oturumu sunucuda geçersiz kılar; anahtar değişince tüm oturumlar düşer. Değiştiren istekler ayrıca özel bir başlık ister (CSRF). Panel `X-Frame-Options: DENY`, sıkı CSP ve `noindex` ile sunulur; hatalı anahtar denemeleri sınırlıdır.
 - **Hız sınırı (IP başına, bellek içi):** giriş + kayıt 15 dakikada 20 istek; oy, bildirim, favori, başvuru ve profil yazma dakikada 60 istek. Aşılınca `429` ve `Retry-After`. Sunucu yalnızca kendi makinesindeki (loopback) vekilin `X-Forwarded-For` başlığına güvenir.
-- Profil ve mekan fotoğrafları içerik baytları kontrol edilerek kabul edilir, rastgele adla `server/data/avatars/` ve `server/data/photos/` altında tutulur (eski sürümlerde veritabanına gömülü fotoğraflar açılışta dosyaya taşınır).
+- Profil ve mekan fotoğrafları içerik baytları kontrol edilerek kabul edilir; Cloudinary'ye imzalı istekle (API secret yalnızca sunucuda), tahmin edilemez `public_id` ile yüklenir ya da yerelde rastgele adla `server/data/avatars/` ve `server/data/photos/` altında tutulur (eski sürümlerde veritabanına gömülü fotoğraflar açılışta depoya taşınır).
+- Turso'da yabancı anahtar zinciri bağlantıya özel olduğundan mekan/kullanıcı silmede bağlı oy, favori ve bildirimler kodda açıkça, tek işlemde (`batch`) silinir.
 - Doğrulama kodu isteği aynı adrese 60 saniyede bir ve IP başına 15 dakikada 10 ile sınırlıdır; kod düz metin saklanmaz.
 - HTTPS kurulumu bu projenin kapsamında değildir; internete açmadan önce bir ters vekil sunucu (reverse proxy) ile HTTPS ekleyin.
 - Telefonda gerçek GPS için tarayıcılar HTTPS ister (`localhost` hariç).
@@ -219,7 +236,9 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 server/
   index.js            # .env okur, uygulamayı 3001'de başlatır
   app.js              # createApp(): Express, yönetim API'si (ADMIN_SECRET_KEY)
-  db.js               # sql.js aç/kaydet, şema, seed
+  db.js               # libSQL (yerel dosya / Turso): şema, göçler, seed eşitleme, batch işlemler
+  photos.js           # fotoğraf deposu: Cloudinary ya da yerel disk
+  mailer.js           # e-posta: Resend / SMTP / konsol
   auth.js  stats.js  validate.js
   routes/             # auth, places, pending, admin
   seed-places.json    # İzmir başlangıç verisi

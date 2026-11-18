@@ -41,7 +41,7 @@ test('içerik baytları görsel olmayan dosya reddedilir', async () => {
 test('fotoğraf diskte rastgele adla saklanır, veritabanında base64 tutulmaz', async () => {
   const r = await srv.req('POST', '/api/pending', submission(), user);
   assert.equal(r.status, 201);
-  const row = srv.db.get('SELECT photo, photo_file FROM pending_places WHERE id = ?', [r.body.id]);
+  const row = (await srv.db.get('SELECT photo, photo_file FROM pending_places WHERE id = ?', [r.body.id]));
   assert.equal(row.photo, null);
   assert.match(row.photo_file, /^[a-f0-9]{32}\.jpg$/);
   assert.ok(existsSync(join(photosDir(), row.photo_file)));
@@ -68,7 +68,7 @@ test('yönetim: başvuru fotoğrafı anahtarla görüntülenir; onayda mekana ba
 
 test('reddedilen başvurunun fotoğrafı silinir', async () => {
   const sub = await srv.req('POST', '/api/pending', submission({ name: 'Reddedilecek WC' }), user);
-  const file = srv.db.get('SELECT photo_file FROM pending_places WHERE id = ?', [sub.body.id]).photo_file;
+  const file = (await srv.db.get('SELECT photo_file FROM pending_places WHERE id = ?', [sub.body.id])).photo_file;
   assert.equal((await srv.admin('DELETE', `/api/admin/pending/${sub.body.id}`)).status, 204);
   assert.equal(existsSync(join(photosDir(), file)), false);
 });
@@ -76,9 +76,9 @@ test('reddedilen başvurunun fotoğrafı silinir', async () => {
 test('yönetim düzenleme: fotoğraf değişince eskisi, kaldırılınca dosya silinir; mekan silinince de', async () => {
   const p = (await srv.admin('PATCH', '/api/admin/places/seed-forum', { photo: JPEG })).body;
   assert.equal(p.hasPhoto, true);
-  const first = srv.db.get("SELECT photo_file FROM places WHERE id = 'seed-forum'").photo_file;
+  const first = (await srv.db.get("SELECT photo_file FROM places WHERE id = 'seed-forum'")).photo_file;
   await srv.admin('PATCH', '/api/admin/places/seed-forum', { photo: PNG });
-  const second = srv.db.get("SELECT photo_file FROM places WHERE id = 'seed-forum'").photo_file;
+  const second = (await srv.db.get("SELECT photo_file FROM places WHERE id = 'seed-forum'")).photo_file;
   assert.match(second, /\.png$/);
   assert.equal(existsSync(join(photosDir(), first)), false);
   const res = await fetch(`${srv.url}/api/places/seed-forum/photo`);
@@ -88,7 +88,7 @@ test('yönetim düzenleme: fotoğraf değişince eskisi, kaldırılınca dosya s
   assert.equal((await fetch(`${srv.url}/api/places/seed-forum/photo`)).status, 404);
 
   const created = (await srv.admin('POST', '/api/admin/places', { name: 'Silinecek Fotolu', category: 'park', lat: 38.4, lng: 27.1, photo: JPEG })).body;
-  const f = srv.db.get('SELECT photo_file FROM places WHERE id = ?', [created.id]).photo_file;
+  const f = (await srv.db.get('SELECT photo_file FROM places WHERE id = ?', [created.id])).photo_file;
   assert.ok(existsSync(join(photosDir(), f)));
   await srv.admin('DELETE', `/api/admin/places/${created.id}`);
   assert.equal(existsSync(join(photosDir(), f)), false);
@@ -104,15 +104,15 @@ test('eski sürümlerde veritabanına gömülü base64 fotoğraflar açılışta
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(SEED));
   const db = await openDb(join(dir, 'x.db'), { seedFile });
-  db.run("UPDATE places SET photo = ? WHERE id = 'seed-forum'", [JPEG]);
-  db.run(`INSERT INTO pending_places (id, name, category, lat, lng, photo, cleanliness, comfort, is_paid, submitted_at)
-          VALUES ('user-eski', 'Eski Başvuru', 'park', 38.4, 27.1, ?, 3, 3, 0, '2026-01-01')`, [PNG]);
+  (await db.run("UPDATE places SET photo = ? WHERE id = 'seed-forum'", [JPEG]));
+  (await db.run(`INSERT INTO pending_places (id, name, category, lat, lng, photo, cleanliness, comfort, is_paid, submitted_at)
+          VALUES ('user-eski', 'Eski Başvuru', 'park', 38.4, 27.1, ?, 3, 3, 0, '2026-01-01')`, [PNG]));
   const app = await createApp({ dbPath: join(dir, 'x.db'), secret: 's', seedFile, mailer: { kind: 'test', sendVerificationCode: async () => {} } });
   const db2 = app.locals.db;
-  const place = db2.get("SELECT photo, photo_file FROM places WHERE id = 'seed-forum'");
+  const place = (await db2.get("SELECT photo, photo_file FROM places WHERE id = 'seed-forum'"));
   assert.equal(place.photo, null);
   assert.ok(existsSync(join(dir, 'photos', place.photo_file)));
-  const pend = db2.get("SELECT photo, photo_file FROM pending_places WHERE id = 'user-eski'");
+  const pend = (await db2.get("SELECT photo, photo_file FROM pending_places WHERE id = 'user-eski'"));
   assert.equal(pend.photo, null);
   assert.match(pend.photo_file, /\.png$/);
 });

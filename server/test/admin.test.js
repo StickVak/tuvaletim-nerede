@@ -56,10 +56,10 @@ test('eski sürümlerin role=admin hesabı açılışta silinir', async () => {
   const { join } = await import('node:path');
   const dir = mkdtempSync(join(tmpdir(), 'tn-legacy-'));
   const db = await openDb(join(dir, 'x.db'));
-  db.run("INSERT INTO users (username, password_hash, role, created_at) VALUES ('admin', 'x', 'admin', '2026-01-01')");
-  db.run("INSERT INTO users (username, password_hash, role, created_at) VALUES ('ali', 'x', 'user', '2026-01-01')");
+  (await db.run("INSERT INTO users (username, password_hash, role, created_at) VALUES ('admin', 'x', 'admin', '2026-01-01')"));
+  (await db.run("INSERT INTO users (username, password_hash, role, created_at) VALUES ('ali', 'x', 'user', '2026-01-01')"));
   const app = await createApp({ dbPath: join(dir, 'x.db'), secret: 's', adminKey: '' });
-  assert.deepEqual(app.locals.db.all('SELECT username FROM users').map((u) => u.username), ['ali']);
+  assert.deepEqual((await app.locals.db.all('SELECT username FROM users')).map((u) => u.username), ['ali']);
 });
 
 // ------------------------------------------------------------------ başvurular

@@ -1,6 +1,6 @@
-import initSqlJs from 'sql.js';
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { createClient } from '@libsql/client';
+import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { dirname, isAbsolute, relative, sep } from 'node:path';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
@@ -95,106 +95,108 @@ const ADDED_COLUMNS = {
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
   status_reports: ['resolved_at TEXT'],
   votes: ['toilet_type TEXT'],
-  // photo_file: server/data/photos altındaki dış mekan fotoğrafı (photo sütunu eski base64 içindir, göçte boşaltılır)
+  // photo_file: dış mekan fotoğrafı — yerel dosya adı (server/data/photos) ya da Cloudinary secure_url
+  // (photo sütunu eski base64 içindir, göçte boşaltılır)
   pending_places: ['toilet_type TEXT', 'public_access INTEGER', 'photo_file TEXT'],
 };
 
 const norm = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0) : v);
+const stmt = (sql, params = []) => ({ sql, args: params.map(norm) });
+/** libSQL satırlarını düz nesnelere çevirir (sütun adı → değer) */
+const plain = (rs) => rs.rows.map((row) => Object.fromEntries(rs.columns.map((c, i) => [c, row[i]])));
+const result = (rs) => ({ lastId: rs.lastInsertRowid === undefined ? null : Number(rs.lastInsertRowid), changes: rs.rowsAffected, rows: plain(rs) });
 
 /**
- * sql.js veritabanını açar (dosya yoksa oluşturur) ve her yazmadan sonra dosyaya kaydeder.
- * Seed dosyasındaki eksik mekanları ekler (bkz. seed eşitleme).
+ * Bağlantı ayarı: TURSO_DATABASE_URL (+ TURSO_AUTH_TOKEN) verilmişse Turso bulut veritabanı,
+ * yoksa yerel SQLite dosyası (file:server/data/tuvaletim.db).
  */
-export async function openDb(path, { seedFile } = {}) {
-  const SQL = await initSqlJs();
-  const db = existsSync(path) ? new SQL.Database(readFileSync(path)) : new SQL.Database();
-  db.run('PRAGMA foreign_keys = ON');
+export function dbConfig(path, { url, authToken } = {}) {
+  if (url) return { url, authToken: authToken || undefined, remote: !url.startsWith('file:') };
+  // libSQL "file:" adresi: göreli yol her platformda (Windows dahil) güvenli
+  const rel = relative(process.cwd(), path);
+  const local = (isAbsolute(rel) ? path : rel).split(sep).join('/');
+  return { url: `file:${local}`, remote: false };
+}
+
+/**
+ * libSQL veritabanını açar: yerel dosya ya da Turso. Şemayı kurar/göç ettirir ve seed dosyasındaki eksik mekanları ekler.
+ * API (hepsi async): all, get, run, batch (tek işlemde çoklu yazma), deletePlace, deleteUser, close.
+ */
+export async function openDb(path, { seedFile, url, authToken } = {}) {
+  const config = dbConfig(path, { url, authToken });
+  if (!config.remote) mkdirSync(dirname(path), { recursive: true });
+  const client = createClient({ url: config.url, authToken: config.authToken });
+
+  const all = async (sql, params) => plain(await client.execute(stmt(sql, params)));
+  const get = async (sql, params) => (await all(sql, params))[0];
+  const run = async (sql, params) => {
+    const r = result(await client.execute(stmt(sql, params)));
+    return { lastId: r.lastId, changes: r.changes };
+  };
+  /** [sql, params] listesini tek işlemde çalıştırır (Turso'da tek ağ isteği); hepsi ya olur ya hiç */
+  const batch = async (statements) => (await client.batch(statements.map(([sql, params]) => stmt(sql, params)), 'write')).map(result);
+
+  // Şema ve göçler
+  if (config.remote === false) await client.execute('PRAGMA foreign_keys = ON');
   // Önceki sürümde status_reports CHECK kısıtı 'open' içermiyordu: tabloyu yeniden kur
-  const reportsSql = db.exec("SELECT sql FROM sqlite_master WHERE name = 'status_reports'")[0]?.values[0][0];
+  const reportsSql = (await get("SELECT sql FROM sqlite_master WHERE name = 'status_reports'"))?.sql;
   if (reportsSql && !reportsSql.includes("'open'")) {
-    db.exec('ALTER TABLE status_reports RENAME TO status_reports_old');
-    db.exec(SCHEMA);
-    db.exec('INSERT INTO status_reports SELECT * FROM status_reports_old; DROP TABLE status_reports_old;');
+    await client.execute('ALTER TABLE status_reports RENAME TO status_reports_old');
+    await client.executeMultiple(SCHEMA);
+    await client.executeMultiple('INSERT INTO status_reports SELECT * FROM status_reports_old; DROP TABLE status_reports_old;');
   }
-  db.exec(SCHEMA);
+  await client.executeMultiple(SCHEMA);
   for (const [table, cols] of Object.entries(ADDED_COLUMNS)) {
-    const have = new Set(db.exec(`PRAGMA table_info(${table})`)[0].values.map((r) => r[1]));
-    for (const col of cols) if (!have.has(col.split(' ')[0])) db.exec(`ALTER TABLE ${table} ADD COLUMN ${col}`);
-  }
-  let inTx = false;
-
-  function save() {
-    if (inTx) return;
-    mkdirSync(dirname(path), { recursive: true });
-    const tmp = `${path}.tmp`;
-    writeFileSync(tmp, Buffer.from(db.export()));
-    renameSync(tmp, path);
-    // export() bağlantıyı yeniden açar ve PRAGMA'ları sıfırlar
-    db.run('PRAGMA foreign_keys = ON');
+    const have = new Set((await all(`PRAGMA table_info(${table})`)).map((r) => r.name));
+    for (const col of cols) if (!have.has(col.split(' ')[0])) await client.execute(`ALTER TABLE ${table} ADD COLUMN ${col}`);
   }
 
-  function all(sql, params = []) {
-    const stmt = db.prepare(sql);
-    stmt.bind(params.map(norm));
-    const rows = [];
-    while (stmt.step()) rows.push(stmt.getAsObject());
-    stmt.free();
-    return rows;
+  /**
+   * Mekanı ve ona bağlı oy/favori/bildirimleri siler (Turso'da yabancı anahtar zinciri bağlantıya özel olduğundan açıkça).
+   * Seed kaynaklıysa açılıştaki eşitlemenin geri getirmemesi için not edilir. Silinen satır sayısını döner.
+   */
+  async function deletePlace(id) {
+    const r = await batch([
+      ["INSERT OR IGNORE INTO seed_removed (id) SELECT id FROM places WHERE id = ? AND source = 'seed'", [id]],
+      ['DELETE FROM votes WHERE place_id = ?', [id]],
+      ['DELETE FROM favorites WHERE place_id = ?', [id]],
+      ['DELETE FROM status_reports WHERE place_id = ?', [id]],
+      ['DELETE FROM places WHERE id = ?', [id]],
+    ]);
+    return r.at(-1).changes;
   }
 
-  function run(sql, params = []) {
-    db.run(sql, params.map(norm));
-    const changes = db.getRowsModified();
-    const lastId = db.exec('SELECT last_insert_rowid()')[0].values[0][0];
-    save();
-    return { lastId, changes };
+  /** Kullanıcıyı ve oy/favori/bildirimlerini siler; eklediği mekanlar ve başvurular sahipsiz kalır. */
+  async function deleteUser(id, { role = 'user' } = {}) {
+    const r = await batch([
+      ['DELETE FROM votes WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['DELETE FROM favorites WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['DELETE FROM status_reports WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['UPDATE places SET added_by = NULL WHERE added_by = ? AND added_by IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['UPDATE pending_places SET user_id = NULL WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['DELETE FROM users WHERE id = ? AND role = ?', [id, role]],
+    ]);
+    return r.at(-1).changes;
   }
 
-  /** fn içindeki tüm yazmalar tek işlemde; sonunda bir kez kaydedilir. */
-  function tx(fn) {
-    db.run('BEGIN');
-    inTx = true;
-    try {
-      const result = fn();
-      db.run('COMMIT');
-      inTx = false;
-      save();
-      return result;
-    } catch (err) {
-      db.run('ROLLBACK');
-      inTx = false;
-      throw err;
-    }
-  }
-
-  /** Mekanı siler; seed kaynaklıysa açılıştaki eşitlemenin geri getirmemesi için not edilir. */
-  function deletePlace(id) {
-    return tx(() => {
-      if (all("SELECT 1 FROM places WHERE id = ? AND source = 'seed'", [id]).length) run('INSERT OR IGNORE INTO seed_removed (id) VALUES (?)', [id]);
-      return run('DELETE FROM places WHERE id = ?', [id]).changes;
-    });
-  }
-
-  const api = { all, get: (sql, params) => all(sql, params)[0], run, tx, save, deletePlace };
+  const api = { all, get, run, batch, deletePlace, deleteUser, close: () => client.close(), remote: config.remote, url: config.url };
 
   // Seed eşitleme: veritabanında olmayan (ve yöneticinin silmediği) seed mekanlarını ekle.
   // Yeni kurulumda hepsi, mevcut kurulumda yalnızca seed dosyasına sonradan eklenenler girer.
   if (seedFile && existsSync(seedFile)) {
     const seed = JSON.parse(readFileSync(seedFile, 'utf8'));
-    const skip = new Set([...all('SELECT id FROM places'), ...all('SELECT id FROM seed_removed')].map((r) => r.id));
+    const skip = new Set([...(await all('SELECT id FROM places')), ...(await all('SELECT id FROM seed_removed'))].map((r) => r.id));
     const missing = seed.filter((p) => !skip.has(p.id));
     const now = new Date().toISOString();
     if (missing.length) {
-      tx(() => {
-        for (const p of missing) {
-          run(
-            `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
-            [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
-              p.toiletType ?? null, p.publicAccess ?? null, now, now],
-          );
-        }
-      });
+      await batch(
+        missing.map((p) => [
+          `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
+          [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
+            p.toiletType ?? null, p.publicAccess ?? null, now, now],
+        ]),
+      );
     }
   }
 

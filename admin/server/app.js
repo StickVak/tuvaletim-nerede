@@ -76,7 +76,8 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
         "script-src 'self'",
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
-        "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org",
+        // Cloudinary: kalıcı mekan/profil fotoğrafları (ana sunucu oraya yönlendirir)
+        "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://res.cloudinary.com",
         "connect-src 'self'",
         "frame-ancestors 'none'",
         "base-uri 'none'",
@@ -140,7 +141,7 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
         },
         body: hasBody ? req.body : undefined,
         signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-        redirect: 'error',
+        redirect: 'manual',
       });
     } catch {
       return res.status(502).json({ error: 'Ana sunucuya ulaşılamadı. Birkaç saniye sonra tekrar deneyin.' });
@@ -148,6 +149,13 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
     if (upstream.status === 401 && withKey) {
       // Ana sunucu anahtarı reddetti: iki serviste ADMIN_SECRET_KEY farklı
       return res.status(502).json({ error: 'Ana sunucu yönetici anahtarını reddetti: iki serviste ADMIN_SECRET_KEY aynı olmalı.' });
+    }
+    // Fotoğraf Cloudinary'deyse ana sunucu oraya yönlendirir: yalnızca Cloudinary adresleri tarayıcıya iletilir
+    if (upstream.status >= 300 && upstream.status < 400) {
+      const location = upstream.headers.get('location') ?? '';
+      if (!/^https:\/\/res\.cloudinary\.com\//.test(location)) return res.status(502).json({ error: 'Beklenmeyen yönlendirme.' });
+      if (upstream.headers.get('cache-control')) res.set('Cache-Control', upstream.headers.get('cache-control'));
+      return res.redirect(upstream.status, location);
     }
     res.status(upstream.status);
     for (const h of ['content-type', 'cache-control']) if (upstream.headers.get(h)) res.set(h, upstream.headers.get(h));

@@ -52,9 +52,14 @@ export function optionalUser(db, secret) {
   return (req, _res, next) => {
     const header = req.headers.authorization ?? '';
     const payload = header.startsWith('Bearer ') ? verifyToken(header.slice(7), secret) : null;
-    const user = payload && db.get('SELECT id, username, role, display_name, avatar_url FROM users WHERE id = ?', [payload.id]);
-    req.user = user ? publicUser(user) : null;
-    next();
+    if (!payload) {
+      req.user = null;
+      return next();
+    }
+    db.get('SELECT id, username, role, display_name, avatar_url FROM users WHERE id = ?', [payload.id]).then((user) => {
+      req.user = user ? publicUser(user) : null;
+      next();
+    }, next);
   };
 }
 

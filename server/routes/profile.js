@@ -1,36 +1,29 @@
-import { Router } from 'express';
-import { randomBytes } from 'node:crypto';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, verifyPassword } from '../auth.js';
-import { PHOTO_RE } from '../validate.js';
 import { contributionsOf } from './places.js';
-import { magicOk } from '../photos.js';
+import { PhotoError } from '../photos.js';
 
-const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
-const EXT = { jpeg: 'jpg', png: 'png', webp: 'webp', gif: 'gif' };
 const AVATAR_FILE_RE = /^\d+-[a-f0-9]+\.(jpg|png|webp|gif)$/;
 const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
-
-const avatarPath = (dir, url) => (url && url.startsWith('/api/avatars/') ? join(dir, url.split('/').pop()) : null);
-
-function removeAvatar(dir, url) {
-  const p = avatarPath(dir, url);
-  if (p && existsSync(p)) unlinkSync(p);
-}
 
 function profileUser(u) {
   return { ...publicUser(u), bio: u.bio ?? '', createdAt: u.created_at };
 }
 
-function counts(db, id) {
-  const n = (sql) => db.get(sql, [id]).n;
-  return {
-    votes: n('SELECT COUNT(*) AS n FROM votes WHERE user_id = ?'),
-    comments: n('SELECT COUNT(*) AS n FROM votes WHERE user_id = ? AND comment IS NOT NULL'),
-    placesAdded: n('SELECT COUNT(*) AS n FROM places WHERE added_by = ?'),
-  };
+async function counts(db, id) {
+  const n = async (sql) => (await db.get(sql, [id])).n;
+  const [votes, comments, placesAdded] = await Promise.all([
+    n('SELECT COUNT(*) AS n FROM votes WHERE user_id = ?'),
+    n('SELECT COUNT(*) AS n FROM votes WHERE user_id = ? AND comment IS NOT NULL'),
+    n('SELECT COUNT(*) AS n FROM places WHERE added_by = ?'),
+  ]);
+  return { votes, comments, placesAdded };
 }
+
+/** users.avatar_url → depo referansı (yerel: /api/avatars/<dosya> → <dosya>; Cloudinary: tam adres) */
+const avatarRef = (url) => (url && url.startsWith('/api/avatars/') ? url.split('/').pop() : url);
 
 const reviewJson = (v) => ({
   placeId: v.place_id,
@@ -43,39 +36,44 @@ const reviewJson = (v) => ({
   updatedAt: v.updated_at,
 });
 
-export function profileRoutes(db, { avatarDir, writeLimit }) {
-  const r = Router();
+/** avatars: createPhotoStore() — Cloudinary ya da server/data/avatars */
+export function profileRoutes(db, { avatars, writeLimit }) {
+  const r = asyncRouter();
   r.use(requireUser);
   const me = (req) => db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
 
-  r.get('/', (req, res) => {
+  r.get('/', async (req, res) => {
     const id = req.user.id;
     const at = (row, kind, extra = {}) => ({ kind, placeId: row.place_id, placeName: row.place_name, at: row.at, ...extra });
+    const [votes, reports, favorites, places, pending, user, c, pendingN, favoritesN, contributions] = await Promise.all([
+      db.all(`SELECT v.*, p.name AS place_name, v.updated_at AS at FROM votes v JOIN places p ON p.id = v.place_id WHERE v.user_id = ?`, [id]),
+      db.all(`SELECT s.*, p.name AS place_name, s.created_at AS at FROM status_reports s JOIN places p ON p.id = s.place_id WHERE s.user_id = ?`, [id]),
+      db.all(`SELECT f.place_id, p.name AS place_name, f.created_at AS at FROM favorites f JOIN places p ON p.id = f.place_id WHERE f.user_id = ?`, [id]),
+      db.all(`SELECT id AS place_id, name AS place_name, created_at AS at FROM places WHERE added_by = ?`, [id]),
+      db.all(`SELECT id AS place_id, name AS place_name, submitted_at AS at FROM pending_places WHERE user_id = ?`, [id]),
+      me(req),
+      counts(db, id),
+      db.get('SELECT COUNT(*) AS n FROM pending_places WHERE user_id = ?', [id]),
+      db.get('SELECT COUNT(*) AS n FROM favorites WHERE user_id = ?', [id]),
+      contributionsOf(db, id),
+    ]);
     const activity = [
-      ...db.all(`SELECT v.*, p.name AS place_name, v.updated_at AS at FROM votes v JOIN places p ON p.id = v.place_id WHERE v.user_id = ?`, [id])
-        .map((v) => at(v, 'vote', { cleanliness: v.cleanliness, comfort: v.comfort, isPaid: !!v.is_paid, priceAmount: v.price_amount, comment: v.comment })),
-      ...db.all(`SELECT s.*, p.name AS place_name, s.created_at AS at FROM status_reports s JOIN places p ON p.id = s.place_id WHERE s.user_id = ?`, [id])
-        .map((s) => at(s, 'report', { reportType: s.report_type })),
-      ...db.all(`SELECT f.place_id, p.name AS place_name, f.created_at AS at FROM favorites f JOIN places p ON p.id = f.place_id WHERE f.user_id = ?`, [id])
-        .map((f) => at(f, 'favorite')),
-      ...db.all(`SELECT id AS place_id, name AS place_name, created_at AS at FROM places WHERE added_by = ?`, [id]).map((p) => at(p, 'place')),
-      ...db.all(`SELECT id AS place_id, name AS place_name, submitted_at AS at FROM pending_places WHERE user_id = ?`, [id]).map((p) => at(p, 'pending')),
+      ...votes.map((v) => at(v, 'vote', { cleanliness: v.cleanliness, comfort: v.comfort, isPaid: !!v.is_paid, priceAmount: v.price_amount, comment: v.comment })),
+      ...reports.map((s) => at(s, 'report', { reportType: s.report_type })),
+      ...favorites.map((f) => at(f, 'favorite')),
+      ...places.map((p) => at(p, 'place')),
+      ...pending.map((p) => at(p, 'pending')),
     ]
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, 30);
     res.json({
-      user: profileUser(me(req)),
-      stats: {
-        ...counts(db, id),
-        pending: db.get('SELECT COUNT(*) AS n FROM pending_places WHERE user_id = ?', [id]).n,
-        favorites: db.get('SELECT COUNT(*) AS n FROM favorites WHERE user_id = ?', [id]).n,
-        contributions: contributionsOf(db, id),
-      },
+      user: profileUser(user),
+      stats: { ...c, pending: pendingN.n, favorites: favoritesN.n, contributions },
       activity,
     });
   });
 
-  r.patch('/', writeLimit, (req, res) => {
+  r.patch('/', writeLimit, async (req, res) => {
     const b = req.body ?? {};
     const sets = {};
     if (b.displayName !== undefined) {
@@ -89,37 +87,38 @@ export function profileRoutes(db, { avatarDir, writeLimit }) {
       sets.bio = v || null;
     }
     const keys = Object.keys(sets);
-    if (keys.length) db.run(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, [...keys.map((k) => sets[k]), req.user.id]);
-    res.json({ user: profileUser(me(req)) });
+    if (keys.length) await db.run(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, [...keys.map((k) => sets[k]), req.user.id]);
+    res.json({ user: profileUser(await me(req)) });
   });
 
-  r.post('/password', writeLimit, (req, res) => {
+  r.post('/password', writeLimit, async (req, res) => {
     const { currentPassword, newPassword } = req.body ?? {};
-    if (!verifyPassword(currentPassword ?? '', me(req).password_hash)) return res.status(400).json({ error: 'Mevcut şifre hatalı.' });
+    if (!verifyPassword(currentPassword ?? '', (await me(req)).password_hash)) return res.status(400).json({ error: 'Mevcut şifre hatalı.' });
     if (String(newPassword ?? '').length < 6) return res.status(400).json({ error: 'Yeni şifre en az 6 karakter olmalı.' });
-    db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hashPassword(String(newPassword)), req.user.id]);
+    await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hashPassword(String(newPassword)), req.user.id]);
     res.status(204).end();
   });
 
-  r.put('/avatar', writeLimit, (req, res) => {
-    const image = req.body?.image;
-    if (typeof image !== 'string' || !PHOTO_RE.test(image)) return res.status(400).json({ error: 'Profil fotoğrafı JPEG, PNG, WebP ya da GIF olmalı.' });
-    const type = image.match(/^data:image\/(\w+);/)[1];
-    const buf = Buffer.from(image.split(',')[1], 'base64');
-    if (buf.length > MAX_AVATAR_BYTES) return res.status(413).json({ error: 'Profil fotoğrafı en fazla 2 MB olabilir.' });
-    if (!magicOk(type, buf)) return res.status(400).json({ error: 'Dosya içeriği bir görsel değil.' });
-    mkdirSync(avatarDir, { recursive: true });
-    const file = `${req.user.id}-${randomBytes(8).toString('hex')}.${EXT[type]}`;
-    writeFileSync(join(avatarDir, file), buf);
-    removeAvatar(avatarDir, me(req).avatar_url);
-    db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [`/api/avatars/${file}`, req.user.id]);
-    res.json({ user: profileUser(me(req)) });
+  r.put('/avatar', writeLimit, async (req, res) => {
+    let ref;
+    try {
+      ref = await avatars.save(req.body?.image, { prefix: `${req.user.id}-` });
+    } catch (e) {
+      if (!(e instanceof PhotoError)) throw e;
+      const msg = e.status === 413 ? 'Profil fotoğrafı en fazla 2 MB olabilir.' : /JPEG/.test(e.message) ? 'Profil fotoğrafı JPEG, PNG, WebP ya da GIF olmalı.' : e.message;
+      return res.status(e.status).json({ error: msg });
+    }
+    const old = (await me(req)).avatar_url;
+    await db.run('UPDATE users SET avatar_url = ? WHERE id = ?', [avatars.isCloud(ref) ? ref : `/api/avatars/${ref}`, req.user.id]);
+    await avatars.remove(avatarRef(old));
+    res.json({ user: profileUser(await me(req)) });
   });
 
-  r.delete('/avatar', writeLimit, (req, res) => {
-    removeAvatar(avatarDir, me(req).avatar_url);
-    db.run('UPDATE users SET avatar_url = NULL WHERE id = ?', [req.user.id]);
-    res.json({ user: profileUser(me(req)) });
+  r.delete('/avatar', writeLimit, async (req, res) => {
+    const old = (await me(req)).avatar_url;
+    await db.run('UPDATE users SET avatar_url = NULL WHERE id = ?', [req.user.id]);
+    await avatars.remove(avatarRef(old));
+    res.json({ user: profileUser(await me(req)) });
   });
 
   return r;
@@ -127,14 +126,17 @@ export function profileRoutes(db, { avatarDir, writeLimit }) {
 
 /** Herkese açık profil: şifre, e-posta, rol gibi hiçbir gizli alan dönmez */
 export function userRoutes(db) {
-  const r = Router();
-  r.get('/:id', (req, res) => {
-    const u = db.get('SELECT * FROM users WHERE id = ?', [Number(req.params.id)]);
+  const r = asyncRouter();
+  r.get('/:id', async (req, res) => {
+    const u = await db.get('SELECT * FROM users WHERE id = ?', [Number(req.params.id)]);
     if (!u) return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });
-    const reviews = db.all(
-      `SELECT v.*, p.name AS place_name FROM votes v JOIN places p ON p.id = v.place_id WHERE v.user_id = ? ORDER BY v.updated_at DESC LIMIT 50`,
-      [u.id],
-    );
+    const [reviews, stats] = await Promise.all([
+      db.all(
+        `SELECT v.*, p.name AS place_name FROM votes v JOIN places p ON p.id = v.place_id WHERE v.user_id = ? ORDER BY v.updated_at DESC LIMIT 50`,
+        [u.id],
+      ),
+      counts(db, u.id),
+    ]);
     res.json({
       id: u.id,
       username: u.username,
@@ -142,16 +144,16 @@ export function userRoutes(db) {
       avatarUrl: u.avatar_url ?? null,
       bio: u.bio ?? '',
       createdAt: u.created_at,
-      stats: counts(db, u.id),
+      stats,
       reviews: reviews.map(reviewJson),
     });
   });
   return r;
 }
 
-/** Avatar dosyaları: yalnızca bilinen ad kalıbı, nosniff */
+/** Yerel avatar dosyaları: yalnızca bilinen ad kalıbı, nosniff */
 export function avatarRoutes(avatarDir) {
-  const r = Router();
+  const r = asyncRouter();
   r.get('/:file', (req, res) => {
     const file = req.params.file;
     if (!AVATAR_FILE_RE.test(file) || !existsSync(join(avatarDir, file))) return res.status(404).json({ error: 'Bulunamadı.' });

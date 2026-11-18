@@ -7,7 +7,7 @@ export const SECRET = 'test-secret';
 export const ADMIN_KEY = 'test-admin-key-1234567890';
 
 /** Geçici veritabanıyla uygulamayı rastgele portta başlatır. */
-export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY } = {}) {
+export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY, cloudinary = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'tn-test-'));
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(seed));
@@ -16,6 +16,7 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
   const mailer = { kind: 'test', sendVerificationCode: async (to, code) => void outbox.push({ to, code }) };
   const app = await createApp({
     mailer,
+    cloudinary,
     dbPath: join(dir, 'test.db'),
     secret: SECRET,
     seedFile,
