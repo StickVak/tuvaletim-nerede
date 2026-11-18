@@ -28,7 +28,7 @@ function removeAvatar(dir, url) {
 }
 
 function profileUser(u) {
-  return { ...publicUser(u), bio: u.bio ?? '', createdAt: u.created_at, isDemo: !!u.is_demo };
+  return { ...publicUser(u), bio: u.bio ?? '', createdAt: u.created_at };
 }
 
 function counts(db, id) {
@@ -150,7 +150,6 @@ export function userRoutes(db) {
       avatarUrl: u.avatar_url ?? null,
       bio: u.bio ?? '',
       createdAt: u.created_at,
-      isDemo: !!u.is_demo,
       stats: counts(db, u.id),
       reviews: reviews.map(reviewJson),
     });

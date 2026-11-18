@@ -8,8 +8,8 @@ import { adminRoutes } from './routes/admin.js';
 import { favoriteRoutes } from './routes/places.js';
 import { avatarRoutes, profileRoutes, userRoutes } from './routes/profile.js';
 import { DEFAULT_LIMITS, rateLimit } from './ratelimit.js';
-import { seedDemo } from './demo.js';
-import { dirname, join } from 'node:path';
+import { existsSync, rmSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 
 /** .env'deki yönetici hesabını oluşturur ya da rolünü/şifresini eşitler. */
 function ensureAdmin(db, username, password) {
@@ -22,14 +22,28 @@ function ensureAdmin(db, username, password) {
 }
 
 /**
- * limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar.
- * demo: true → yeni oluşturulan veritabanına örnek kullanıcılar eklenir.
+ * Önceki sürümlerin eklediği örnek (demo) kullanıcıları, oylarını (CASCADE) ve avatarlarını siler.
+ * Silinen kullanıcı sayısını döner.
  */
-export async function createApp({ dbPath, secret, seedFile, adminUsername, adminPassword, limits = {}, demo = false }) {
+export function removeDemoData(db, avatarDir) {
+  const demos = db.all('SELECT id, avatar_url FROM users WHERE is_demo = 1');
+  if (!demos.length) return 0;
+  db.tx(() => {
+    for (const u of demos) db.run('DELETE FROM users WHERE id = ?', [u.id]);
+  });
+  for (const u of demos) {
+    const file = u.avatar_url && join(avatarDir, basename(u.avatar_url));
+    if (file && existsSync(file)) rmSync(file);
+  }
+  return demos.length;
+}
+
+/** limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar. */
+export async function createApp({ dbPath, secret, seedFile, adminUsername, adminPassword, limits = {} }) {
   const db = await openDb(dbPath, { seedFile });
   ensureAdmin(db, adminUsername, adminPassword);
   const avatarDir = join(dirname(dbPath), 'avatars');
-  if (demo && db.seeded) seedDemo(db, avatarDir);
+  removeDemoData(db, avatarDir);
 
   const pass = (_req, _res, next) => next();
   const L = limits === false ? null : { ...DEFAULT_LIMITS, ...limits };

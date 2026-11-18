@@ -147,7 +147,7 @@ export function placeRoutes(db, writeLimit) {
   r.get('/:id/reviews', (req, res) => {
     if (!exists(req.params.id)) return res.status(404).json({ error: 'Mekan bulunamadı.' });
     const rows = db.all(
-      `SELECT v.*, u.username, u.display_name, u.avatar_url, u.is_demo FROM votes v JOIN users u ON u.id = v.user_id
+      `SELECT v.*, u.username, u.display_name, u.avatar_url FROM votes v JOIN users u ON u.id = v.user_id
        WHERE v.place_id = ? AND v.comment IS NOT NULL ORDER BY v.updated_at DESC LIMIT 20`,
       [req.params.id],
     );
@@ -157,7 +157,6 @@ export function placeRoutes(db, writeLimit) {
         username: v.username,
         displayName: v.display_name || v.username,
         avatarUrl: v.avatar_url ?? null,
-        isDemo: !!v.is_demo,
         ...voteJson(v),
         updatedAt: v.updated_at,
       })),

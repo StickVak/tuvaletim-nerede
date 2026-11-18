@@ -78,7 +78,7 @@ export function adminRoutes(db) {
   });
 
   r.delete('/places/:id', (req, res) => {
-    const { changes } = db.run('DELETE FROM places WHERE id = ?', [req.params.id]);
+    const changes = db.deletePlace(req.params.id);
     res.status(changes ? 204 : 404).end();
   });
 

@@ -24,7 +24,7 @@ interface Props {
   onToast: (text: string, tone?: 'success' | 'info' | 'error') => void;
 }
 
-type Review = Vote & { userId: number; username: string; displayName: string; avatarUrl: string | null; isDemo: boolean; updatedAt: string };
+type Review = Vote & { userId: number; username: string; displayName: string; avatarUrl: string | null; updatedAt: string };
 
 const TOILET_TYPE_LABEL: Record<ToiletType, string> = { alafranga: 'Alafranga', alaturka: 'Alaturka', ikisi: 'Alafranga + Alaturka' };
 const REPORTS: { type: ReportType; label: string; icon: typeof Wrench }[] = [
@@ -303,7 +303,6 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
                         <div className="min-w-0 flex-1">
                           <button type="button" onClick={() => onOpenUser(r.userId)} className="block truncate text-left text-sm font-bold text-ink hover:underline">
                             {r.displayName}
-                            {r.isDemo && <span className="ml-1.5 rounded-full bg-surface px-1.5 py-0.5 align-middle text-[9px] font-bold text-ink-muted">Örnek</span>}
                           </button>
                           <span className="text-[11px] text-ink-muted">{relTime(r.updatedAt)}</span>
                         </div>

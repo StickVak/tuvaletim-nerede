@@ -75,6 +75,8 @@ CREATE TABLE IF NOT EXISTS status_reports (
   created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS reports_place_time ON status_reports(place_id, created_at);
+-- Yöneticinin sildiği seed mekanları: açılıştaki seed eşitlemesi bunları yeniden eklemez
+CREATE TABLE IF NOT EXISTS seed_removed (id TEXT PRIMARY KEY);
 `;
 
 /** Sonradan eklenen sütunlar: yeni ve eski veritabanları aynı göçten geçer */
@@ -89,7 +91,7 @@ const norm = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 
 
 /**
  * sql.js veritabanını açar (dosya yoksa oluşturur) ve her yazmadan sonra dosyaya kaydeder.
- * `places` boşsa seed dosyasından doldurur.
+ * Seed dosyasındaki eksik mekanları ekler (bkz. seed eşitleme).
  */
 export async function openDb(path, { seedFile } = {}) {
   const SQL = await initSqlJs();
@@ -153,22 +155,35 @@ export async function openDb(path, { seedFile } = {}) {
     }
   }
 
-  const api = { all, get: (sql, params) => all(sql, params)[0], run, tx, save, seeded: false };
-
-  if (seedFile && existsSync(seedFile) && api.get('SELECT COUNT(*) AS n FROM places').n === 0) {
-    const seed = JSON.parse(readFileSync(seedFile, 'utf8'));
-    const now = new Date().toISOString();
-    tx(() => {
-      for (const p of seed) {
-        run(
-          `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
-          [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
-            p.toiletType ?? null, p.publicAccess ?? null, now, now],
-        );
-      }
+  /** Mekanı siler; seed kaynaklıysa açılıştaki eşitlemenin geri getirmemesi için not edilir. */
+  function deletePlace(id) {
+    return tx(() => {
+      if (all("SELECT 1 FROM places WHERE id = ? AND source = 'seed'", [id]).length) run('INSERT OR IGNORE INTO seed_removed (id) VALUES (?)', [id]);
+      return run('DELETE FROM places WHERE id = ?', [id]).changes;
     });
-    api.seeded = true;
+  }
+
+  const api = { all, get: (sql, params) => all(sql, params)[0], run, tx, save, deletePlace };
+
+  // Seed eşitleme: veritabanında olmayan (ve yöneticinin silmediği) seed mekanlarını ekle.
+  // Yeni kurulumda hepsi, mevcut kurulumda yalnızca seed dosyasına sonradan eklenenler girer.
+  if (seedFile && existsSync(seedFile)) {
+    const seed = JSON.parse(readFileSync(seedFile, 'utf8'));
+    const skip = new Set([...all('SELECT id FROM places'), ...all('SELECT id FROM seed_removed')].map((r) => r.id));
+    const missing = seed.filter((p) => !skip.has(p.id));
+    const now = new Date().toISOString();
+    if (missing.length) {
+      tx(() => {
+        for (const p of missing) {
+          run(
+            `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
+            [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
+              p.toiletType ?? null, p.publicAccess ?? null, now, now],
+          );
+        }
+      });
+    }
   }
 
   return api;

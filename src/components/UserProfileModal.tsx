@@ -27,7 +27,6 @@ export default function UserProfileModal({ userId, onClose, onOpenPlace }: { use
             <Avatar name={p.displayName} url={p.avatarUrl} size={88} />
             <h2 className="mt-3 text-xl font-extrabold">{p.displayName}</h2>
             <p className="text-sm text-ink-muted">@{p.username}</p>
-            {p.isDemo && <span className="mt-1 rounded-full bg-card px-2.5 py-0.5 text-[11px] font-bold text-ink-muted">Örnek profil</span>}
             {p.bio && <p className="mt-3 text-sm text-ink-soft">{p.bio}</p>}
             <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-muted">
               <CalendarDays size={13} /> {joinedLabel(p.createdAt)} tarihinden beri üye

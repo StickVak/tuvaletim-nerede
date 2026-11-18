@@ -31,7 +31,6 @@ Diğer komutlar:
 ```bash
 npm test          # sunucu (node:test) + Acil, rota, koridor, filtre testleri
 npm run build     # üretim derlemesi (dist/)
-npm run seed:demo # mevcut veritabanına örnek kullanıcı + yorum ekler (sunucu kapalıyken)
 ```
 
 ### Ortam değişkenleri (`.env`, yalnızca sunucu okur)
@@ -41,7 +40,6 @@ npm run seed:demo # mevcut veritabanına örnek kullanıcı + yorum ekler (sunuc
 | `AUTH_SECRET` | Oturum belirteçlerini imzalayan gizli anahtar. Tanımlı değilse ya da `.env.example`'daki örnek değer bırakılmışsa sunucu rastgele bir anahtar üretip `server/data/.auth-secret`'e kaydeder. | otomatik üretilir |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | Yönetici hesabı; sunucu her açılışta bu hesabı oluşturur veya şifresini eşitler | `admin` / `admin123` |
 | `PORT` | API portu | `3001` |
-| `SEED_DEMO_DATA` | `false` ise yeni veritabanına örnek kullanıcı ve yorum eklenmez | `true` |
 | `TRUST_PROXY` | Ters vekil (Render vb.) arkasında gerçek istemci IP'si için Express `trust proxy` değeri, ör. `1` | — |
 
 ### Üretimde çalıştırma (Render vb.)
@@ -73,7 +71,7 @@ Not: Render'ın ücretsiz planında dosya sistemi kalıcı değildir; her yenide
 - **Canlı durum:** Mekan detayından tek tıkla “Temizlik / Tadilat Nedeniyle Kapalı”, “Kağıt / Sabun Yok”, “Çok Kalabalık” bildirimi. Son 3 saatte en az 2 farklı kullanıcı kapalı bildirirse kartta, detayda ve pinde **Geçici Olarak Kapalı Bildirildi** rozeti çıkar ve Acil o mekanı atlar.
 - **Favoriler:** Kart ve detaydaki kalp ikonu.
 - **Harita kümeleme:** `leaflet.markercluster`; uzaklaşınca yakın pinler sarı-siyah sayı baloncuklarında toplanır (koyu temada ters renkler). Seçili mekan ve rota hedefi kümeye girmez.
-- **Örnek veriler:** İlk kurulumda 6 kurgusal İzmirli kullanıcı (çizim avatarlı) ve 9 popüler mekanda 18 gerçekçi oy/yorum eklenir. Bu profiller arayüzde **Örnek profil** olarak işaretlidir; şifreleri rastgele olduğundan bu hesaplarla giriş yapılamaz. Diğer mekanlar oysuz kalır.
+- **Örnek veri yok:** Kurgusal kullanıcı veya yorum eklenmez; tüm puanlar gerçek kullanıcılardan gelir. Önceki sürümlerin eklediği örnek profiller (`is_demo = 1`) oyları ve avatarlarıyla birlikte açılışta silinir.
 - **Kitle kaynaklı puan ve ücret:**
   - Başlangıç verisinde hiç puan yoktur (`Henüz puanlanmadı · 0 oy`).
   - Puanlama: Temizlik ★1-5, Konfor ★1-5, altında **Ücretli / Ücretsiz**; Ücretli seçilince **Ücret Tutarı (₺)** alanı açılır. İsteğe bağlı kısa yorum.
@@ -103,11 +101,13 @@ Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stat
 
 ## Başlangıç verisi (İzmir)
 
-[`server/seed-places.json`](server/seed-places.json): **177 mekan** — 29 AVM, 38 Starbucks/kafe, 12 belediye tuvaleti, 98 diğer kamuya açık tuvalet. Tüm İzmir ilini kapsar.
+[`server/seed-places.json`](server/seed-places.json): **184 mekan** — 36 AVM, 38 Starbucks/kafe, 12 belediye tuvaleti, 98 diğer kamuya açık tuvalet. Tüm İzmir ilini kapsar.
 
 - Koordinatlar OpenStreetMap / **Nominatim**'den alınmıştır ve gerçek OSM nesnelerine aittir. Her kaydın `osm` alanında OSM kimliği yer alır.
 - Engelli erişimi, bebek bakım ve çalışma saatleri, varsa OSM etiketlerinden gelir. Puan veya oy sayısı **yoktur**.
 - Adı istenen 24 noktanın 22'si doğrudan bir OSM kaydına oturur. Şu ikisinin yakınında OSM'de kayıtlı tuvalet olmadığından referans noktasına **yaklaşık** yerleştirilmiştir (`approximate: true`, adreste “(yaklaşık konum)” yazar): *Bornova Merkez Meydan Belediye WC* (Cumhuriyet Meydanı) ve *Karşıyaka İskele / Çarşı Belediye WC* (Karşıyaka Vapur İskelesi). Doğru konum `/admin` → Mekanlar → Düzenle'den haritaya tıklanarak düzeltilebilir.
+- AVM'ler: il genelinde OSM'de `shop=mall` etiketli ve adı olan tüm kayıtlar (iş hanı, pasaj, çarşı gibi AVM olmayanlar hariç). Migros'un işlettiği AVM'ler OSM'de yalnızca “Migros” adıyla kayıtlı olduğundan “Migros AVM ‹ilçe›” olarak adlandırılır.
+- Starbucks: il genelinde OSM'de kayıtlı tüm Starbucks şubeleri. OSM'de olmayan şubeler (özellikle AVM içindekiler) listede yoktur; kullanıcılar sarı **+** butonuyla ekleyebilir.
 - Operatörü belediye olarak işaretlenmemiş, adsız kamu tuvaletleri “Umumi Tuvalet – ‹mahalle›” adıyla eklenmiştir.
 
 Veriyi yeniden üretmek için (Nominatim kullanım kuralına uygun: saniyede en fazla 1 istek, yanıtlar `scripts/.nominatim-cache.json`'da önbelleğe alınır):
@@ -116,7 +116,7 @@ Veriyi yeniden üretmek için (Nominatim kullanım kuralına uygun: saniyede en 
 node scripts/geocode-seed.mjs > server/seed-places.json
 ```
 
-Seed verisi yalnızca veritabanı boşken yüklenir.
+Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ekler; böylece seed'e eklenen yeni mekanlar mevcut kurulumlara da gelir. Yöneticinin `/admin`'den sildiği seed mekanları `seed_removed` tablosuna yazılır ve yeniden eklenmez.
 
 ## API
 

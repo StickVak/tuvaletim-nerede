@@ -912,6 +912,26 @@
   "approximate": false
  },
  {
+  "id": "osm-w915525694",
+  "name": "Migros AVM Urla",
+  "category": "avm",
+  "district": "Urla",
+  "address": "111. Sokak, Denizli Mahallesi",
+  "lat": 38.3903508,
+  "lng": 26.74769,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 915525694,
+   "display_name": "Migros, 111. Sokak, Denizli Mahallesi, Urla, İzmir, Ege Bölgesi, 35430, Türkiye"
+  },
+  "approximate": false
+ },
+ {
   "id": "osm-w1553970630",
   "name": "Starbucks Güzelbahçe – Yelki",
   "category": "kafe",
@@ -1292,6 +1312,26 @@
   "approximate": false
  },
  {
+  "id": "osm-w330844703",
+  "name": "Balçova Kipa Alışveriş Merkezi",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Mithatpaşa Caddesi, Bahçelerarası Mahallesi",
+  "lat": 38.3951769,
+  "lng": 27.0422411,
+  "hours": "Mo-Su 10:00-22:00",
+  "accessible": true,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 330844703,
+   "display_name": "Balçova Kipa Alışveriş Merkezi, No:46, Mithatpaşa Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
   "id": "osm-w387585142",
   "name": "Özdilek",
   "category": "avm",
@@ -1352,6 +1392,26 @@
   "approximate": false
  },
  {
+  "id": "osm-w312215616",
+  "name": "Palmiye AVM",
+  "category": "avm",
+  "district": "Balçova",
+  "address": "Mithatpaşa Caddesi, Bahçelerarası Mahallesi",
+  "lat": 38.3948963,
+  "lng": 27.0503179,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 312215616,
+   "display_name": "Palmiye AVM, 34, Mithatpaşa Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
+  },
+  "approximate": false
+ },
+ {
   "id": "osm-w859049564",
   "name": "İzmirPARK AVM",
   "category": "avm",
@@ -1368,6 +1428,66 @@
    "type": "way",
    "id": 859049564,
    "display_name": "İzmirPARK AVM, 518 sokak, Güneşli Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35270, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w386075185",
+  "name": "Migros AVM Çiğli",
+  "category": "avm",
+  "district": "Çiğli",
+  "address": "8820. Sokak, Egekent Mahallesi",
+  "lat": 38.5038235,
+  "lng": 27.0620817,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 386075185,
+   "display_name": "Migros, 8820. Sokak, Egekent Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w684817648",
+  "name": "Migros AVM Buca",
+  "category": "avm",
+  "district": "Buca",
+  "address": "Menderes Caddesi, İnkılap Mahallesi",
+  "lat": 38.3921684,
+  "lng": 27.1501328,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 684817648,
+   "display_name": "Migros, Menderes Caddesi, İnkılap Mahallesi, Buca, İzmir, Ege Bölgesi, 35380, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w432900088",
+  "name": "Egekent Alışveriş Merkezi",
+  "category": "avm",
+  "district": "Çiğli",
+  "address": "8837. Sokak, İzkent Mahallesi",
+  "lat": 38.5089649,
+  "lng": 27.0641516,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 432900088,
+   "display_name": "Egekent Alışveriş Merkezi, 8837. Sokak, İzkent Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
   },
   "approximate": false
  },
@@ -3128,6 +3248,26 @@
    "type": "way",
    "id": 282933410,
    "display_name": "Park Bornova, 1592. Sokak, Doğanlar Mahallesi, Bornova, İzmir, Ege Bölgesi, 35050, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "osm-w617646032",
+  "name": "Migros AVM Bornova",
+  "category": "avm",
+  "district": "Bornova",
+  "address": "Fevzi Çakmak Caddesi, Erzene Mahallesi",
+  "lat": 38.4654785,
+  "lng": 27.2195416,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 617646032,
+   "display_name": "Migros, Fevzi Çakmak Caddesi, Erzene Mahallesi, Bornova, İzmir, Ege Bölgesi, 35040, Türkiye"
   },
   "approximate": false
  },

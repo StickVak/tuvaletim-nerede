@@ -6,7 +6,7 @@ import { createApp } from '../app.js';
 export const SECRET = 'test-secret';
 
 /** Geçici veritabanıyla uygulamayı rastgele portta başlatır. */
-export async function startServer({ seed = [], limits = false, demo = false } = {}) {
+export async function startServer({ seed = [], limits = false } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'tn-test-'));
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(seed));
@@ -17,7 +17,6 @@ export async function startServer({ seed = [], limits = false, demo = false } = 
     adminUsername: 'admin',
     adminPassword: 'admin123',
     limits,
-    demo,
   });
   const server = await new Promise((resolve) => {
     const s = app.listen(0, () => resolve(s));

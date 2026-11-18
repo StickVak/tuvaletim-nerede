@@ -82,14 +82,13 @@ export interface PublicProfile {
   avatarUrl: string | null;
   bio: string;
   createdAt: string;
-  isDemo: boolean;
   stats: { votes: number; comments: number; placesAdded: number };
   reviews: (Vote & { placeId: string; placeName: string; updatedAt: string })[];
 }
 
 /** GET /api/profile — kendi profilim */
 export interface MyProfile {
-  user: User & { bio: string; createdAt: string; isDemo: boolean };
+  user: User & { bio: string; createdAt: string };
   stats: { votes: number; comments: number; placesAdded: number; pending: number; favorites: number; contributions: number };
   activity: {
     kind: 'vote' | 'report' | 'favorite' | 'place' | 'pending';

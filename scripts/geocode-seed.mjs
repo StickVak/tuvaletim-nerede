@@ -141,7 +141,9 @@ for (const n of NAMED) {
 
 // ---------------------------------------------------------------- 2) İl geneli tarama
 // shop=mall etiketli ama AVM olmayan kayıtlar (Türkçe 'İ' /i ile eşleşmediği için [iİ])
-const MALL_DENY = /[iİ]ş ?han|[iİ]ş merkezi|pazar|pasaj|çarşı|kültür merkezi|^migros$|koçtaş|mektup|kidsmall|pirinç center|sanayi/i;
+// "iş merkezi" yalnızca kelime başında: "Alışveriş Merkezi" elenmesin
+const MALL_DENY = /(^|\s)[iİ]ş ?han|(^|\s)[iİ]ş merkezi|pazar|pasaj|çarşı|kültür merkezi|koçtaş|mektup|kidsmall|pirinç center|sanayi/i;
+const normName = (s) => s.toLocaleLowerCase('tr').replace(/avm|alışveriş merkezi|izmir|\s+/g, '');
 const TILE = 0.25;
 const scanned = [];
 for (let west = PROVINCE.west; west < PROVINCE.east; west += TILE) {
@@ -170,8 +172,12 @@ for (const { q, x } of scanned) {
   const a = x.address ?? {};
   const t = x.extratags ?? {};
   let place = null;
-  if (q === 'mall' && x.category === 'shop' && x.type === 'mall' && x.name && !MALL_DENY.test(x.name) && !near(p, 'avm', 250)) {
-    place = toPlace(x, { category: 'avm' });
+  const dupMall = () =>
+    near(p, 'avm', 100) || out.some((o) => o.category === 'avm' && normName(o.name) === normName(x.name) && dist(o, p) < 1000);
+  if (q === 'mall' && x.category === 'shop' && x.type === 'mall' && x.name && !MALL_DENY.test(x.name) && !dupMall()) {
+    // Migros'un işlettiği AVM'ler (eski Kipa) OSM'de yalnızca "Migros" adıyla kayıtlı
+    const district = a.town || a.city_district || a.county || '';
+    place = toPlace(x, { category: 'avm', ...(/^migros$/i.test(x.name) ? { name: `Migros AVM ${district}`.trim() } : {}) });
   } else if (q === 'Starbucks' && /starbucks/i.test(x.name ?? '') && !near(p, 'kafe', 60)) {
     place = toPlace(x, { category: 'kafe', name: `Starbucks ${a.town ?? ''} – ${short(a.suburb) || a.road || ''}`.trim() });
   } else if (q === 'toilets' && x.type === 'toilets' && !['private', 'no', 'customers'].includes(t.access) && !out.some((o) => dist(o, p) < 25)) {
