@@ -1,7 +1,7 @@
 /* Tuvaletim Nerede? — basit service worker
  * Uygulama kabuğu: network-first (çevrimdışıyken önbellekten)
  * Harita karoları: cache-first (gezilen bölgeler çevrimdışı da görünür) */
-const APP_CACHE = 'tn-app-v6';
+const APP_CACHE = 'tn-app-v7';
 const TILE_CACHE = 'tn-tiles-v4';
 const MAX_TILES = 400;
 

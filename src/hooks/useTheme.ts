@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { themeColorFor } from '../lib/themeColors';
 
 export type ThemeSetting = 'system' | 'light' | 'dark';
 const KEY = 'tn.theme';
@@ -16,7 +17,8 @@ function readSetting(): ThemeSetting {
 function apply(setting: ThemeSetting) {
   const dark = setting === 'dark' || (setting === 'system' && window.matchMedia(DARK_QUERY).matches);
   document.documentElement.classList.toggle('dark', dark);
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#1E1E1E' : '#FFD60A');
+  // Durum çubuğu uygulama zemini rengini alır (sarı değil)
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColorFor(dark));
 }
 
 /** Sistem / Açık / Koyu. Varsayılan sistem teması; seçim tn.theme anahtarında saklanır. */

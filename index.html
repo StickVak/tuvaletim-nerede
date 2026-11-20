@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#FFD60A" />
+    <!-- Durum çubuğu = uygulama zemini (açık #FFFFFF / koyu #1E1E1E); koyu tema aşağıdaki betikte uygulanır -->
+    <meta name="theme-color" content="#FFFFFF" />
     <meta name="description" content="Yakınındaki en temiz ve ücretsiz tuvaleti saniyeler içinde bul." />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -19,7 +20,7 @@
     <title>Tuvaletim Nerede?</title>
     <script>
       // Boyamadan önce temayı uygula (beyaz yanıp sönmeyi önler) — src/hooks/useTheme.ts ile aynı kural
-      try { var t = localStorage.getItem('tn.theme'); if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark'); } catch (e) {}
+      try { var t = localStorage.getItem('tn.theme'); if (t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); document.querySelector('meta[name="theme-color"]').setAttribute('content', '#1E1E1E'); } } catch (e) {}
     </script>
   </head>
   <body>
