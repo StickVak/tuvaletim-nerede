@@ -2,6 +2,7 @@ import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, signToken, verifyPassword } from '../auth.js';
 import { MailError, maskEmail } from '../mailer.js';
+import { clearDeviceCookie, createDeviceStore, readDeviceToken, setDeviceCookie } from '../devices.js';
 
 const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,7 +40,24 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   r.use('/register', registerLimit);
   r.use('/send-code', sendCodeLimit);
   r.use('/login', loginLimit);
-  const respond = (res, status, user) => res.status(status).json({ token: signToken({ id: user.id, role: user.role }, secret), user: publicUser(user) });
+  const devices = createDeviceStore(db, secret);
+  /** Erişim belirteci (cihaza bağlıysa did ile: cihaz iptal edilince belirteç de geçersiz olur) */
+  const respond = (res, status, user, deviceId = null) =>
+    res.status(status).json({ token: signToken({ id: user.id, role: user.role, ...(deviceId ? { did: deviceId } : {}) }, secret), user: publicUser(user) });
+
+  /** Başarılı OTP'li kayıt / girişten sonra: "Bu cihazı hatırla" açıksa (varsayılan) güvenilir cihaz + çerez */
+  async function startSession(req, res, status, user) {
+    if (req.body?.remember === false) return respond(res, status, user);
+    const device = await devices.issue(user.id, req.get('user-agent'));
+    setDeviceCookie(req, res, device.token);
+    return respond(res, status, user, device.id);
+  }
+
+  /** Bu isteğin cihazı: önce erişim belirtecindeki did, yoksa çerezdeki token */
+  async function currentDeviceId(req) {
+    if (req.auth?.deviceId) return req.auth.deviceId;
+    return (await devices.find(readDeviceToken(req)))?.id ?? null;
+  }
   // Kod düz metin saklanmaz; e-postaya bağlı HMAC
   const codeHash = (email, code) => createHmac('sha256', secret).update(`email-code:${email}:${code}`).digest('hex');
 
@@ -141,7 +159,8 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
       ]],
     ]);
     const lastId = created.lastId;
-    respond(res, 201, { id: lastId, username, role: 'user', display_name: username, avatar_url: null });
+    // OTP doğrulandı: bu cihaz güvenilir olur (sonraki açılışlarda giriş ekranı gelmez)
+    await startSession(req, res, 201, { id: lastId, username, role: 'user', display_name: username, avatar_url: null });
   });
 
   r.post('/login', async (req, res) => {
@@ -150,9 +169,54 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     if (!user || !verifyPassword(req.body?.password ?? '', user.password_hash)) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
     }
-    respond(res, 200, user);
+    await startSession(req, res, 200, user);
   });
 
   r.get('/me', requireUser, (req, res) => res.json({ user: req.user }));
+
+  /**
+   * Sessiz oturum tazeleme: güvenilir cihaz çereziyle yeni erişim belirteci. Uygulama açılışında ya da belirteç
+   * süresi dolunca istemci çağırır. Çerez yok/geçersiz/iptal/süresi dolmuş → 401 (istemci standart girişe düşer).
+   */
+  r.post('/refresh', async (req, res) => {
+    const token = readDeviceToken(req);
+    const device = await devices.find(token);
+    const user = device && (await db.get('SELECT * FROM users WHERE id = ?', [device.user_id]));
+    if (!device || !user) {
+      if (token) clearDeviceCookie(req, res);
+      return res.status(401).json({ error: 'Oturum yenilenemedi. Lütfen giriş yapın.' });
+    }
+    await devices.touch(device.id);
+    setDeviceCookie(req, res, token); // çerez süresi de kayar
+    respond(res, 200, user, device.id);
+  });
+
+  /** Bu cihazdan çıkış: yalnızca bu cihazın güvenilir kaydı iptal edilir (diğer cihazlar etkilenmez) */
+  r.post('/logout', async (req, res) => {
+    const id = await currentDeviceId(req);
+    if (id) await devices.revoke(id);
+    clearDeviceCookie(req, res);
+    res.status(204).end();
+  });
+
+  /** Tüm cihazlardan çıkış: tüm güvenilir cihazlar iptal + daha önce verilmiş tüm erişim belirteçleri geçersiz */
+  r.post('/logout-all', requireUser, async (req, res) => {
+    await db.batch([devices.revokeAllStmt(req.user.id), ['UPDATE users SET tokens_valid_after = ? WHERE id = ?', [new Date().toISOString(), req.user.id]]]);
+    clearDeviceCookie(req, res);
+    res.status(204).end();
+  });
+
+  /** Güvenilir cihazlarım (bu cihaz işaretli); token özeti ve ham user-agent dönmez */
+  r.get('/devices', requireUser, async (req, res) => {
+    const current = await currentDeviceId(req);
+    const rows = await devices.list(req.user.id);
+    res.json(rows.map((d) => ({ id: d.id, label: d.device_label, createdAt: d.created_at, lastUsedAt: d.last_used_at, expiresAt: d.expires_at, current: d.id === current })));
+  });
+
+  /** Tek cihazı iptal (yalnızca kendi cihazları); o cihazın erişim belirteci de hemen geçersizleşir */
+  r.delete('/devices/:id', requireUser, async (req, res) => {
+    const changes = await devices.revoke(Number(req.params.id), req.user.id);
+    res.status(changes ? 204 : 404).end();
+  });
   return r;
 }

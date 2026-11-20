@@ -83,13 +83,27 @@ CREATE TABLE IF NOT EXISTS email_codes (
   attempts INTEGER NOT NULL DEFAULT 0,
   sent_at TEXT NOT NULL
 );
+-- Güvenilir cihazlar (kalıcı oturum): ham token yalnızca istemcinin HttpOnly çerezinde, burada HMAC özeti
+CREATE TABLE IF NOT EXISTS trusted_devices (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_token_hash TEXT NOT NULL UNIQUE,
+  device_label TEXT,
+  user_agent TEXT,
+  created_at TEXT NOT NULL,
+  last_used_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  revoked_at TEXT
+);
+CREATE INDEX IF NOT EXISTS trusted_devices_user ON trusted_devices(user_id);
 -- Yöneticinin sildiği seed mekanları: açılıştaki seed eşitlemesi bunları yeniden eklemez
 CREATE TABLE IF NOT EXISTS seed_removed (id TEXT PRIMARY KEY);
 `;
 
 /** Sonradan eklenen sütunlar: yeni ve eski veritabanları aynı göçten geçer */
 const ADDED_COLUMNS = {
-  users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0'],
+  // tokens_valid_after: "tüm cihazlardan çıkış" / şifre değişikliği anı; öncesinde verilmiş erişim belirteçleri geçersiz
+  users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0', 'tokens_valid_after TEXT'],
   // closed_at: yönetici onaylı kalıcı kapalı (haritada gösterilmez)
   places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
@@ -174,6 +188,7 @@ export async function openDb(path, { seedFile, url, authToken } = {}) {
       ['DELETE FROM votes WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['DELETE FROM favorites WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['DELETE FROM status_reports WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['DELETE FROM trusted_devices WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['UPDATE places SET added_by = NULL WHERE added_by = ? AND added_by IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['UPDATE pending_places SET user_id = NULL WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['DELETE FROM users WHERE id = ? AND role = ?', [id, role]],

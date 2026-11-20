@@ -10,6 +10,7 @@ import { avatarRoutes, profileRoutes, userRoutes } from './routes/profile.js';
 import { DEFAULT_LIMITS, rateLimit } from './ratelimit.js';
 import { createMailer } from './mailer.js';
 import { createPhotoStore, migrateInlinePhotos } from './photos.js';
+import { createDeviceStore } from './devices.js';
 import { dirname, join } from 'node:path';
 
 /**
@@ -47,6 +48,7 @@ export async function createApp({
   const avatars = createPhotoStore({ dir: avatarDir, folder: 'tuvaletim/avatars', cloudinary, maxBytes: 2 * 1024 * 1024 });
   await migrateInlinePhotos(db, photos);
   await removeDemoData(db, avatars);
+  await createDeviceStore(db, secret).prune(); // süresi çoktan dolmuş / iptal edilmiş güvenilir cihaz kayıtları
 
   const pass = (_req, _res, next) => next();
   const L = limits === false ? null : { ...DEFAULT_LIMITS, ...limits };

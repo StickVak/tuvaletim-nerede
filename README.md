@@ -116,6 +116,7 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
   - **E-posta doğrulamalı kayıt:** Kullanıcı adı, e-posta (zorunlu, benzersiz) ve şifre girilip **Kod Gönder** denir; e-postaya 6 haneli kod gelir. Kod 10 dakika geçerlidir, en fazla 5 hatalı deneme hakkı vardır; aynı adrese 60 saniyede bir kod istenebilir (geri sayımlı **Kodu Tekrar Gönder**). Kodlar veritabanında düz metin değil HMAC olarak tutulur.
   - **Kararlı gönderim (Brevo / Resend / SMTP):** Her gönderim denemesi 8 sn ile sınırlıdır; zaman aşımı, ağ hatası ve sağlayıcının geçici (5xx / SMTP 4xx) hatalarında kısa bir beklemeyle **aynı kod** 1 kez yeniden gönderilir. Hatalar `timeout / network / rate_limit / provider / config` olarak loglanır (adres maskeli, kod yazılmaz). Zaman aşımında e-posta ulaşmış olabileceğinden kod korunur, kullanıcı kod adımına geçer ve 15 sn sonra yeni kod isteyebilir (`202 delivery: uncertain`). Kesin hatalarda kod silinir ve `503` + `Retry-After` ile ne zaman tekrar denenebileceği bildirilir; kullanıcıya sağlayıcı ayrıntısı gösterilmez.
   - **Arayüz:** Kod isteği sürerken buton kilitlenir (“Kod gönderiliyor…”, çift tıklama/Enter tek istek); bekleme gerekiyorsa saniyelik geri sayım gösterilir (“Tekrar dene (0:27)”, “27 saniye sonra tekrar deneyebilirsiniz.”).
+- **Güvenilir cihaz / kalıcı oturum:** OTP'li kayıt ya da şifreli girişten sonra (“Bu cihazı hatırla”, varsayılan açık) cihaza 256 bit rastgele bir token verilir. Ham token yalnızca `HttpOnly; SameSite=Lax; Path=/api/auth` (HTTPS'te `Secure`) `tn_device` çerezinde durur; veritabanında (`trusted_devices`) sunucu sırrıyla HMAC özeti tutulur. Uygulama yeniden açılınca ya da erişim belirtecinin süresi dolunca istemci `/api/auth/refresh` ile sessizce yeni belirteç alır (`last_used_at` güncellenir, süre 90 gün ileri kayar); giriş ekranı gelmez. Token yok / geçersiz / iptal / süresi dolmuşsa standart giriş akışı. **Bu cihazdan çıkış** yalnızca bu cihazın kaydını iptal eder; Profil'deki **Tüm cihazlardan çıkış** tüm kayıtları iptal eder ve önceden verilmiş tüm erişim belirteçlerini hemen geçersiz kılar. Profil'de güvenilir cihazlar listelenir ve tek tek kaldırılabilir (kaldırılan cihazın belirteci de hemen geçersizleşir). Şifre değişince bu cihaz dışındakiler iptal edilir.
 - **Tuvalet ekleme:** **Dış mekan fotoğrafı (giriş / bina cephesi) zorunludur**; fotoğrafsız başvuru gönderilemez. Görsel tarayıcıda küçültülür, sunucuda içerik baytları doğrulanır; Cloudinary tanımlıysa oraya yüklenip kalıcı `secure_url` kaydedilir (gösterimde otomatik biçim/kalite `f_auto,q_auto`), değilse rastgele adla `server/data/photos/` altına yazılır. Mekan silinince ya da başvuru reddedilince görsel Cloudinary'den de silinir. Yönetim panelinde başvuru ve düzenleme ekranlarında büyük önizleme ve tam ekran görüntüleme vardır.
 - **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
 - **Herkese açık profiller:** Yorumlardaki ada/avatara tıklayınca kullanıcının fotoğrafı, adı, biyografisi, katılım tarihi, katkı sayıları ve tüm değerlendirmeleri görünür. Şifre, e-posta ve rol asla dönmez.
@@ -152,6 +153,7 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
 | `places` | Onaylı mekanlar: ad, tür, ilçe, adres, konum, fotoğraf, saatler, engelli erişimi, bebek bakım, kaynak (`seed` / `user` / `admin`), `closed_at` (kalıcı kapalı) |
 | `votes` | cleanliness, comfort, is_paid, price_amount, comment, toilet_type, user_id, place_id — `UNIQUE(user_id, place_id)` |
 | `pending_places` | `+` ile gönderilen, onay bekleyen mekanlar, dış mekan fotoğrafı (`photo_file`) ve ekleyenin ilk oyu (onayda `votes`'a yazılır) |
+| `trusted_devices` | id, user_id, device_token_hash (HMAC), device_label, user_agent, created_at, last_used_at, expires_at, revoked_at |
 | `email_codes` | Kayıt doğrulama kodları: email, code_hash (HMAC), expires_at (10 dk), attempts (en fazla 5), sent_at |
 | `favorites` | user_id, place_id, created_at — birincil anahtar `(user_id, place_id)` |
 | `status_reports` | place_id, user_id, report_type (`closed` / `no_supplies` / `crowded` / `open`), created_at, `resolved_at` (yönetici onayladı/reddetti) |
@@ -186,9 +188,13 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | Yöntem | Yol | Yetki | Açıklama |
 |---|---|---|---|
 | POST | `/api/auth/send-code` | — | `{ email, username? }` → e-postaya 6 haneli kod (`409` kayıtlı e-posta/kullanıcı adı, `429` 60 sn dolmadan) |
-| POST | `/api/auth/register` | — | `{ username, email, password, code }` → `{ token, user }` |
-| POST | `/api/auth/login` | — | `{ username (veya e-posta), password }` → `{ token, user }` |
+| POST | `/api/auth/register` | — | `{ username, email, password, code, remember? }` → `{ token, user }` (+ güvenilir cihaz çerezi) |
+| POST | `/api/auth/login` | — | `{ username (veya e-posta), password, remember? }` → `{ token, user }` (+ güvenilir cihaz çerezi) |
 | GET | `/api/auth/me` | kullanıcı | Oturumdaki kullanıcı |
+| POST | `/api/auth/refresh` | `tn_device` çerezi | Güvenilir cihazla sessiz oturum tazeleme → `{ token, user }` (geçersizse `401`) |
+| POST | `/api/auth/logout` | — | Bu cihazın güvenilir kaydını iptal eder, çerezi siler (`204`) |
+| POST | `/api/auth/logout-all` | kullanıcı | Tüm güvenilir cihazlar + tüm erişim belirteçleri iptal (`204`) |
+| GET / DELETE | `/api/auth/devices`, `/api/auth/devices/:id` | kullanıcı | Güvenilir cihazlarım (bu cihaz işaretli) / bir cihazı kaldır |
 | GET | `/api/places` | — | Mekanlar + `stats` (+ girişliyse `myVote`) |
 | GET | `/api/places/:id/photo` | — | Mekan fotoğrafı (liste yanıtında yalnızca `hasPhoto` bulunur) |
 | GET | `/api/places/:id/reviews` | — | Yorumlu son 20 oy (yazarın görünen adı ve avatarıyla) |
@@ -225,7 +231,7 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 
 ## Güvenlik notları
 
-- Şifreler `scrypt` ile tuzlanarak saklanır. Oturum, `AUTH_SECRET` ile HMAC-SHA256 imzalı 7 günlük bir belirteçtir; tarayıcıda `localStorage`'da tutulur. Kullanıcının rolü her istekte veritabanından okunur.
+- Şifreler `scrypt` ile tuzlanarak saklanır. Oturum, `AUTH_SECRET` ile HMAC-SHA256 imzalı 7 günlük bir belirteçtir; tarayıcıda `localStorage`'da tutulur. Kullanıcının rolü her istekte veritabanından okunur. Belirteç, bağlı olduğu güvenilir cihaz iptal edilmişse ya da “tüm cihazlardan çıkış” / şifre değişikliğinden (`users.tokens_valid_after`) önce verilmişse reddedilir. Kalıcı oturumun ham cihaz token'ı JavaScript'in erişemediği HttpOnly çerezdedir.
 - Örnek (herkese açık) anahtar asla kullanılmaz; yoksa rastgele üretilir.
 - Fotoğraflar yalnızca JPEG / PNG / WebP / GIF olabilir (SVG reddedilir) ve `X-Content-Type-Options: nosniff` ile sunulur.
 - **Yönetim paneli ayrı servistir**; kullanıcı uygulamasının paketinde yönetim kodu yoktur. Yönetim API'si kullanıcı hesaplarıyla açılmaz, yalnızca `ADMIN_SECRET_KEY` ile (sabit süreli karşılaştırma).

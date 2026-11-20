@@ -34,7 +34,11 @@ test('password change requires current password', async () => {
   assert.equal((await srv.req('POST', '/api/profile/password', { currentPassword: 'secret1', newPassword: '123' }, me.token)).status, 400);
   assert.equal((await srv.req('POST', '/api/profile/password', { currentPassword: 'secret1', newPassword: 'yenisifre1' }, me.token)).status, 204);
   assert.equal((await srv.req('POST', '/api/auth/login', { username: 'profilci', password: 'secret1' })).status, 401);
-  assert.equal((await srv.req('POST', '/api/auth/login', { username: 'profilci', password: 'yenisifre1' })).status, 200);
+  const relog = await srv.req('POST', '/api/auth/login', { username: 'profilci', password: 'yenisifre1' });
+  assert.equal(relog.status, 200);
+  // Güvenlik: şifre değişince eski erişim belirteçleri geçersiz (uygulama güvenilir cihazla sessizce tazeler)
+  assert.equal((await srv.req('GET', '/api/auth/me', null, me.token)).status, 401);
+  me.token = relog.body.token;
 });
 
 test('avatar upload: raster only, magic bytes checked, stored under data/avatars, served nosniff', async () => {

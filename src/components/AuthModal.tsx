@@ -32,6 +32,8 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
+  // Güvenilir cihaz: işaretliyse bu cihazda oturum kalıcıdır (sonraki açılışlarda giriş ekranı gelmez)
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // Kayıt 2. adımı: e-postaya gönderilen kod
@@ -107,7 +109,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
     setBusy(true);
     setError('');
     try {
-      const u = await register(username.trim(), email.trim(), password, c);
+      const u = await register(username.trim(), email.trim(), password, c, remember);
       setPassword('');
       setStep('form');
       onWelcome(u.username);
@@ -132,7 +134,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
     setBusy(true);
     setError('');
     try {
-      const u = await login(username.trim(), password);
+      const u = await login(username.trim(), password, remember);
       setPassword('');
       onWelcome(u.username);
     } catch (err) {
@@ -248,6 +250,13 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              <label className="flex cursor-pointer items-start gap-2.5 px-1 text-sm text-ink">
+                <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#FFC300]" />
+                <span>
+                  <b className="font-semibold">Bu cihazı hatırla</b>
+                  <span className="block text-xs text-ink-muted">Bu cihazda tekrar giriş yapmanız gerekmez. Ortak kullanılan cihazlarda işareti kaldırın.</span>
+                </span>
+              </label>
               {isRegister && <p className="px-1 text-xs text-ink-muted">E-postanıza gönderilecek 6 haneli kodla hesabınızı doğrulayacaksınız.</p>}
             </div>
           </>

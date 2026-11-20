@@ -52,7 +52,7 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
       body: body ? JSON.stringify(body) : undefined,
     });
     const text = await res.text();
-    return { status: res.status, body: text ? JSON.parse(text) : null };
+    return { status: res.status, body: text ? JSON.parse(text) : null, headers: res.headers };
   }
 
   /** Son gönderilen doğrulama kodu */

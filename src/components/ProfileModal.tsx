@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Camera, Clock3, Heart, KeyRound, Loader2, LogOut, MapPinPlus, MessageSquareText, Star, Trash2, UserRound } from 'lucide-react';
+import { AlertTriangle, Camera, Clock3, Heart, KeyRound, Loader2, LogOut, MapPinPlus, MessageSquareText, MonitorSmartphone, ShieldCheck, Star, Trash2, UserRound } from 'lucide-react';
 import type { MyProfile } from '../types';
 import { api } from '../api';
 import { useAuth } from '../hooks/useAuth';
@@ -9,6 +9,16 @@ import Avatar from './Avatar';
 import ModalShell from './ModalShell';
 
 const input = 'w-full rounded-2xl border-2 border-transparent bg-card px-4 py-2.5 text-sm font-medium text-ink outline-none focus:border-brand-dark';
+/** GET /api/auth/devices */
+interface TrustedDevice {
+  id: number;
+  label: string;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+  current: boolean;
+}
+
 const REPORT_TEXT = { closed: 'kapalı bildirdiniz', no_supplies: 'kağıt/sabun yok bildirdiniz', crowded: 'çok kalabalık bildirdiniz', open: 'açık / sorun yok bildirdiniz' } as const;
 
 interface Props {
@@ -20,7 +30,9 @@ interface Props {
 
 /** Kendi profilim: istatistikler, ad/biyografi, şifre, fotoğraf, etkinlik geçmişi */
 export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToast }: Props) {
-  const { updateUser, logout } = useAuth();
+  const { updateUser, logout, logoutAll } = useAuth();
+  const [devices, setDevices] = useState<TrustedDevice[] | null>(null);
+  const [confirmAll, setConfirmAll] = useState(false);
   const [p, setP] = useState<MyProfile | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
@@ -35,9 +47,28 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
     setDisplayName(data.user.displayName);
     setBio(data.user.bio);
   }, []);
+  const loadDevices = useCallback(async () => setDevices(await api<TrustedDevice[]>('/auth/devices')), []);
   useEffect(() => {
     load().catch((e) => onToast((e as Error).message, 'error'));
-  }, [load, onToast]);
+    loadDevices().catch(() => setDevices([]));
+  }, [load, loadDevices, onToast]);
+
+  const revokeDevice = (d: TrustedDevice) =>
+    run(`device-${d.id}`, async () => {
+      await api(`/auth/devices/${d.id}`, { method: 'DELETE' });
+      await loadDevices();
+    }, `${d.label} artık güvenilir değil.`);
+  const signOutEverywhere = async () => {
+    setBusy('all');
+    try {
+      await logoutAll();
+      onToast('Tüm cihazlardan çıkış yapıldı.', 'success');
+      onClose();
+    } catch (e) {
+      onToast((e as Error).message, 'error');
+      setBusy(null);
+    }
+  };
 
   const run = async (key: string, fn: () => Promise<void>, ok: string) => {
     setBusy(key);
@@ -188,9 +219,55 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
             )}
           </section>
 
-          <button type="button" onClick={() => { logout(); onClose(); }} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-sm font-bold text-ink">
-            <LogOut size={15} /> Çıkış Yap
+          <section className="mt-6" aria-label="Güvenilir cihazlar">
+            <h3 className="flex items-center gap-2 text-sm font-extrabold"><ShieldCheck size={15} /> Güvenilir cihazlar</h3>
+            <p className="mt-1 text-xs text-ink-muted">Bu cihazlarda tekrar giriş yapmanız gerekmez. Tanımadığınız bir cihazı kaldırın.</p>
+            {devices === null ? (
+              <Loader2 size={18} className="mx-auto mt-3 animate-spin text-ink-muted" />
+            ) : devices.length === 0 ? (
+              <p className="mt-2 text-sm text-ink-muted">Güvenilir cihaz yok.</p>
+            ) : (
+              <ul className="mt-2 space-y-1.5">
+                {devices.map((d) => (
+                  <li key={d.id} className="flex items-center gap-3 rounded-2xl bg-card px-3 py-2.5">
+                    <MonitorSmartphone size={18} className="shrink-0 text-ink-soft" />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-1.5 text-sm font-bold">
+                        <span className="truncate">{d.label}</span>
+                        {d.current && <span className="shrink-0 rounded-full bg-brand px-2 py-0.5 text-[10px] font-extrabold text-onbrand">Bu cihaz</span>}
+                      </span>
+                      <span className="block text-[11px] text-ink-muted">Son kullanım {relTime(d.lastUsedAt)}</span>
+                    </span>
+                    {!d.current && (
+                      <button type="button" onClick={() => void revokeDevice(d)} disabled={busy === `device-${d.id}`} aria-label={`${d.label} cihazını kaldır`}
+                        className="rounded-xl p-2 text-ink-muted hover:bg-red-500/10 hover:text-red-600 disabled:opacity-50">
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <button type="button" onClick={() => { void logout(); onClose(); }} className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-card py-3 text-sm font-bold text-ink">
+            <LogOut size={15} /> Bu cihazdan çıkış yap
           </button>
+          {confirmAll ? (
+            <div className="mt-2 rounded-2xl bg-red-500/10 p-3" role="alertdialog" aria-label="Tüm cihazlardan çıkış onayı">
+              <p className="text-sm font-semibold text-red-700 dark:text-red-400">Bu cihaz dahil tüm cihazlardaki oturumlarınız kapatılacak.</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setConfirmAll(false)} className="rounded-xl bg-surface py-2.5 text-sm font-bold text-ink">Vazgeç</button>
+                <button type="button" onClick={() => void signOutEverywhere()} disabled={busy === 'all'} className="flex items-center justify-center gap-1.5 rounded-xl bg-red-600 py-2.5 text-sm font-bold text-white disabled:opacity-60">
+                  {busy === 'all' && <Loader2 size={14} className="animate-spin" />} Evet, çıkış yap
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setConfirmAll(true)} className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl py-2.5 text-sm font-bold text-red-600 hover:bg-red-500/10">
+              <LogOut size={15} /> Tüm cihazlardan çıkış yap
+            </button>
+          )}
         </div>
       )}
     </ModalShell>

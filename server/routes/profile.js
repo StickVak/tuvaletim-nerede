@@ -95,7 +95,13 @@ export function profileRoutes(db, { avatars, writeLimit }) {
     const { currentPassword, newPassword } = req.body ?? {};
     if (!verifyPassword(currentPassword ?? '', (await me(req)).password_hash)) return res.status(400).json({ error: 'Mevcut şifre hatalı.' });
     if (String(newPassword ?? '').length < 6) return res.status(400).json({ error: 'Yeni şifre en az 6 karakter olmalı.' });
-    await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [hashPassword(String(newPassword)), req.user.id]);
+    // Güvenlik: şifre değişince bu cihaz dışındaki güvenilir cihazlar iptal edilir ve eski erişim belirteçleri geçersizleşir.
+    // Bu cihaz (güvenilirse) istemcinin sessiz oturum tazelemesiyle kesintisiz devam eder.
+    const now = new Date().toISOString();
+    await db.batch([
+      ['UPDATE users SET password_hash = ?, tokens_valid_after = ? WHERE id = ?', [hashPassword(String(newPassword)), now, req.user.id]],
+      ['UPDATE trusted_devices SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL AND id != ?', [now, req.user.id, req.auth?.deviceId ?? -1]],
+    ]);
     res.status(204).end();
   });
 

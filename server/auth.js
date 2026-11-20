@@ -19,7 +19,8 @@ const sign = (data, secret) => createHmac('sha256', secret).update(data).digest(
 
 /** base64url(JSON payload) + "." + base64url(HMAC-SHA256) */
 export function signToken(payload, secret) {
-  const body = { ...payload, exp: payload.exp ?? Math.floor(Date.now() / 1000) + TOKEN_TTL_S };
+  // iat: milisaniye (tokens_valid_after ile aynı saniye içindeki girişler doğru ayrılsın)
+  const body = { ...payload, iat: payload.iat ?? Date.now(), exp: payload.exp ?? Math.floor(Date.now() / 1000) + TOKEN_TTL_S };
   const data = Buffer.from(JSON.stringify(body)).toString('base64url');
   return `${data}.${sign(data, secret).toString('base64url')}`;
 }
@@ -47,17 +48,29 @@ export const publicUser = (u) => ({
   avatarUrl: u.avatar_url ?? null,
 });
 
-/** Geçerli belirteç varsa req.user'ı veritabanındaki güncel kullanıcıyla doldurur. */
+/**
+ * Geçerli belirteç varsa req.user'ı veritabanındaki güncel kullanıcıyla doldurur; req.auth.deviceId = belirtecin cihazı.
+ * Belirteç reddedilir: kullanıcı yoksa, "tüm cihazlardan çıkış"/şifre değişikliğinden önce verilmişse
+ * (users.tokens_valid_after) ya da bağlı olduğu güvenilir cihaz iptal edilmiş / süresi dolmuşsa.
+ */
 export function optionalUser(db, secret) {
   return (req, _res, next) => {
+    req.user = null;
+    req.auth = { deviceId: null };
     const header = req.headers.authorization ?? '';
     const payload = header.startsWith('Bearer ') ? verifyToken(header.slice(7), secret) : null;
-    if (!payload) {
-      req.user = null;
-      return next();
-    }
-    db.get('SELECT id, username, role, display_name, avatar_url FROM users WHERE id = ?', [payload.id]).then((user) => {
-      req.user = user ? publicUser(user) : null;
+    if (!payload) return next();
+    db.get(
+      `SELECT u.id, u.username, u.role, u.display_name, u.avatar_url, u.tokens_valid_after,
+              d.user_id AS d_user, d.revoked_at AS d_revoked, d.expires_at AS d_expires
+       FROM users u LEFT JOIN trusted_devices d ON d.id = ? WHERE u.id = ?`,
+      [payload.did ?? -1, payload.id],
+    ).then((row) => {
+      if (!row) return next();
+      if (row.tokens_valid_after && (payload.iat ?? 0) < Date.parse(row.tokens_valid_after)) return next();
+      if (payload.did && (row.d_user !== row.id || row.d_revoked || Date.parse(row.d_expires) < Date.now())) return next();
+      req.user = publicUser(row);
+      req.auth = { deviceId: payload.did ?? null };
       next();
     }, next);
   };
