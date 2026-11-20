@@ -11,6 +11,7 @@ import { DEFAULT_LIMITS, rateLimit } from './ratelimit.js';
 import { createMailer } from './mailer.js';
 import { createPhotoStore, migrateInlinePhotos } from './photos.js';
 import { createDeviceStore } from './devices.js';
+import { legalRoutes } from './legal.js';
 import { dirname, join } from 'node:path';
 
 /**
@@ -31,11 +32,12 @@ export async function removeDemoData(db, avatars) {
  * cloudinary: cloudinaryConfig() sonucu; null ise fotoğraflar server/data altında yerel diske yazılır.
  * dataDir: yerel fotoğraf/avatar klasörlerinin kökü (varsayılan: dbPath'in klasörü).
  * adminKey: ADMIN_SECRET_KEY (yönetim API'si yalnızca bu anahtarla açılır; boşsa API kapalı).
+ * contactEmail: Gizlilik Politikası / Hizmet Şartları sayfalarındaki iletişim adresi (legalContact()).
  * limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar.
  */
 export async function createApp({
   dbPath, dbUrl, dbAuthToken, dataDir = dirname(dbPath), cloudinary = null, google = null,
-  secret, seedFile, adminKey = '', limits = {}, mailer = createMailer(),
+  secret, seedFile, adminKey = '', limits = {}, mailer = createMailer(), contactEmail = null,
 }) {
   if (adminKey && adminKey.length < MIN_ADMIN_KEY_LENGTH) {
     throw new Error(`ADMIN_SECRET_KEY en az ${MIN_ADMIN_KEY_LENGTH} karakter olmalı.`);
@@ -63,6 +65,7 @@ export async function createApp({
   app.locals.photos = photos;
   // Vite proxy (127.0.0.1) arkasında gerçek istemci IP'si X-Forwarded-For'dan okunur
   app.set('trust proxy', 'loopback');
+  app.use(legalRoutes({ contactEmail })); // /gizlilik-politikasi, /hizmet-sartlari (herkese açık düz HTML)
   app.use(express.json({ limit: '6mb' }));
   app.use(optionalUser(db, secret));
   app.use('/api/auth', authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimit, mailer, google }));

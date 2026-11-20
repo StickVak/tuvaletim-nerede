@@ -6,6 +6,7 @@ const ERRORS: Record<string, string> = {
   state: 'Giriş isteğinin süresi doldu ya da geçersiz. Lütfen tekrar deneyin.',
   email_unverified: 'Google hesabınızın e-posta adresi doğrulanmamış. Lütfen başka bir yöntemle giriş yapın.',
   account_conflict: 'Bu e-posta adresi başka bir Google hesabına bağlı. Lütfen şifrenizle giriş yapın.',
+  terms_required: "Yeni hesap açmak için Hizmet Şartları'nı ve Gizlilik Politikası'nı kabul etmelisiniz.",
 };
 const GENERIC = 'Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.';
 

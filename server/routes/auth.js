@@ -5,11 +5,13 @@ import { MailError, maskEmail } from '../mailer.js';
 import { clearDeviceCookie, createDeviceStore, readDeviceToken, setDeviceCookie } from '../devices.js';
 import { EMAIL_RE, USERNAME_INVALID, USERNAME_RE, conflictFromDbError, emailKey, identityConflict, uniqueUsername, usernameBase, usernameKey } from '../identity.js';
 import { OAuthError, createGoogleAuth } from '../google.js';
+import { LEGAL_VERSION } from '../legal.js';
 export const CODE_TTL_MS = 10 * 60 * 1000;
 export const RESEND_AFTER_MS = 60 * 1000;
 export const MAX_CODE_ATTEMPTS = 5;
 /** Belirsiz teslim (zaman aşımı) sonrası yeni kod istemeden önceki kısa bekleme */
 export const UNCERTAIN_RESEND_MS = 15 * 1000;
+export const TERMS_REQUIRED = "Devam etmek için Hizmet Şartları'nı ve Gizlilik Politikası'nı kabul etmelisiniz.";
 
 /**
  * Kesin gönderim hatasında kullanıcıya gösterilecek güvenli mesaj ve bekleme (sn). Sağlayıcı ayrıntısı içermez.
@@ -132,6 +134,8 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     const code = String(req.body?.code ?? '').trim();
     const err = (await emailError(email)) ?? (await usernameError(username));
     if (err) return fail(res, err);
+    // Hizmet Şartları + Gizlilik Politikası onayı zorunlu (kod tüketilmeden önce denetlenir)
+    if (req.body?.acceptTerms !== true) return res.status(400).json({ error: TERMS_REQUIRED, field: 'terms' });
     if (password.length < 6) return res.status(400).json({ error: 'Şifre en az 6 karakter olmalı.' });
     if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'E-postanıza gelen 6 haneli kodu girin.' });
 
@@ -152,14 +156,16 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
       return res.status(400).json({ error: `Kod hatalı. Kalan deneme: ${MAX_CODE_ATTEMPTS - attempts}` });
     }
 
+    const now = new Date().toISOString();
     // Kod tüketimi ve hesap oluşturma tek işlemde; aynı anda başkası aynı adı/e-postayı aldıysa UNIQUE indeks yakalar
     let created;
     try {
       [, created] = await db.batch([
         ['DELETE FROM email_codes WHERE email = ?', [email]],
-        [`INSERT INTO users (username, username_key, display_name, email, email_key, email_verified, password_hash, role, created_at)
-          VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)`, [
-          username, usernameKey(username), username, email, emailKey(email), hashPassword(password), 'user', new Date().toISOString(),
+        [`INSERT INTO users (username, username_key, display_name, email, email_key, email_verified, password_hash, role, created_at,
+            terms_accepted_at, terms_version)
+          VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)`, [
+          username, usernameKey(username), username, email, emailKey(email), hashPassword(password), 'user', now, now, LEGAL_VERSION,
         ]],
       ]);
     } catch (e) {
@@ -190,7 +196,8 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
 
   r.get('/google', (req, res) => {
     if (!googleAuth) return res.redirect(302, '/?auth_error=google_disabled');
-    res.redirect(302, googleAuth.begin(req, res));
+    // terms=1: kullanıcı arayüzde Hizmet Şartları/Gizlilik Politikası'nı kabul etti (yeni hesap için zorunlu)
+    res.redirect(302, googleAuth.begin(req, res, { terms: req.query.terms === '1' }));
   });
 
   /**
@@ -198,14 +205,21 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
    * (Google adından çakışmayan kullanıcı adı). E-postası doğrulanmamış eski bir hesaba bağlanırken, o adresle daha önce
    * başkasının açmış olabileceği hesaba karşı (ön ele geçirme) önceki şifre ve tüm oturumlar iptal edilir.
    */
-  async function googleUser(p) {
+  async function googleUser(p, { termsAccepted = false } = {}) {
+    const now = new Date().toISOString();
+    // Mevcut hesap şartları bu girişte kabul ettiyse (henüz kaydı yoksa) kabul anı yazılır
+    const recordTerms = (u) => (termsAccepted && !u.terms_accepted_at
+      ? [['UPDATE users SET terms_accepted_at = ?, terms_version = ? WHERE id = ?', [now, LEGAL_VERSION, u.id]]] : []);
     const bySub = await db.get('SELECT * FROM users WHERE google_id = ?', [p.sub]);
-    if (bySub) return { user: bySub, created: false };
+    if (bySub) {
+      const stmts = recordTerms(bySub);
+      if (stmts.length) await db.batch(stmts);
+      return { user: bySub, created: false };
+    }
     const byEmail = await db.get('SELECT * FROM users WHERE email_key = ?', [emailKey(p.email)]);
     if (byEmail) {
       if (byEmail.google_id) throw new OAuthError('account_conflict', 'e-posta başka bir Google hesabına bağlı');
-      const now = new Date().toISOString();
-      const stmts = [['UPDATE users SET google_id = ?, email_verified = 1 WHERE id = ?', [p.sub, byEmail.id]]];
+      const stmts = [['UPDATE users SET google_id = ?, email_verified = 1 WHERE id = ?', [p.sub, byEmail.id]], ...recordTerms(byEmail)];
       if (!byEmail.email_verified) {
         console.warn(`[google] doğrulanmamış e-postalı hesap (id=${byEmail.id}) Google'a bağlandı: önceki şifre ve oturumlar iptal edildi`);
         stmts.push(
@@ -216,14 +230,17 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
       await db.batch(stmts);
       return { user: byEmail, created: false };
     }
+    // Yeni hesap: şartların kabulü zorunlu (arayüz terms=1 ile başlatır; kabul edilmemişse hesap açılmaz)
+    if (!termsAccepted) throw new OAuthError('terms_required', 'yeni hesap için şartlar kabul edilmedi');
     for (let attempt = 0; ; attempt++) {
       const username = await uniqueUsername(db, usernameBase(p.name, p.email));
       try {
         const { lastId } = await db.run(
-          `INSERT INTO users (username, username_key, display_name, email, email_key, email_verified, google_id, avatar_url, password_hash, role, created_at)
-           VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, 'user', ?)`,
+          `INSERT INTO users (username, username_key, display_name, email, email_key, email_verified, google_id, avatar_url, password_hash, role,
+             created_at, terms_accepted_at, terms_version)
+           VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, 'user', ?, ?, ?)`,
           [username, usernameKey(username), (p.name ?? username).slice(0, 40), emailKey(p.email), emailKey(p.email), p.sub, p.picture,
-            `oauth$${randomBytes(16).toString('hex')}`, new Date().toISOString()], // şifreyle giriş yok (yalnızca Google)
+            `oauth$${randomBytes(16).toString('hex')}`, now, now, LEGAL_VERSION], // şifreyle giriş yok (yalnızca Google)
         );
         return { user: await db.get('SELECT * FROM users WHERE id = ?', [lastId]), created: true };
       } catch (e) {
@@ -244,7 +261,7 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     if (req.query.error) return back(req.query.error === 'access_denied' ? 'cancelled' : 'google');
     try {
       const profile = await googleAuth.exchange(String(req.query.code ?? ''), flow);
-      const { user, created } = await googleUser(profile);
+      const { user, created } = await googleUser(profile, { termsAccepted: flow.t === 1 });
       // Mevcut güvenilir cihaz mekanizması: uygulama bu çerezle sessizce oturum açar (belirteç URL'de taşınmaz)
       const device = await devices.issue(user.id, req.get('user-agent'));
       setDeviceCookie(req, res, device.token);

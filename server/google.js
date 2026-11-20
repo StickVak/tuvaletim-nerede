@@ -60,9 +60,10 @@ export function createGoogleAuth({ clientId, clientSecret, redirectUri = null, f
 
   return {
     /** Akışı başlatır: oauth çerezini yazar, Google yetkilendirme adresini döner */
-    begin(req, res) {
+    begin(req, res, { terms = false } = {}) {
       const redirect = redirectUri || `${req.protocol}://${req.get('host')}${CALLBACK_PATH}`;
-      const flow = { s: b64url(randomBytes(24)), v: b64url(randomBytes(32)), n: b64url(randomBytes(16)), r: redirect, e: Date.now() + FLOW_TTL_MS };
+      const flow = { s: b64url(randomBytes(24)), v: b64url(randomBytes(32)), n: b64url(randomBytes(16)), r: redirect, e: Date.now() + FLOW_TTL_MS, t: terms ? 1 : 0 };
+      // t: kullanıcı başlatırken şartları kabul etti (imzalı çerezde taşınır, dönüşte değiştirilemez)
       const payload = b64url(JSON.stringify(flow));
       res.append('Set-Cookie', `${OAUTH_COOKIE}=${payload}.${sign(payload)}; ${attrs(req, FLOW_TTL_MS / 1000)}`);
       const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');

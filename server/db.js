@@ -106,8 +106,10 @@ const ADDED_COLUMNS = {
   // tokens_valid_after: "tüm cihazlardan çıkış" / şifre değişikliği anı; öncesinde verilmiş erişim belirteçleri geçersiz
   // username_key/email_key: Türkçe kurallarıyla küçültülmüş, kırpılmış benzersizlik anahtarları (UNIQUE indeksli)
   // google_id: Google hesabı (sub) · email_verified: e-posta sahipliği kanıtlandı (OTP ya da Google)
+  // terms_accepted_at/terms_version: Hizmet Şartları + Gizlilik Politikası'nın kabul anı ve kabul edilen sürüm (LEGAL_VERSION)
   users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0', 'tokens_valid_after TEXT',
-    'username_key TEXT', 'email_key TEXT', 'google_id TEXT', 'email_verified INTEGER NOT NULL DEFAULT 0'],
+    'username_key TEXT', 'email_key TEXT', 'google_id TEXT', 'email_verified INTEGER NOT NULL DEFAULT 0',
+    'terms_accepted_at TEXT', 'terms_version TEXT'],
   // closed_at: yönetici onaylı kalıcı kapalı (haritada gösterilmez)
   places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)

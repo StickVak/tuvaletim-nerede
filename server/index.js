@@ -6,6 +6,7 @@ import { resolveAdminKey, resolveSecret } from './secret.js';
 import { createMailer } from './mailer.js';
 import { cloudinaryConfig } from './photos.js';
 import { CALLBACK_PATH, googleConfig } from './google.js';
+import { legalContact, PRIVACY_PATH, TERMS_PATH } from './legal.js';
 
 try {
   process.loadEnvFile();
@@ -44,8 +45,16 @@ console.log(
     : '[google] GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET tanımlı değil: "Google ile Giriş Yap" butonu gizli',
 );
 
+const contactEmail = legalContact(process.env);
+console.log(
+  contactEmail
+    ? `[legal] ${PRIVACY_PATH} ve ${TERMS_PATH} yayında — iletişim: ${contactEmail}`
+    : `[legal] UYARI: CONTACT_EMAIL (ya da MAIL_FROM) tanımlı değil; ${PRIVACY_PATH} ve ${TERMS_PATH} sayfalarında iletişim e-postası yok`,
+);
+
 const app = await createApp({
   mailer,
+  contactEmail,
   google,
   dbPath: here('./data/tuvaletim.db'),
   dbUrl,

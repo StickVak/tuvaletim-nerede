@@ -1,4 +1,5 @@
-import { HeartHandshake, Info, Monitor, Moon, Palette, Star, Sun, X } from 'lucide-react';
+import { FileText, HeartHandshake, Info, Monitor, Moon, Palette, ShieldCheck, Star, Sun, X } from 'lucide-react';
+import { PRIVACY_URL, TERMS_URL } from '../lib/legal';
 import type { ThemeSetting } from '../hooks/useTheme';
 import Logo from './Logo';
 
@@ -87,6 +88,28 @@ export default function SettingsDrawer({ open, onClose, placeCount, myVoteCount,
                 Sarı <b className="text-ink">+</b> butonuyla eklediğiniz mekanlar incelendikten sonra haritada yayınlanır.
               </li>
             </ul>
+          </section>
+
+          <section>
+            <h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-ink-muted">
+              <ShieldCheck size={13} /> Yasal
+            </h3>
+            <div className="overflow-hidden rounded-2xl bg-card">
+              {[
+                { href: TERMS_URL, label: 'Hizmet Şartları', icon: FileText },
+                { href: PRIVACY_URL, label: 'Gizlilik Politikası', icon: ShieldCheck },
+              ].map((l, i) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  target="_blank"
+                  rel="noopener"
+                  className={`flex items-center gap-3 px-3.5 py-3 text-sm font-semibold text-ink hover:bg-line/40 ${i ? 'border-t border-line' : ''}`}
+                >
+                  <l.icon size={16} className="text-ink-muted" /> {l.label}
+                </a>
+              ))}
+            </div>
           </section>
 
           <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-ink-muted">

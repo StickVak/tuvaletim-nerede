@@ -10,7 +10,7 @@ before(async () => {
 after(() => srv.close());
 
 const send = (email, username) => srv.req('POST', '/api/auth/send-code', { email, ...(username ? { username } : {}) });
-const reg = (body) => srv.req('POST', '/api/auth/register', { password: 'secret1', ...body });
+const reg = (body) => srv.req('POST', '/api/auth/register', { password: 'secret1', acceptTerms: true, ...body });
 
 test('kod iste → 6 haneli kod e-postaya gider; kodla kayıt → 201', async () => {
   const s = await send('Ayse@Example.com', 'ayse');

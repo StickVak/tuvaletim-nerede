@@ -8,7 +8,7 @@ export const ADMIN_KEY = 'test-admin-key-1234567890';
 
 /** Geçici veritabanıyla uygulamayı rastgele portta başlatır. */
 /** mailer: gerçek bir createMailer() örneği verilebilir (ör. sahte fetch'li Brevo); verilmezse sahte posta kutusu */
-export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY, cloudinary = null, mailer: customMailer = null, google = null } = {}) {
+export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY, cloudinary = null, mailer: customMailer = null, google = null, contactEmail = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'tn-test-'));
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(seed));
@@ -30,6 +30,7 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
   const app = await createApp({
     mailer: customMailer ?? mailer,
     google,
+    contactEmail,
     cloudinary,
     dbPath: join(dir, 'test.db'),
     secret: SECRET,
@@ -63,7 +64,7 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
   async function registerFull(username, password = 'secret1', email = `${username.toLowerCase()}@test.local`) {
     const sent = await req('POST', '/api/auth/send-code', { email, username });
     if (sent.status !== 200) throw new Error(`send-code ${sent.status}: ${sent.body?.error}`);
-    const r = await req('POST', '/api/auth/register', { username, email, password, code: lastCode(email) });
+    const r = await req('POST', '/api/auth/register', { username, email, password, code: lastCode(email), acceptTerms: true });
     if (r.status !== 201) throw new Error(`register ${r.status}: ${r.body?.error}`);
     return { token: r.body.token, user: r.body.user };
   }

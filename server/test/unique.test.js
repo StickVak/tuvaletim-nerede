@@ -57,7 +57,7 @@ test('kayıt adımında da (kod doğrulanırken) çakışma engellenir: arada ba
   await send('yaris@example.com', 'yarisci');
   const code = srv.lastCode('yaris@example.com');
   await srv.registerFull('Yarisci'); // bu arada başka biri aynı adı aldı
-  const r = await srv.req('POST', '/api/auth/register', { username: 'yarisci', email: 'yaris@example.com', password: 'secret1', code });
+  const r = await srv.req('POST', '/api/auth/register', { username: 'yarisci', email: 'yaris@example.com', password: 'secret1', code, acceptTerms: true });
   assert.equal(r.status, 409);
   assert.equal(r.body.error, USERNAME_TAKEN);
   assert.equal(await srv.db.get("SELECT 1 FROM users WHERE email_key = 'yaris@example.com'"), undefined);

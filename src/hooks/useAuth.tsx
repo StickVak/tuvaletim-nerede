@@ -17,7 +17,7 @@ interface AuthState {
   /** Kayıt 1. adım: e-postaya 6 haneli doğrulama kodu gönderir */
   sendCode: (email: string, username: string) => Promise<SendCodeResponse>;
   /** Kayıt 2. adım: kodu doğrular ve hesabı oluşturur */
-  register: (username: string, email: string, password: string, code: string, remember?: boolean) => Promise<User>;
+  register: (username: string, email: string, password: string, code: string, remember?: boolean, acceptTerms?: boolean) => Promise<User>;
   /** Bu cihazdan çıkış: yalnızca bu cihazın güvenilir kaydı iptal edilir */
   logout: () => Promise<void>;
   /** Tüm cihazlardan çıkış: tüm güvenilir cihazlar ve oturumlar iptal edilir */
@@ -80,8 +80,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
   const register = useCallback(
-    async (username: string, email: string, password: string, code: string, remember = true) =>
-      finish(await api('/auth/register', { method: 'POST', body: { username, email, password, code, remember } })),
+    async (username: string, email: string, password: string, code: string, remember = true, acceptTerms = false) =>
+      finish(await api('/auth/register', { method: 'POST', body: { username, email, password, code, remember, acceptTerms } })),
     [],
   );
   const clearLocal = () => {

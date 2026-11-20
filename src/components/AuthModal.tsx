@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowLeft, Clock3, Eye, EyeOff, Loader2, MailCheck, Rota
 import { useAuth, type AuthMode } from '../hooks/useAuth';
 import { ApiError, api } from '../api';
 import CodeInput from './CodeInput';
+import { PrivacyLink, TERMS_REQUIRED, TermsLink } from '../lib/legal';
 import { failureTitle, formatWait, resendLabel, retryHint, secondsLeft, sendButton, waitSecondsFromError } from '../lib/otp';
 
 const input =
@@ -47,7 +48,10 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
   // Alan bazlı uyarı (ör. 409: e-posta / kullanıcı adı zaten kayıtlı) ilgili kutunun altında gösterilir
-  const [fieldError, setFieldError] = useState<{ field: 'username' | 'email'; text: string } | null>(null);
+  const [fieldError, setFieldError] = useState<{ field: 'username' | 'email' | 'terms'; text: string } | null>(null);
+  // Hizmet Şartları + Gizlilik Politikası onayı: kayıtta (e-posta ya da Google) zorunlu
+  const [terms, setTerms] = useState(false);
+  const termsRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   // "Google ile Giriş Yap" yalnızca sunucuda GOOGLE_CLIENT_ID/SECRET tanımlıysa görünür
   const [googleOn, setGoogleOn] = useState(false);
@@ -77,6 +81,18 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   const expiresIn = secondsLeft(expiresAt, now);
   const cooldown = secondsLeft(cooldownUntil, now);
   const sendBtn = sendButton({ busy: sending, wait: cooldown });
+
+  const needTerms = () => {
+    setFieldError({ field: 'terms', text: TERMS_REQUIRED });
+    termsRef.current?.focus();
+  };
+
+  /** Google'a yönlendir; dönüşte oturum sessizce açılır. terms=1: şartlar kabul edildi (yeni hesap için zorunlu) */
+  const startGoogle = () => {
+    if (isRegister && !terms) return needTerms();
+    setGoogleBusy(true);
+    window.location.assign('/api/auth/google?terms=1');
+  };
 
   const switchTo = (m: AuthMode) => {
     setError('');
@@ -137,13 +153,13 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
     setBusy(true);
     setError('');
     try {
-      const u = await register(username.trim(), email.trim(), password, c, remember);
+      const u = await register(username.trim(), email.trim(), password, c, remember, terms);
       setPassword('');
       setStep('form');
       onWelcome(u.username);
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : null;
-      if (apiErr && (apiErr.field === 'email' || apiErr.field === 'username')) {
+      if (apiErr && (apiErr.field === 'email' || apiErr.field === 'username' || apiErr.field === 'terms')) {
         // Kod doğrulanırken bu ad/e-posta başkası tarafından alındıysa forma dön ve alanı işaretle
         setStep('form');
         setFieldError({ field: apiErr.field, text: apiErr.message });
@@ -163,6 +179,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
       if (!USERNAME_RE.test(username.trim())) return setError('Kullanıcı adı 3-30 karakter olmalı; harf, rakam, _ . - kullanılabilir.');
       if (!EMAIL_RE.test(email.trim())) return setError('Geçerli bir e-posta adresi girin.');
       if (password.length < 6) return setError('Şifre en az 6 karakter olmalı.');
+      if (!terms) return needTerms();
       if (cooldown > 0 || sending) return; // bekleme sürerken Enter ile de gönderilmez
       return requestCode();
     }
@@ -250,15 +267,19 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
               <>
                 <button
                   type="button"
-                  onClick={() => {
-                    setGoogleBusy(true);
-                    window.location.assign('/api/auth/google'); // Google'a yönlendir; dönüşte oturum sessizce açılır
-                  }}
+                  onClick={startGoogle}
                   disabled={googleBusy}
                   className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl bg-surface py-3 text-[15px] font-bold text-ink ring-1 ring-line transition hover:bg-card disabled:opacity-60"
                 >
                   {googleBusy ? <Loader2 size={18} className="animate-spin" /> : <GoogleLogo />} Google ile Giriş Yap
                 </button>
+                {/* Girişte Google yeni hesap da açabilir: devam etmek şartların kabulüdür (kayıtta ayrıca onay kutusu var) */}
+                {!isRegister && (
+                  <p className="mt-2 px-1 text-center text-[11px] leading-snug text-ink-muted">
+                    Google ile devam ederek <TermsLink className="font-semibold text-ink-soft underline" />'nı ve{' '}
+                    <PrivacyLink className="font-semibold text-ink-soft underline" />'nı kabul etmiş olursunuz.
+                  </p>
+                )}
                 <div className="mt-3 flex items-center gap-3 text-xs font-semibold text-ink-muted" aria-hidden>
                   <span className="h-px flex-1 bg-line" /> veya <span className="h-px flex-1 bg-line" />
                 </div>
@@ -331,6 +352,32 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
                   <span className="block text-xs text-ink-muted">Bu cihazda tekrar giriş yapmanız gerekmez. Ortak kullanılan cihazlarda işareti kaldırın.</span>
                 </span>
               </label>
+              {isRegister && (
+                <div>
+                  <label className="flex cursor-pointer items-start gap-2.5 px-1 text-sm text-ink">
+                    <input
+                      ref={termsRef}
+                      type="checkbox"
+                      checked={terms}
+                      onChange={(e) => {
+                        setTerms(e.target.checked);
+                        if (e.target.checked && fieldError?.field === 'terms') setFieldError(null);
+                      }}
+                      required
+                      aria-invalid={fieldError?.field === 'terms'}
+                      aria-describedby={fieldError?.field === 'terms' ? 'terms-error' : undefined}
+                      data-testid="accept-terms"
+                      className="mt-0.5 h-4 w-4 accent-[#FFC300]"
+                    />
+                    <span>
+                      <TermsLink />'nı ve <PrivacyLink />'nı okudum, kabul ediyorum.
+                    </span>
+                  </label>
+                  {fieldError?.field === 'terms' && (
+                    <p id="terms-error" role="alert" className="mt-1.5 px-1 text-xs font-semibold text-red-600">{fieldError.text}</p>
+                  )}
+                </div>
+              )}
               {isRegister && <p className="px-1 text-xs text-ink-muted">E-postanıza gönderilecek 6 haneli kodla hesabınızı doğrulayacaksınız.</p>}
             </div>
           </>

@@ -54,7 +54,7 @@ test('HTTPS arkasında (X-Forwarded-Proto: https) çerez Secure olur', async () 
 test('OTP ile kayıt tamamlanınca da cihaz güvenilir olur', async () => {
   const email = 'otpcihaz@test.local';
   await srv.req('POST', '/api/auth/send-code', { email, username: 'otpcihaz' });
-  const r = await srv.req('POST', '/api/auth/register', { username: 'otpcihaz', email, password: 'secret1', code: srv.lastCode(email) }, null, { 'User-Agent': IPHONE_UA });
+  const r = await srv.req('POST', '/api/auth/register', { username: 'otpcihaz', email, password: 'secret1', code: srv.lastCode(email), acceptTerms: true }, null, { 'User-Agent': IPHONE_UA });
   assert.equal(r.status, 201);
   const c = deviceCookie(r);
   assert.ok(c);

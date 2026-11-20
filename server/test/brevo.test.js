@@ -171,7 +171,7 @@ test('send-code + Brevo: başarılı gönderim → 200, kodla kayıt olunur', as
     const r = await sendCode(srv, 'brevo-ok@example.com');
     assert.equal(r.status, 200);
     assert.equal(r.body.delivery, 'sent');
-    const reg = await srv.req('POST', '/api/auth/register', { username: 'brevook', email: 'brevo-ok@example.com', password: 'secret1', code: b.sent[0].code });
+    const reg = await srv.req('POST', '/api/auth/register', { username: 'brevook', email: 'brevo-ok@example.com', password: 'secret1', code: b.sent[0].code, acceptTerms: true });
     assert.equal(reg.status, 201);
   } finally {
     srv.close();

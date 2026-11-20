@@ -53,6 +53,7 @@ npm run build:admin  # yönetim paneli derlemesi (admin/dist/)
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | İkisi de tanımlıysa **Google ile Giriş Yap** açılır (buton görünür); yoksa buton gizli | — |
 | `GOOGLE_REDIRECT_URI` | Google callback adresi; boşsa `APP_URL` + `/api/auth/google/callback`, o da yoksa isteğin adresinden türetilir | — |
 | `APP_URL` | Uygulamanın herkese açık adresi, ör. `https://tuvaletim-nerede.onrender.com` | — |
+| `CONTACT_EMAIL` | Gizlilik Politikası ve Hizmet Şartları sayfalarında gösterilen iletişim e-postası | `MAIL_FROM` adresi |
 | `BREVO_API_KEY` | Kayıt doğrulama kodlarını [Brevo](https://www.brevo.com) Transactional Email API ile gönderir (`POST /v3/smtp/email`, `api-key` başlığı) — **öncelikli** | — |
 | `RESEND_API_KEY` | Brevo yoksa [Resend](https://resend.com) | — |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Brevo ve Resend yoksa Nodemailer ile SMTP (465 → TLS) | port `587` |
@@ -92,9 +93,18 @@ Ana serviste `ADMIN_SECRET_KEY` tanımlı değilse yönetim API'si erişilemez o
 
 Ücretsiz planda servisler 15 dakika boşta kalınca uyur; panel ilk istekte ana servisi uyandırır (~1 dakika).
 
+### Hizmet Şartları ve Gizlilik Politikası
+
+Sunucu iki herkese açık sayfa üretir (JavaScript gerektirmeyen düz HTML, açık/koyu tema): **`/hizmet-sartlari`** ve **`/gizlilik-politikasi`** (kısa adresler `/terms`, `/privacy` yönlendirir). Metin `server/legal.js` içindedir; değiştirildiğinde `LEGAL_VERSION` güncellenmelidir. İletişim adresi `CONTACT_EMAIL` (yoksa `MAIL_FROM`).
+
+- **E-posta ile kayıt:** “Hizmet Şartları'nı ve Gizlilik Politikası'nı okudum, kabul ediyorum” kutusu zorunludur; işaretlenmeden kod gönderilmez. Sunucu da `acceptTerms: true` olmadan hesabı açmaz (`400`, `field: "terms"`, kod tüketilmez).
+- **Google ile:** Kayıt sekmesinde aynı kutu işaretlenmeden Google'a yönlendirilmez; giriş sekmesinde butonun altında “Google ile devam ederek … kabul etmiş olursunuz” notu vardır. Akış `/api/auth/google?terms=1` ile başlar ve bu bilgi imzalı OAuth çerezinde taşınır; kabul olmadan Google ile **yeni hesap açılmaz** (`/?auth_error=terms_required`). Mevcut hesapların girişi etkilenmez.
+- Kabul anı ve sürümü `users.terms_accepted_at` / `users.terms_version` sütunlarına yazılır.
+- Ayarlar menüsünde “Yasal” bölümünden iki sayfaya ulaşılır; `index.html` `rel="privacy-policy"` / `rel="terms-of-service"` bağlantılarını içerir.
+
 ### Google ile Giriş Yap kurulumu
 
-1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → OAuth consent screen**: uygulama adı, destek e-postası; kapsamlar `openid`, `email`, `profile`. Yayın durumu *Testing* iken yalnızca eklenen test kullanıcıları girebilir; herkese açmak için *Publish app*.
+1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → OAuth consent screen** (Branding): uygulama adı, destek e-postası, *Application home page* `https://tuvaletim-nerede.onrender.com`, *Privacy policy* `https://tuvaletim-nerede.onrender.com/gizlilik-politikasi`, *Terms of service* `https://tuvaletim-nerede.onrender.com/hizmet-sartlari`; kapsamlar `openid`, `email`, `profile`. Yayın durumu *Testing* iken yalnızca eklenen test kullanıcıları girebilir; herkese açmak için *Publish app*.
 2. **Credentials → Create credentials → OAuth client ID → Web application**:
    - *Authorized JavaScript origins*: `https://tuvaletim-nerede.onrender.com` (yerel: `http://localhost:5173`)
    - *Authorized redirect URIs*: **`https://tuvaletim-nerede.onrender.com/api/auth/google/callback`** (yerel: `http://localhost:5173/api/auth/google/callback`)

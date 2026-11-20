@@ -42,6 +42,9 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      # Gizlilik Politikası / Hizmet Şartları sayfalarındaki iletişim e-postası (boşsa MAIL_FROM adresi)
+      - key: CONTACT_EMAIL
+        sync: false
       # E-posta doğrulama kodları — birini doldurun (öncelik: Brevo → Resend → SMTP).
       # Hiçbiri yoksa kodlar yalnızca servis loglarına yazılır (kullanıcılar e-posta almaz).
       # Brevo: BREVO_API_KEY + MAIL_FROM ("Ad <adres>", Brevo'da doğrulanmış gönderen) birlikte gerekir.

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { startServer } from './helpers.js';
 import { googleConfig } from '../google.js';
+import { LEGAL_VERSION } from '../legal.js';
 
 const CLIENT_ID = 'test-client.apps.googleusercontent.com';
 const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
@@ -38,8 +39,8 @@ async function setup(claimsFor, extra = {}) {
 }
 
 /** Akışı başlat: Google'a yönlendirme adresi ve oauth çerezi */
-async function start(srv, g) {
-  const res = await fetch(`${srv.url}/api/auth/google`, { redirect: 'manual' });
+async function start(srv, g, { terms = true } = {}) {
+  const res = await fetch(`${srv.url}/api/auth/google${terms ? '?terms=1' : ''}`, { redirect: 'manual' });
   assert.equal(res.status, 302);
   const loc = new URL(res.headers.get('location'));
   g.state.challenge = loc.searchParams.get('code_challenge');
@@ -254,6 +255,46 @@ test('callback adresi verilmemişse istekten türetilir (Host + protokol) ve bel
     assert.equal(loc.searchParams.get('redirect_uri'), expected);
     await callback(srv, cookie, { code: 'iyi-kod', state: loc.searchParams.get('state') });
     assert.equal(g.state.calls[0].form.get('redirect_uri'), expected);
+  } finally {
+    srv.close();
+  }
+});
+
+test('şartlar: kabul edilmeden (terms=1 yok) Google ile yeni hesap açılmaz; mevcut hesap girişi etkilenmez', async () => {
+  const { srv, g } = await setup((n) => baseClaims(n));
+  try {
+    const a = await start(srv, g, { terms: false });
+    const r = await callback(srv, a.cookie, { code: 'iyi-kod', state: a.loc.searchParams.get('state') });
+    assert.equal(r.location, '/?auth_error=terms_required');
+    assert.equal(r.device, null);
+    assert.equal((await srv.db.get('SELECT COUNT(*) AS n FROM users')).n, 0);
+
+    // Kabul ederek açılan hesap: kabul anı ve sürümü kaydedilir
+    const b = await start(srv, g);
+    assert.equal((await callback(srv, b.cookie, { code: 'iyi-kod', state: b.loc.searchParams.get('state') })).location, '/?auth=google&new=1');
+    const u = await srv.db.get('SELECT terms_accepted_at, terms_version FROM users WHERE google_id = ?', ['google-sub-1']);
+    assert.ok(u.terms_accepted_at);
+    assert.equal(u.terms_version, LEGAL_VERSION);
+
+    // Aynı Google hesabı sonraki girişlerde terms=1 olmadan da girer
+    const c = await start(srv, g, { terms: false });
+    assert.equal((await callback(srv, c.cookie, { code: 'iyi-kod', state: c.loc.searchParams.get('state') })).location, '/?auth=google');
+  } finally {
+    srv.close();
+  }
+});
+
+test('şartlar: eski (kabul kaydı olmayan) hesap Google ile şartları kabul ederek girince kabul anı yazılır', async () => {
+  const { srv, g } = await setup((n) => baseClaims(n));
+  try {
+    await srv.registerFull('eskiuye', 'secret1', 'ayse.yilmaz@gmail.com');
+    await srv.db.run("UPDATE users SET terms_accepted_at = NULL, terms_version = NULL WHERE username = 'eskiuye'");
+    const a = await start(srv, g);
+    assert.equal((await callback(srv, a.cookie, { code: 'iyi-kod', state: a.loc.searchParams.get('state') })).location, '/?auth=google');
+    const u = await srv.db.get("SELECT terms_accepted_at, terms_version, google_id FROM users WHERE username = 'eskiuye'");
+    assert.equal(u.google_id, 'google-sub-1');
+    assert.ok(u.terms_accepted_at);
+    assert.equal(u.terms_version, LEGAL_VERSION);
   } finally {
     srv.close();
   }
