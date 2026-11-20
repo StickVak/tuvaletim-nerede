@@ -50,6 +50,9 @@ npm run build:admin  # yönetim paneli derlemesi (admin/dist/)
 | `ADMIN_PORT` | Yönetim paneli sunucusunun portu (Render'da `PORT` kullanılır) | `3002` |
 | `MAIN_API_URL` | Panel sunucusunun bağlanacağı ana sunucu adresi | `http://localhost:3001` |
 | `MAIN_APP_URL` | Paneldeki “Uygulamayı aç” bağlantısı (verilmezse `MAIN_API_URL`) | — |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | İkisi de tanımlıysa **Google ile Giriş Yap** açılır (buton görünür); yoksa buton gizli | — |
+| `GOOGLE_REDIRECT_URI` | Google callback adresi; boşsa `APP_URL` + `/api/auth/google/callback`, o da yoksa isteğin adresinden türetilir | — |
+| `APP_URL` | Uygulamanın herkese açık adresi, ör. `https://tuvaletim-nerede.onrender.com` | — |
 | `BREVO_API_KEY` | Kayıt doğrulama kodlarını [Brevo](https://www.brevo.com) Transactional Email API ile gönderir (`POST /v3/smtp/email`, `api-key` başlığı) — **öncelikli** | — |
 | `RESEND_API_KEY` | Brevo yoksa [Resend](https://resend.com) | — |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Brevo ve Resend yoksa Nodemailer ile SMTP (465 → TLS) | port `587` |
@@ -89,6 +92,14 @@ Ana serviste `ADMIN_SECRET_KEY` tanımlı değilse yönetim API'si erişilemez o
 
 Ücretsiz planda servisler 15 dakika boşta kalınca uyur; panel ilk istekte ana servisi uyandırır (~1 dakika).
 
+### Google ile Giriş Yap kurulumu
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → **APIs & Services → OAuth consent screen**: uygulama adı, destek e-postası; kapsamlar `openid`, `email`, `profile`. Yayın durumu *Testing* iken yalnızca eklenen test kullanıcıları girebilir; herkese açmak için *Publish app*.
+2. **Credentials → Create credentials → OAuth client ID → Web application**:
+   - *Authorized JavaScript origins*: `https://tuvaletim-nerede.onrender.com` (yerel: `http://localhost:5173`)
+   - *Authorized redirect URIs*: **`https://tuvaletim-nerede.onrender.com/api/auth/google/callback`** (yerel: `http://localhost:5173/api/auth/google/callback`)
+3. Render → ana servis → Environment: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `APP_URL=https://tuvaletim-nerede.onrender.com` (ya da `GOOGLE_REDIRECT_URI` ile adresi açıkça verin). Açılış logunda `[google] Google ile giriş açık — callback: …` satırı kullanılan adresi gösterir; Google Console'dakiyle **birebir** aynı olmalı (`redirect_uri_mismatch` hatası bundandır).
+
 ### Kalıcı veri: Turso + Cloudinary (Render ücretsiz planı için gerekli)
 
 Render'ın ücretsiz planında yerel disk kalıcı değildir: uyku, yeniden başlatma ya da dağıtımda `server/data/` sıfırlanır.
@@ -116,6 +127,8 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
   - **E-posta doğrulamalı kayıt:** Kullanıcı adı, e-posta (zorunlu, benzersiz) ve şifre girilip **Kod Gönder** denir; e-postaya 6 haneli kod gelir. Kod 10 dakika geçerlidir, en fazla 5 hatalı deneme hakkı vardır; aynı adrese 60 saniyede bir kod istenebilir (geri sayımlı **Kodu Tekrar Gönder**). Kodlar veritabanında düz metin değil HMAC olarak tutulur.
   - **Kararlı gönderim (Brevo / Resend / SMTP):** Her gönderim denemesi 8 sn ile sınırlıdır; zaman aşımı, ağ hatası ve sağlayıcının geçici (5xx / SMTP 4xx) hatalarında kısa bir beklemeyle **aynı kod** 1 kez yeniden gönderilir. Hatalar `timeout / network / rate_limit / provider / config` olarak loglanır (adres maskeli, kod yazılmaz). Zaman aşımında e-posta ulaşmış olabileceğinden kod korunur, kullanıcı kod adımına geçer ve 15 sn sonra yeni kod isteyebilir (`202 delivery: uncertain`). Kesin hatalarda kod silinir ve `503` + `Retry-After` ile ne zaman tekrar denenebileceği bildirilir; kullanıcıya sağlayıcı ayrıntısı gösterilmez.
   - **Arayüz:** Kod isteği sürerken buton kilitlenir (“Kod gönderiliyor…”, çift tıklama/Enter tek istek); bekleme gerekiyorsa saniyelik geri sayım gösterilir (“Tekrar dene (0:27)”, “27 saniye sonra tekrar deneyebilirsiniz.”).
+- **Benzersiz hesap:** Kullanıcı adı ve e-posta kırpılıp büyük/küçük harf duyarsız olarak tekildir — Türkçe harfler dahil (`users.username_key` / `email_key` UNIQUE indeksli; SQLite `NOCASE` yalnızca ASCII'yi eşitlediği için). `I/İ/ı/i` tek harf sayılır: büyük harfle yazan aynı hesaba ulaşır, `ali` / `alı` gibi birbirinin taklidi adlar açılamaz. Kayıtta ve Profil'de kullanıcı adı değiştirirken veritabanına yazmadan önce denetlenir (`409`, `field`): “Bu e-posta adresiyle zaten bir hesap mevcut. Lütfen giriş yapın.” / “Bu kullanıcı adı daha önce alınmış. Lütfen farklı bir kullanıcı adı seçin.” — uyarı ilgili alanın altında gösterilir. Eşzamanlı isteklerde UNIQUE indeks aynı yanıtı verir.
+- **Google ile Giriş Yap (OAuth 2.0 / OpenID Connect):** `GET /api/auth/google` → Google → `GET /api/auth/google/callback`. CSRF için `state` (imzalı, HttpOnly, 10 dk, tek kullanımlık `tn_oauth` çerezi), PKCE (S256) ve `nonce`; id_token'da `iss`, `aud`, `exp`, `nonce` ve `email_verified` denetlenir. Eşleştirme: `google_id` → aynı e-posta (mevcut hesaba bağlanır, yeni hesap açılmaz) → yeni hesap (Google adından çakışmayan kullanıcı adı, gerekirse sonuna rastgele rakam). E-postası doğrulanmamış eski bir hesaba bağlanırken (ön ele geçirmeye karşı) o hesabın eski şifresi ve oturumları iptal edilir. Başarıda güvenilir cihaz çerezi verilip uygulamaya dönülür; uygulama oturumu sessiz tazelemeyle açar (belirteç URL'de taşınmaz). Google ile açılan hesapların şifresi yoktur.
 - **Güvenilir cihaz / kalıcı oturum:** OTP'li kayıt ya da şifreli girişten sonra (“Bu cihazı hatırla”, varsayılan açık) cihaza 256 bit rastgele bir token verilir. Ham token yalnızca `HttpOnly; SameSite=Lax; Path=/api/auth` (HTTPS'te `Secure`) `tn_device` çerezinde durur; veritabanında (`trusted_devices`) sunucu sırrıyla HMAC özeti tutulur. Uygulama yeniden açılınca ya da erişim belirtecinin süresi dolunca istemci `/api/auth/refresh` ile sessizce yeni belirteç alır (`last_used_at` güncellenir, süre 90 gün ileri kayar); giriş ekranı gelmez. Token yok / geçersiz / iptal / süresi dolmuşsa standart giriş akışı. **Bu cihazdan çıkış** yalnızca bu cihazın kaydını iptal eder; Profil'deki **Tüm cihazlardan çıkış** tüm kayıtları iptal eder ve önceden verilmiş tüm erişim belirteçlerini hemen geçersiz kılar. Profil'de güvenilir cihazlar listelenir ve tek tek kaldırılabilir (kaldırılan cihazın belirteci de hemen geçersizleşir). Şifre değişince bu cihaz dışındakiler iptal edilir.
 - **Tuvalet ekleme:** **Dış mekan fotoğrafı (giriş / bina cephesi) zorunludur**; fotoğrafsız başvuru gönderilemez. Görsel tarayıcıda küçültülür, sunucuda içerik baytları doğrulanır; Cloudinary tanımlıysa oraya yüklenip kalıcı `secure_url` kaydedilir (gösterimde otomatik biçim/kalite `f_auto,q_auto`), değilse rastgele adla `server/data/photos/` altına yazılır. Mekan silinince ya da başvuru reddedilince görsel Cloudinary'den de silinir. Yönetim panelinde başvuru ve düzenleme ekranlarında büyük önizleme ve tam ekran görüntüleme vardır.
 - **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
@@ -191,6 +204,9 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | POST | `/api/auth/register` | — | `{ username, email, password, code, remember? }` → `{ token, user }` (+ güvenilir cihaz çerezi) |
 | POST | `/api/auth/login` | — | `{ username (veya e-posta), password, remember? }` → `{ token, user }` (+ güvenilir cihaz çerezi) |
 | GET | `/api/auth/me` | kullanıcı | Oturumdaki kullanıcı |
+| GET | `/api/auth/providers` | — | `{ google: boolean }` — Google butonu gösterilsin mi |
+| GET | `/api/auth/google` | — | Google'a yönlendirir (state + PKCE + nonce) |
+| GET | `/api/auth/google/callback` | — | Google dönüşü → `/?auth=google[&new=1]` ya da `/?auth_error=<kod>` |
 | POST | `/api/auth/refresh` | `tn_device` çerezi | Güvenilir cihazla sessiz oturum tazeleme → `{ token, user }` (geçersizse `401`) |
 | POST | `/api/auth/logout` | — | Bu cihazın güvenilir kaydını iptal eder, çerezi siler (`204`) |
 | POST | `/api/auth/logout-all` | kullanıcı | Tüm güvenilir cihazlar + tüm erişim belirteçleri iptal (`204`) |
@@ -201,7 +217,7 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | POST | `/api/places/:id/arrival` | kullanıcı | `{ wasOpen, hadPaper?, cleanliness, comfort, isPaid, priceAmount? }` varış değerlendirmesi → `{ place, contributions }` |
 | POST | `/api/places/:id/reports` | kullanıcı | `{ type: 'closed' \| 'no_supplies' \| 'crowded' \| 'open' }` canlı durum bildirimi |
 | PUT / DELETE | `/api/favorites/:placeId` | kullanıcı | Favoriye ekle / çıkar |
-| GET / PATCH | `/api/profile` | kullanıcı | Profilim (istatistik + etkinlik) / ad ve biyografi |
+| GET / PATCH | `/api/profile` | kullanıcı | Profilim (istatistik + etkinlik) / kullanıcı adı (`409` alınmışsa), görünen ad ve biyografi |
 | POST | `/api/profile/password` | kullanıcı | `{ currentPassword, newPassword }` |
 | PUT / DELETE | `/api/profile/avatar` | kullanıcı | `{ image: dataURL }` profil fotoğrafı yükle / kaldır |
 | GET | `/api/users/:id` | — | Herkese açık profil |

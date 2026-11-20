@@ -1,6 +1,7 @@
 import { createClient } from '@libsql/client';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, sep } from 'node:path';
+import { emailKey, usernameKey } from './identity.js';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS users (
@@ -103,7 +104,10 @@ CREATE TABLE IF NOT EXISTS seed_removed (id TEXT PRIMARY KEY);
 /** Sonradan eklenen sütunlar: yeni ve eski veritabanları aynı göçten geçer */
 const ADDED_COLUMNS = {
   // tokens_valid_after: "tüm cihazlardan çıkış" / şifre değişikliği anı; öncesinde verilmiş erişim belirteçleri geçersiz
-  users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0', 'tokens_valid_after TEXT'],
+  // username_key/email_key: Türkçe kurallarıyla küçültülmüş, kırpılmış benzersizlik anahtarları (UNIQUE indeksli)
+  // google_id: Google hesabı (sub) · email_verified: e-posta sahipliği kanıtlandı (OTP ya da Google)
+  users: ['display_name TEXT', 'avatar_url TEXT', 'bio TEXT', 'is_demo INTEGER NOT NULL DEFAULT 0', 'tokens_valid_after TEXT',
+    'username_key TEXT', 'email_key TEXT', 'google_id TEXT', 'email_verified INTEGER NOT NULL DEFAULT 0'],
   // closed_at: yönetici onaylı kalıcı kapalı (haritada gösterilmez)
   places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
@@ -162,9 +166,57 @@ export async function openDb(path, { seedFile, url, authToken } = {}) {
     await client.executeMultiple('INSERT INTO status_reports SELECT * FROM status_reports_old; DROP TABLE status_reports_old;');
   }
   await client.executeMultiple(SCHEMA);
+  const added = new Set();
   for (const [table, cols] of Object.entries(ADDED_COLUMNS)) {
     const have = new Set((await all(`PRAGMA table_info(${table})`)).map((r) => r.name));
-    for (const col of cols) if (!have.has(col.split(' ')[0])) await client.execute(`ALTER TABLE ${table} ADD COLUMN ${col}`);
+    for (const col of cols) {
+      if (have.has(col.split(' ')[0])) continue;
+      await client.execute(`ALTER TABLE ${table} ADD COLUMN ${col}`);
+      added.add(`${table}.${col.split(' ')[0]}`);
+    }
+  }
+  if (added.has('users.email_verified')) {
+    // OTP zorunluluğu (2026-11-18 11:50 UTC) sonrası açılan hesapların e-postası doğrulanmıştır; öncekiler doğrulanmamış
+    await client.execute("UPDATE users SET email_verified = 1 WHERE email IS NOT NULL AND created_at >= '2026-11-18T11:50:48Z'");
+  }
+  await migrateIdentityKeys();
+
+  /**
+   * Eski kayıtların benzersizlik anahtarlarını doldurur, sonra UNIQUE indeksleri kurar. Eski sürümde ASCII NOCASE'in
+   * kaçırdığı çakışmalar (ör. "Çağrı" / "çağrı") sunucuyu düşürmesin diye sonraki kayda ayırt edici ek verilir.
+   */
+  async function migrateIdentityKeys() {
+    const rows = await all('SELECT id, username, email, username_key, email_key FROM users ORDER BY id');
+    const takenU = new Set(rows.map((r) => r.username_key).filter(Boolean));
+    const takenE = new Set(rows.map((r) => r.email_key).filter(Boolean));
+    const updates = [];
+    for (const r of rows) {
+      let uk = r.username_key;
+      let ek = r.email_key;
+      if (!uk) {
+        uk = usernameKey(r.username);
+        if (takenU.has(uk)) {
+          console.warn(`[db] kullanıcı adı çakışması (eski kayıt) id=${r.id}: ayırt edici anahtar verildi`);
+          uk = `${uk}#${r.id}`;
+        }
+        takenU.add(uk);
+      }
+      if (!ek && r.email) {
+        ek = emailKey(r.email);
+        if (takenE.has(ek)) {
+          console.warn(`[db] e-posta çakışması (eski kayıt) id=${r.id}: ayırt edici anahtar verildi`);
+          ek = `${ek}#${r.id}`;
+        }
+        takenE.add(ek);
+      }
+      if (uk !== r.username_key || ek !== r.email_key) updates.push(['UPDATE users SET username_key = ?, email_key = ? WHERE id = ?', [uk, ek, r.id]]);
+    }
+    if (updates.length) await batch(updates);
+    await client.executeMultiple(`
+      CREATE UNIQUE INDEX IF NOT EXISTS users_username_key ON users(username_key);
+      CREATE UNIQUE INDEX IF NOT EXISTS users_email_key ON users(email_key);
+      CREATE UNIQUE INDEX IF NOT EXISTS users_google_id ON users(google_id);
+    `);
   }
 
   /**

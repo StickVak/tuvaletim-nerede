@@ -5,6 +5,7 @@ import { createApp } from './app.js';
 import { resolveAdminKey, resolveSecret } from './secret.js';
 import { createMailer } from './mailer.js';
 import { cloudinaryConfig } from './photos.js';
+import { CALLBACK_PATH, googleConfig } from './google.js';
 
 try {
   process.loadEnvFile();
@@ -35,8 +36,17 @@ if (process.env.RENDER && (!dbUrl || !cloudinary)) {
   console.warn('[uyarı] Render ücretsiz planında yerel disk kalıcı değildir: TURSO_* ve CLOUDINARY_* değişkenlerini tanımlayın.');
 }
 
+// Google ile giriş: GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET; callback GOOGLE_REDIRECT_URI ya da APP_URL'den türetilir
+const google = googleConfig(process.env);
+console.log(
+  google
+    ? `[google] Google ile giriş açık — callback: ${google.redirectUri ?? `(istekten türetilir) https://<alan-adı>${CALLBACK_PATH}`}`
+    : '[google] GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET tanımlı değil: "Google ile Giriş Yap" butonu gizli',
+);
+
 const app = await createApp({
   mailer,
+  google,
   dbPath: here('./data/tuvaletim.db'),
   dbUrl,
   dbAuthToken: process.env.TURSO_AUTH_TOKEN,

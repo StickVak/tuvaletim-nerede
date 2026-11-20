@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Clock3, Eye, EyeOff, Loader2, MailCheck, RotateCw, X } from 'lucide-react';
 import { useAuth, type AuthMode } from '../hooks/useAuth';
-import { ApiError } from '../api';
+import { ApiError, api } from '../api';
 import Logo from './Logo';
 import CodeInput from './CodeInput';
 import { failureTitle, formatWait, resendLabel, retryHint, secondsLeft, sendButton, waitSecondsFromError } from '../lib/otp';
@@ -11,6 +11,18 @@ const input =
 
 const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Google "G" logosu (Google'ın marka yönergelerindeki dört renkli simge) */
+function GoogleLogo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z" />
+    </svg>
+  );
+}
 
 /** Saniyede bir yenilenen "şu an" (geri sayımlar için) */
 function useNow(active: boolean) {
@@ -35,7 +47,17 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   // Güvenilir cihaz: işaretliyse bu cihazda oturum kalıcıdır (sonraki açılışlarda giriş ekranı gelmez)
   const [remember, setRemember] = useState(true);
   const [error, setError] = useState('');
+  // Alan bazlı uyarı (ör. 409: e-posta / kullanıcı adı zaten kayıtlı) ilgili kutunun altında gösterilir
+  const [fieldError, setFieldError] = useState<{ field: 'username' | 'email'; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  // "Google ile Giriş Yap" yalnızca sunucuda GOOGLE_CLIENT_ID/SECRET tanımlıysa görünür
+  const [googleOn, setGoogleOn] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  useEffect(() => {
+    api<{ google: boolean }>('/auth/providers', { silent: true })
+      .then((r) => setGoogleOn(Boolean(r?.google)))
+      .catch(() => setGoogleOn(false));
+  }, []);
   // Kayıt 2. adımı: e-postaya gönderilen kod
   const [step, setStep] = useState<'form' | 'code'>('form');
   const [code, setCode] = useState('');
@@ -59,6 +81,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
 
   const switchTo = (m: AuthMode) => {
     setError('');
+    setFieldError(null);
     setNotice(null);
     setStep('form');
     openAuth(m);
@@ -89,6 +112,12 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
       }
     } catch (err) {
       const apiErr = err instanceof ApiError ? err : null;
+      if (apiErr && (apiErr.field === 'email' || apiErr.field === 'username')) {
+        // 409 / 400: ilgili alanın altında net uyarı (kod gönderilmedi)
+        setFieldError({ field: apiErr.field, text: apiErr.message });
+        if (fromCodeStep) setStep('form');
+        return;
+      }
       const wait = waitSecondsFromError(apiErr);
       if (wait) {
         const until = Date.now() + wait * 1000;
@@ -114,6 +143,13 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
       setStep('form');
       onWelcome(u.username);
     } catch (err) {
+      const apiErr = err instanceof ApiError ? err : null;
+      if (apiErr && (apiErr.field === 'email' || apiErr.field === 'username')) {
+        // Kod doğrulanırken bu ad/e-posta başkası tarafından alındıysa forma dön ve alanı işaretle
+        setStep('form');
+        setFieldError({ field: apiErr.field, text: apiErr.message });
+        return;
+      }
       setError((err as Error).message);
       setCode(''); // hatalı/süresi dolmuş kod: kutuları temizle, ilk kutuya dön
     } finally {
@@ -214,27 +250,69 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
               ))}
             </div>
 
-            <div className="mt-4 space-y-3">
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder={isRegister ? 'Kullanıcı adı' : 'Kullanıcı adı veya e-posta'}
-                aria-label={isRegister ? 'Kullanıcı adı' : 'Kullanıcı adı veya e-posta'}
-                autoComplete="username"
-                autoFocus
-                className={input}
-              />
-              {isRegister && (
+            {googleOn && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGoogleBusy(true);
+                    window.location.assign('/api/auth/google'); // Google'a yönlendir; dönüşte oturum sessizce açılır
+                  }}
+                  disabled={googleBusy}
+                  className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl bg-surface py-3 text-[15px] font-bold text-ink ring-1 ring-line transition hover:bg-card disabled:opacity-60"
+                >
+                  {googleBusy ? <Loader2 size={18} className="animate-spin" /> : <GoogleLogo />} Google ile Giriş Yap
+                </button>
+                <div className="mt-3 flex items-center gap-3 text-xs font-semibold text-ink-muted" aria-hidden>
+                  <span className="h-px flex-1 bg-line" /> veya <span className="h-px flex-1 bg-line" />
+                </div>
+              </>
+            )}
+
+            <div className={`${googleOn ? 'mt-3' : 'mt-4'} space-y-3`}>
+              <div>
                 <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="E-posta"
-                  aria-label="E-posta"
-                  autoComplete="email"
-                  className={input}
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    if (fieldError?.field === 'username') setFieldError(null);
+                  }}
+                  placeholder={isRegister ? 'Kullanıcı adı' : 'Kullanıcı adı veya e-posta'}
+                  aria-label={isRegister ? 'Kullanıcı adı' : 'Kullanıcı adı veya e-posta'}
+                  aria-invalid={fieldError?.field === 'username'}
+                  aria-describedby={fieldError?.field === 'username' ? 'username-error' : undefined}
+                  autoComplete="username"
+                  autoFocus
+                  className={`${input} ${fieldError?.field === 'username' ? '!border-red-500' : ''}`}
                 />
+                {isRegister && fieldError?.field === 'username' && (
+                  <p id="username-error" role="alert" className="mt-1.5 px-1 text-xs font-semibold text-red-600">{fieldError.text}</p>
+                )}
+              </div>
+              {isRegister && (
+                <div>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (fieldError?.field === 'email') setFieldError(null);
+                    }}
+                    placeholder="E-posta"
+                    aria-label="E-posta"
+                    aria-invalid={fieldError?.field === 'email'}
+                    aria-describedby={fieldError?.field === 'email' ? 'email-error' : undefined}
+                    autoComplete="email"
+                    className={`${input} ${fieldError?.field === 'email' ? '!border-red-500' : ''}`}
+                  />
+                  {fieldError?.field === 'email' && (
+                    <p id="email-error" role="alert" className="mt-1.5 flex flex-wrap items-center gap-x-1 px-1 text-xs font-semibold text-red-600">
+                      {fieldError.text}
+                      <button type="button" onClick={() => switchTo('login')} className="font-bold text-ink underline">Giriş yap</button>
+                    </p>
+                  )}
+                </div>
               )}
               <div className="relative">
                 <input

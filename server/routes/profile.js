@@ -4,6 +4,7 @@ import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, verifyPassword } from '../auth.js';
 import { contributionsOf } from './places.js';
 import { PhotoError } from '../photos.js';
+import { USERNAME_INVALID, USERNAME_RE, conflictFromDbError, identityConflict, usernameKey } from '../identity.js';
 
 const AVATAR_FILE_RE = /^\d+-[a-f0-9]+\.(jpg|png|webp|gif)$/;
 const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
@@ -76,6 +77,15 @@ export function profileRoutes(db, { avatars, writeLimit }) {
   r.patch('/', writeLimit, async (req, res) => {
     const b = req.body ?? {};
     const sets = {};
+    if (b.username !== undefined) {
+      // Kullanıcı adı değiştirme: biçim + benzersizlik (büyük/küçük harf duyarsız; kendi adının harf değişimi serbest)
+      const v = String(b.username).trim();
+      if (!USERNAME_RE.test(v)) return res.status(400).json({ error: USERNAME_INVALID, field: 'username' });
+      const c = await identityConflict(db, { username: v, exceptUserId: req.user.id });
+      if (c) return res.status(c.status).json({ error: c.error, field: c.field });
+      sets.username = v;
+      sets.username_key = usernameKey(v);
+    }
     if (b.displayName !== undefined) {
       const v = String(b.displayName).trim();
       if (v.length < 1 || v.length > 40) return res.status(400).json({ error: 'Görünen ad 1-40 karakter olmalı.' });
@@ -87,7 +97,15 @@ export function profileRoutes(db, { avatars, writeLimit }) {
       sets.bio = v || null;
     }
     const keys = Object.keys(sets);
-    if (keys.length) await db.run(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, [...keys.map((k) => sets[k]), req.user.id]);
+    if (keys.length) {
+      try {
+        await db.run(`UPDATE users SET ${keys.map((k) => `${k} = ?`).join(', ')} WHERE id = ?`, [...keys.map((k) => sets[k]), req.user.id]);
+      } catch (e) {
+        const c = conflictFromDbError(e);
+        if (c) return res.status(c.status).json({ error: c.error, field: c.field });
+        throw e;
+      }
+    }
     res.json({ user: profileUser(await me(req)) });
   });
 

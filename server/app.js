@@ -34,7 +34,7 @@ export async function removeDemoData(db, avatars) {
  * limits: false → hız sınırı yok (testler); nesne → DEFAULT_LIMITS üzerine yazar.
  */
 export async function createApp({
-  dbPath, dbUrl, dbAuthToken, dataDir = dirname(dbPath), cloudinary = null,
+  dbPath, dbUrl, dbAuthToken, dataDir = dirname(dbPath), cloudinary = null, google = null,
   secret, seedFile, adminKey = '', limits = {}, mailer = createMailer(),
 }) {
   if (adminKey && adminKey.length < MIN_ADMIN_KEY_LENGTH) {
@@ -65,7 +65,7 @@ export async function createApp({
   app.set('trust proxy', 'loopback');
   app.use(express.json({ limit: '6mb' }));
   app.use(optionalUser(db, secret));
-  app.use('/api/auth', authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimit, mailer }));
+  app.use('/api/auth', authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimit, mailer, google }));
   app.use('/api/places', placeRoutes(db, writeLimit, photos));
   app.use('/api/favorites', favoriteRoutes(db, writeLimit));
   app.use('/api/pending', pendingRoutes(db, writeLimit, photos));

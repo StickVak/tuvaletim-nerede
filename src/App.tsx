@@ -28,6 +28,7 @@ import Sidebar from './components/Sidebar';
 import SearchBox from './components/SearchBox';
 import Toasts from './components/Toasts';
 import InstallBanner from './components/InstallBanner';
+import { readAuthReturn, stripAuthParams } from './lib/authReturn';
 import LocationBanner from './components/LocationBanner';
 import AuthModal from './components/AuthModal';
 import AccountButton from './components/AccountButton';
@@ -81,6 +82,18 @@ export default function App() {
     setToasts((t) => [...t.slice(-2), { id, text, tone }]);
     window.setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3800);
   }, []);
+
+  // Google ile girişten dönüş (?auth=google / ?auth_error=…): bildirim göster, adres çubuğunu temizle.
+  // Oturumun kendisi AuthProvider'ın açılıştaki sessiz tazelemesiyle (güvenilir cihaz çerezi) açılır.
+  const authReturnShown = useRef(false);
+  useEffect(() => {
+    if (authReturnShown.current) return;
+    authReturnShown.current = true;
+    const r = readAuthReturn(window.location.search);
+    if (!r) return;
+    toast(r.text, r.tone);
+    window.history.replaceState(null, '', stripAuthParams(window.location.href));
+  }, [toast]);
 
   useEffect(() => {
     const onErr = () => toast('Tarayıcı depolama alanı dolu.', 'error');

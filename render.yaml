@@ -34,6 +34,14 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      # Google ile Giriş Yap: ikisi de doluysa buton görünür. Google Console'daki "Authorized redirect URI":
+      #   https://<ana-servis>.onrender.com/api/auth/google/callback  (APP_URL'den türetilir)
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
       # E-posta doğrulama kodları — birini doldurun (öncelik: Brevo → Resend → SMTP).
       # Hiçbiri yoksa kodlar yalnızca servis loglarına yazılır (kullanıcılar e-posta almaz).
       # Brevo: BREVO_API_KEY + MAIL_FROM ("Ad <adres>", Brevo'da doğrulanmış gönderen) birlikte gerekir.

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Camera, Clock3, Heart, KeyRound, Loader2, LogOut, MapPinPlus, MessageSquareText, MonitorSmartphone, ShieldCheck, Star, Trash2, UserRound } from 'lucide-react';
 import type { MyProfile } from '../types';
-import { api } from '../api';
+import { ApiError, api } from '../api';
 import { useAuth } from '../hooks/useAuth';
 import { readImageAsDataUrl } from '../lib/image';
 import { joinedLabel, relTime } from '../lib/time';
@@ -35,6 +35,8 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
   const [confirmAll, setConfirmAll] = useState(false);
   const [p, setP] = useState<MyProfile | null>(null);
   const [displayName, setDisplayName] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameError, setUsernameError] = useState('');
   const [bio, setBio] = useState('');
   const [currentPw, setCurrentPw] = useState('');
   const [newPw, setNewPw] = useState('');
@@ -45,6 +47,7 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
     const data = await api<MyProfile>('/profile');
     setP(data);
     setDisplayName(data.user.displayName);
+    setUsername(data.user.username);
     setBio(data.user.bio);
   }, []);
   const loadDevices = useCallback(async () => setDevices(await api<TrustedDevice[]>('/auth/devices')), []);
@@ -86,8 +89,21 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
     await load();
   };
 
-  const saveProfile = () =>
-    run('profile', async () => applyUser(await api('/profile', { method: 'PATCH', body: { displayName, bio } })), 'Profiliniz güncellendi.');
+  const saveProfile = async () => {
+    setUsernameError('');
+    setBusy('profile');
+    try {
+      const changed = p && username.trim() !== p.user.username;
+      await applyUser(await api('/profile', { method: 'PATCH', body: { displayName, bio, ...(changed ? { username: username.trim() } : {}) } }));
+      onToast('Profiliniz güncellendi.', 'success');
+    } catch (e) {
+      // 409 "Bu kullanıcı adı daha önce alınmış…" / 400 biçim hatası: alanın altında göster
+      if (e instanceof ApiError && e.field === 'username') setUsernameError(e.message);
+      else onToast((e as Error).message, 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
   const changePassword = () =>
     run('password', async () => {
       await api('/profile/password', { method: 'POST', body: { currentPassword: currentPw, newPassword: newPw } });
@@ -164,6 +180,26 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
 
           <section className="mt-6 space-y-2">
             <h3 className="flex items-center gap-2 text-sm font-extrabold"><UserRound size={15} /> Profil bilgileri</h3>
+            <label className="block">
+              <span className="mb-1 block text-xs font-bold text-ink-soft">Kullanıcı adı</span>
+              <span className={`flex items-center rounded-2xl border-2 bg-card pl-4 focus-within:border-brand-dark ${usernameError ? 'border-red-500' : 'border-transparent'}`}>
+                <span className="text-sm font-bold text-ink-muted">@</span>
+                <input
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setUsernameError('');
+                  }}
+                  maxLength={30}
+                  aria-label="Kullanıcı adı"
+                  aria-invalid={Boolean(usernameError)}
+                  aria-describedby={usernameError ? 'profile-username-error' : undefined}
+                  autoComplete="username"
+                  className="w-full bg-transparent px-1 py-2.5 text-sm font-medium text-ink outline-none"
+                />
+              </span>
+              {usernameError && <span id="profile-username-error" role="alert" className="mt-1 block text-xs font-semibold text-red-600">{usernameError}</span>}
+            </label>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Görünen ad</span>
               <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} className={input} />

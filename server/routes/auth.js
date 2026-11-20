@@ -1,11 +1,10 @@
-import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, signToken, verifyPassword } from '../auth.js';
 import { MailError, maskEmail } from '../mailer.js';
 import { clearDeviceCookie, createDeviceStore, readDeviceToken, setDeviceCookie } from '../devices.js';
-
-const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { EMAIL_RE, USERNAME_INVALID, USERNAME_RE, conflictFromDbError, emailKey, identityConflict, uniqueUsername, usernameBase, usernameKey } from '../identity.js';
+import { OAuthError, createGoogleAuth } from '../google.js';
 export const CODE_TTL_MS = 10 * 60 * 1000;
 export const RESEND_AFTER_MS = 60 * 1000;
 export const MAX_CODE_ATTEMPTS = 5;
@@ -35,7 +34,7 @@ const normEmail = (v) => String(v ?? '').trim().toLowerCase();
  * Kayıt: önce POST /send-code ile e-postaya 6 haneli kod, sonra POST /register ile kod doğrulanıp hesap açılır.
  * mailer.sendVerificationCode(to, code) — bkz. server/mailer.js
  */
-export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimit, mailer }) {
+export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimit, mailer, google = null }) {
   const r = asyncRouter();
   r.use('/register', registerLimit);
   r.use('/send-code', sendCodeLimit);
@@ -61,22 +60,24 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   // Kod düz metin saklanmaz; e-postaya bağlı HMAC
   const codeHash = (email, code) => createHmac('sha256', secret).update(`email-code:${email}:${code}`).digest('hex');
 
+  /** Biçim (400) ve benzersizlik (409, büyük/küçük harf duyarsız) kontrolleri: [durum, mesaj, alan] ya da null */
   const usernameError = async (username) => {
-    if (!USERNAME_RE.test(username)) return [400, 'Kullanıcı adı 3-30 karakter olmalı; harf, rakam, _ . - kullanılabilir.'];
-    if (await db.get('SELECT 1 FROM users WHERE username = ?', [username])) return [409, 'Bu kullanıcı adı alınmış.'];
-    return null;
+    if (!USERNAME_RE.test(username)) return [400, USERNAME_INVALID, 'username'];
+    const c = await identityConflict(db, { username });
+    return c && [c.status, c.error, c.field];
   };
   const emailError = async (email) => {
-    if (!email || !EMAIL_RE.test(email) || email.length > 254) return [400, 'Geçerli bir e-posta adresi girin.'];
-    if (await db.get('SELECT 1 FROM users WHERE email = ?', [email])) return [409, 'Bu e-posta ile kayıtlı bir hesap var. Giriş yapmayı deneyin.'];
-    return null;
+    if (!email || !EMAIL_RE.test(email) || email.length > 254) return [400, 'Geçerli bir e-posta adresi girin.', 'email'];
+    const c = await identityConflict(db, { email });
+    return c && [c.status, c.error, c.field];
   };
+  const fail = (res, err) => res.status(err[0]).json({ error: err[1], ...(err[2] ? { field: err[2] } : {}) });
 
   r.post('/send-code', async (req, res) => {
     const email = normEmail(req.body?.email);
     const username = req.body?.username === undefined ? null : String(req.body.username).trim();
     const err = (await emailError(email)) ?? (username !== null ? await usernameError(username) : null);
-    if (err) return res.status(err[0]).json({ error: err[1] });
+    if (err) return fail(res, err);
 
     const prev = await db.get('SELECT sent_at, next_send_at FROM email_codes WHERE email = ?', [email]);
     const nextAt = prev ? Date.parse(prev.next_send_at ?? '') || Date.parse(prev.sent_at) + RESEND_AFTER_MS : 0;
@@ -129,8 +130,8 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     const email = normEmail(req.body?.email);
     const password = String(req.body?.password ?? '');
     const code = String(req.body?.code ?? '').trim();
-    const err = (await usernameError(username)) ?? (await emailError(email));
-    if (err) return res.status(err[0]).json({ error: err[1] });
+    const err = (await emailError(email)) ?? (await usernameError(username));
+    if (err) return fail(res, err);
     if (password.length < 6) return res.status(400).json({ error: 'Şifre en az 6 karakter olmalı.' });
     if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'E-postanıza gelen 6 haneli kodu girin.' });
 
@@ -151,13 +152,21 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
       return res.status(400).json({ error: `Kod hatalı. Kalan deneme: ${MAX_CODE_ATTEMPTS - attempts}` });
     }
 
-    // Kod tüketimi ve hesap oluşturma tek işlemde
-    const [, created] = await db.batch([
-      ['DELETE FROM email_codes WHERE email = ?', [email]],
-      ['INSERT INTO users (username, display_name, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, ?, ?)', [
-        username, username, email, hashPassword(password), 'user', new Date().toISOString(),
-      ]],
-    ]);
+    // Kod tüketimi ve hesap oluşturma tek işlemde; aynı anda başkası aynı adı/e-postayı aldıysa UNIQUE indeks yakalar
+    let created;
+    try {
+      [, created] = await db.batch([
+        ['DELETE FROM email_codes WHERE email = ?', [email]],
+        [`INSERT INTO users (username, username_key, display_name, email, email_key, email_verified, password_hash, role, created_at)
+          VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?)`, [
+          username, usernameKey(username), username, email, emailKey(email), hashPassword(password), 'user', new Date().toISOString(),
+        ]],
+      ]);
+    } catch (e) {
+      const c = conflictFromDbError(e);
+      if (c) return res.status(c.status).json({ error: c.error, field: c.field });
+      throw e;
+    }
     const lastId = created.lastId;
     // OTP doğrulandı: bu cihaz güvenilir olur (sonraki açılışlarda giriş ekranı gelmez)
     await startSession(req, res, 201, { id: lastId, username, role: 'user', display_name: username, avatar_url: null });
@@ -165,7 +174,7 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
 
   r.post('/login', async (req, res) => {
     const login = String(req.body?.username ?? '').trim();
-    const user = await db.get('SELECT * FROM users WHERE username = ? OR email = ?', [login, login.toLowerCase()]);
+    const user = await db.get('SELECT * FROM users WHERE username_key = ? OR email_key = ?', [usernameKey(login), emailKey(login)]);
     if (!user || !verifyPassword(req.body?.password ?? '', user.password_hash)) {
       return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
     }
@@ -173,6 +182,79 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   });
 
   r.get('/me', requireUser, (req, res) => res.json({ user: req.user }));
+
+  // ---------------------------------------------------------------- Google ile giriş
+  const googleAuth = google ? createGoogleAuth(google, secret) : null;
+  /** Arayüz Google butonunu yalnızca yapılandırılmışsa gösterir */
+  r.get('/providers', (_req, res) => res.json({ google: Boolean(googleAuth) }));
+
+  r.get('/google', (req, res) => {
+    if (!googleAuth) return res.redirect(302, '/?auth_error=google_disabled');
+    res.redirect(302, googleAuth.begin(req, res));
+  });
+
+  /**
+   * Google hesabı → kullanıcı: önce google_id, sonra doğrulanmış e-posta ile mevcut hesaba bağlanır; yoksa yeni hesap
+   * (Google adından çakışmayan kullanıcı adı). E-postası doğrulanmamış eski bir hesaba bağlanırken, o adresle daha önce
+   * başkasının açmış olabileceği hesaba karşı (ön ele geçirme) önceki şifre ve tüm oturumlar iptal edilir.
+   */
+  async function googleUser(p) {
+    const bySub = await db.get('SELECT * FROM users WHERE google_id = ?', [p.sub]);
+    if (bySub) return { user: bySub, created: false };
+    const byEmail = await db.get('SELECT * FROM users WHERE email_key = ?', [emailKey(p.email)]);
+    if (byEmail) {
+      if (byEmail.google_id) throw new OAuthError('account_conflict', 'e-posta başka bir Google hesabına bağlı');
+      const now = new Date().toISOString();
+      const stmts = [['UPDATE users SET google_id = ?, email_verified = 1 WHERE id = ?', [p.sub, byEmail.id]]];
+      if (!byEmail.email_verified) {
+        console.warn(`[google] doğrulanmamış e-postalı hesap (id=${byEmail.id}) Google'a bağlandı: önceki şifre ve oturumlar iptal edildi`);
+        stmts.push(
+          ['UPDATE users SET password_hash = ?, tokens_valid_after = ? WHERE id = ?', [`oauth$${randomBytes(16).toString('hex')}`, now, byEmail.id]],
+          devices.revokeAllStmt(byEmail.id),
+        );
+      }
+      await db.batch(stmts);
+      return { user: byEmail, created: false };
+    }
+    for (let attempt = 0; ; attempt++) {
+      const username = await uniqueUsername(db, usernameBase(p.name, p.email));
+      try {
+        const { lastId } = await db.run(
+          `INSERT INTO users (username, username_key, display_name, email, email_key, email_verified, google_id, avatar_url, password_hash, role, created_at)
+           VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, 'user', ?)`,
+          [username, usernameKey(username), (p.name ?? username).slice(0, 40), emailKey(p.email), emailKey(p.email), p.sub, p.picture,
+            `oauth$${randomBytes(16).toString('hex')}`, new Date().toISOString()], // şifreyle giriş yok (yalnızca Google)
+        );
+        return { user: await db.get('SELECT * FROM users WHERE id = ?', [lastId]), created: true };
+      } catch (e) {
+        // Aynı anda aynı adı başkası aldıysa yeni adla bir kez daha dene
+        if (attempt === 0 && conflictFromDbError(e)?.field === 'username') continue;
+        if (conflictFromDbError(e)) throw new OAuthError('account_conflict', e.message);
+        throw e;
+      }
+    }
+  }
+
+  r.get('/google/callback', async (req, res) => {
+    const back = (code) => res.redirect(302, `/?auth_error=${code}`);
+    if (!googleAuth) return back('google_disabled');
+    const flow = googleAuth.consume(req, String(req.query.state ?? ''));
+    googleAuth.clearCookie(req, res);
+    if (!flow) return back('state');
+    if (req.query.error) return back(req.query.error === 'access_denied' ? 'cancelled' : 'google');
+    try {
+      const profile = await googleAuth.exchange(String(req.query.code ?? ''), flow);
+      const { user, created } = await googleUser(profile);
+      // Mevcut güvenilir cihaz mekanizması: uygulama bu çerezle sessizce oturum açar (belirteç URL'de taşınmaz)
+      const device = await devices.issue(user.id, req.get('user-agent'));
+      setDeviceCookie(req, res, device.token);
+      res.redirect(302, `/?auth=google${created ? '&new=1' : ''}`);
+    } catch (e) {
+      if (!(e instanceof OAuthError)) throw e;
+      console.warn(`[google] giriş başarısız kod=${e.code}: ${e.message}`);
+      back(e.code);
+    }
+  });
 
   /**
    * Sessiz oturum tazeleme: güvenilir cihaz çereziyle yeni erişim belirteci. Uygulama açılışında ya da belirteç
