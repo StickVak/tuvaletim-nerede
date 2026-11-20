@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, ArrowLeft, Clock3, Eye, EyeOff, Loader2, MailCheck, RotateCw, X } from 'lucide-react';
 import { useAuth, type AuthMode } from '../hooks/useAuth';
 import { ApiError, api } from '../api';
-import Logo from './Logo';
 import CodeInput from './CodeInput';
 import { failureTitle, formatWait, resendLabel, retryHint, secondsLeft, sendButton, waitSecondsFromError } from '../lib/otp';
 
@@ -185,12 +184,9 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
       <div className="absolute inset-0 animate-fade-in bg-black/50" onClick={closeAuth} />
       <form onSubmit={submit} noValidate className="relative w-full max-w-sm animate-sheet-in rounded-t-[32px] bg-surface p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-2xl sm:animate-slide-up sm:rounded-[32px]">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size={40} />
-            <div>
-              <h2 className="text-lg font-extrabold text-ink">{onCodeStep ? 'E-postanızı doğrulayın' : isRegister ? 'Kayıt Ol' : 'Giriş Yap'}</h2>
-              <p className="text-xs text-ink-muted">{onCodeStep ? 'Son adım: 6 haneli kod' : 'Tuvalet eklemek ve puanlamak için'}</p>
-            </div>
+          <div>
+            <h2 className="text-lg font-extrabold text-ink">{onCodeStep ? 'E-postanızı doğrulayın' : isRegister ? 'Kayıt Ol' : 'Giriş Yap'}</h2>
+            <p className="text-xs text-ink-muted">{onCodeStep ? 'Son adım: 6 haneli kod' : 'Tuvalet eklemek ve puanlamak için'}</p>
           </div>
           <button type="button" onClick={closeAuth} aria-label="Kapat" className="rounded-full bg-card p-2 text-ink">
             <X size={18} />
