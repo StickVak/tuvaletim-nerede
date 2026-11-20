@@ -7,7 +7,8 @@ export const SECRET = 'test-secret';
 export const ADMIN_KEY = 'test-admin-key-1234567890';
 
 /** Geçici veritabanıyla uygulamayı rastgele portta başlatır. */
-export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY, cloudinary = null } = {}) {
+/** mailer: gerçek bir createMailer() örneği verilebilir (ör. sahte fetch'li Brevo); verilmezse sahte posta kutusu */
+export async function startServer({ seed = [], limits = false, adminKey = ADMIN_KEY, cloudinary = null, mailer: customMailer = null } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'tn-test-'));
   const seedFile = join(dir, 'seed.json');
   writeFileSync(seedFile, JSON.stringify(seed));
@@ -27,7 +28,7 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
     },
   };
   const app = await createApp({
-    mailer,
+    mailer: customMailer ?? mailer,
     cloudinary,
     dbPath: join(dir, 'test.db'),
     secret: SECRET,

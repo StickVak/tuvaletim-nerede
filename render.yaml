@@ -34,8 +34,11 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      # E-posta doğrulama kodları — birini doldurun (öncelik: Resend → SMTP).
-      # İkisi de boşsa kodlar yalnızca servis loglarına yazılır (kullanıcılar e-posta almaz).
+      # E-posta doğrulama kodları — birini doldurun (öncelik: Brevo → Resend → SMTP).
+      # Hiçbiri yoksa kodlar yalnızca servis loglarına yazılır (kullanıcılar e-posta almaz).
+      # Brevo: BREVO_API_KEY + MAIL_FROM ("Ad <adres>", Brevo'da doğrulanmış gönderen) birlikte gerekir.
+      - key: BREVO_API_KEY
+        sync: false
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM

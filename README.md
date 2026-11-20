@@ -50,11 +50,15 @@ npm run build:admin  # yönetim paneli derlemesi (admin/dist/)
 | `ADMIN_PORT` | Yönetim paneli sunucusunun portu (Render'da `PORT` kullanılır) | `3002` |
 | `MAIN_API_URL` | Panel sunucusunun bağlanacağı ana sunucu adresi | `http://localhost:3001` |
 | `MAIN_APP_URL` | Paneldeki “Uygulamayı aç” bağlantısı (verilmezse `MAIN_API_URL`) | — |
-| `RESEND_API_KEY` | Kayıt doğrulama kodlarını [Resend](https://resend.com) ile gönderir (öncelikli) | — |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Resend yoksa Nodemailer ile SMTP (465 → TLS) | port `587` |
-| `MAIL_FROM` | Gönderen adres (Resend'de doğrulanmış alan adı olmalı) | Resend: `onboarding@resend.dev`, SMTP: `SMTP_USER` |
+| `BREVO_API_KEY` | Kayıt doğrulama kodlarını [Brevo](https://www.brevo.com) Transactional Email API ile gönderir (`POST /v3/smtp/email`, `api-key` başlığı) — **öncelikli** | — |
+| `RESEND_API_KEY` | Brevo yoksa [Resend](https://resend.com) | — |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` | Brevo ve Resend yoksa Nodemailer ile SMTP (465 → TLS) | port `587` |
+| `MAIL_FROM` | Gönderen: `"Ad <adres>"` ya da yalın adres. **Brevo'da zorunlu** ve Brevo'da doğrulanmış gönderen olmalı; Resend'de doğrulanmış alan adı | Resend: `onboarding@resend.dev`, SMTP: `SMTP_USER` |
 
+Seçilen sağlayıcı açılışta loglanır, ör. `[mail] e-posta servisi: brevo (gönderen: noreply@alanadiniz.com)`. Brevo seçili ama `MAIL_FROM` boş/geçersizse sunucu yine açılır, açılışta `[mail] brevo yapılandırma hatası: MAIL_FROM …` yazılır ve kod istekleri Brevo'ya gitmeden reddedilir (kullanıcı güvenli bir “servis kullanılamıyor” mesajı görür).
 E-posta servisi tanımlı değilse doğrulama kodları **sunucu konsoluna** yazılır (`[mail] … için doğrulama kodu: 123456`) — yerel geliştirme için.
+
+**Brevo kurulumu:** Brevo → *SMTP & API* → *API Keys* → yeni anahtar (`xkeysib-…`) → `BREVO_API_KEY`. *Senders, Domains & Dedicated IPs* altında gönderen adresini (ya da alan adını) doğrulayın → `MAIL_FROM`. Hesapta *Authorised IPs* kısıtı açıksa Render'ın değişken IP'leri `403 Unrecognised IP address` alır; kısıtı kapatın. Hata logları Brevo'nun durum kodunu, `code` ve `message` alanlarını içerir (ör. `durum=401 … unauthorized: Key not found`, `400 … Sender … is not valid`); API anahtarı, tam alıcı adresi ve kod loglanmaz.
 | `TRUST_PROXY` | Ters vekil (Render vb.) arkasında gerçek istemci IP'si için Express `trust proxy` değeri, ör. `1` | — |
 
 ### Üretimde çalıştırma (Render: iki ücretsiz Web Service)
@@ -110,7 +114,7 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
 - **Uygulama içi yol tarifi:** Liste kartındaki, detay penceresindeki “Yol Tarifi” ve Acil'deki “Hemen Git” kullanıcıyı dışarı yönlendirmez; konumunuzdan tuvalete sokaklara oturan yaya rotası haritada çizilir. Üstteki kartta yürüme mesafesi, tahmini süre ve **Rotayı Bitir** bulunur. Rota motoru OSRM'dir ([`src/lib/route.ts`](src/lib/route.ts)): önce gerçek yaya profili olan `routing.openstreetmap.de`, yanıt vermezse `router.project-osrm.org` denenir. Genel demo sunucusu yalnızca araç profili çalıştırdığından orada süre yürüme hızından (4,8 km/sa) hesaplanır. İkisi de yanıt vermezse kesikli kuş uçuşu çizgi çizilir.
 - **Hesaplar:** Kayıt Ol / Giriş Yap. Tuvalet eklemek, puan vermek, favori ve durum bildirimi için giriş gerekir.
   - **E-posta doğrulamalı kayıt:** Kullanıcı adı, e-posta (zorunlu, benzersiz) ve şifre girilip **Kod Gönder** denir; e-postaya 6 haneli kod gelir. Kod 10 dakika geçerlidir, en fazla 5 hatalı deneme hakkı vardır; aynı adrese 60 saniyede bir kod istenebilir (geri sayımlı **Kodu Tekrar Gönder**). Kodlar veritabanında düz metin değil HMAC olarak tutulur.
-  - **Kararlı gönderim:** Her gönderim denemesi 8 sn ile sınırlıdır; zaman aşımı, ağ hatası ve sağlayıcının geçici (5xx / SMTP 4xx) hatalarında kısa bir beklemeyle **aynı kod** 1 kez yeniden gönderilir. Hatalar `timeout / network / rate_limit / provider / config` olarak loglanır (adres maskeli, kod yazılmaz). Zaman aşımında e-posta ulaşmış olabileceğinden kod korunur, kullanıcı kod adımına geçer ve 15 sn sonra yeni kod isteyebilir (`202 delivery: uncertain`). Kesin hatalarda kod silinir ve `503` + `Retry-After` ile ne zaman tekrar denenebileceği bildirilir; kullanıcıya sağlayıcı ayrıntısı gösterilmez.
+  - **Kararlı gönderim (Brevo / Resend / SMTP):** Her gönderim denemesi 8 sn ile sınırlıdır; zaman aşımı, ağ hatası ve sağlayıcının geçici (5xx / SMTP 4xx) hatalarında kısa bir beklemeyle **aynı kod** 1 kez yeniden gönderilir. Hatalar `timeout / network / rate_limit / provider / config` olarak loglanır (adres maskeli, kod yazılmaz). Zaman aşımında e-posta ulaşmış olabileceğinden kod korunur, kullanıcı kod adımına geçer ve 15 sn sonra yeni kod isteyebilir (`202 delivery: uncertain`). Kesin hatalarda kod silinir ve `503` + `Retry-After` ile ne zaman tekrar denenebileceği bildirilir; kullanıcıya sağlayıcı ayrıntısı gösterilmez.
   - **Arayüz:** Kod isteği sürerken buton kilitlenir (“Kod gönderiliyor…”, çift tıklama/Enter tek istek); bekleme gerekiyorsa saniyelik geri sayım gösterilir (“Tekrar dene (0:27)”, “27 saniye sonra tekrar deneyebilirsiniz.”).
 - **Tuvalet ekleme:** **Dış mekan fotoğrafı (giriş / bina cephesi) zorunludur**; fotoğrafsız başvuru gönderilemez. Görsel tarayıcıda küçültülür, sunucuda içerik baytları doğrulanır; Cloudinary tanımlıysa oraya yüklenip kalıcı `secure_url` kaydedilir (gösterimde otomatik biçim/kalite `f_auto,q_auto`), değilse rastgele adla `server/data/photos/` altına yazılır. Mekan silinince ya da başvuru reddedilince görsel Cloudinary'den de silinir. Yönetim panelinde başvuru ve düzenleme ekranlarında büyük önizleme ve tam ekran görüntüleme vardır.
 - **Profilim:** Sağ üstteki avatar/ada tıklayınca açılır. Görünen ad, biyografi (160 karakter), şifre ve profil fotoğrafı (JPEG/PNG/WebP/GIF, en fazla 2 MB) değiştirilebilir; fotoğraf yoksa baş harflerden sarı-siyah avatar gösterilir. Oy/yorum, eklenen tuvalet ve favori sayıları ile etkinlik geçmişi bulunur.
@@ -241,7 +245,7 @@ server/
   app.js              # createApp(): Express, yönetim API'si (ADMIN_SECRET_KEY)
   db.js               # libSQL (yerel dosya / Turso): şema, göçler, seed eşitleme, batch işlemler
   photos.js           # fotoğraf deposu: Cloudinary ya da yerel disk
-  mailer.js           # e-posta: Resend / SMTP / konsol
+  mailer.js           # e-posta: Brevo / Resend / SMTP / konsol (zaman aşımı, 1 yeniden deneme, hata sınıflama)
   auth.js  stats.js  validate.js
   routes/             # auth, places, pending, admin
   seed-places.json    # İzmir başlangıç verisi

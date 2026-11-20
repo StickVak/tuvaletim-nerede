@@ -20,9 +20,11 @@ if (generated) console.warn('[api] AUTH_SECRET tanımlı değil (ya da örnek de
 const { key: adminKey, generated: adminKeyGenerated } = resolveAdminKey(process.env.ADMIN_SECRET_KEY, here('./data'));
 if (adminKeyGenerated) console.warn('[api] ADMIN_SECRET_KEY tanımlı değil; yönetici anahtarı üretilip server/data/.admin-key dosyasına kaydedildi (admin paneline bu anahtarla girin).');
 
+// E-posta sağlayıcısı: BREVO_API_KEY → RESEND_API_KEY → SMTP_* → konsol (seçim ve nedeni loglanır)
 const mailer = createMailer(process.env);
-if (mailer.kind === 'console') console.warn('[mail] RESEND_API_KEY / SMTP_* tanımlı değil: doğrulama kodları e-posta yerine bu konsola yazılacak.');
-else console.log(`[mail] e-posta servisi: ${mailer.kind}`);
+if (mailer.configError) console.error(`[mail] e-posta servisi: ${mailer.summary} — kayıt kodları gönderilemez: ${mailer.configError}`);
+else if (mailer.kind === 'console') console.warn(`[mail] e-posta servisi: ${mailer.summary}`);
+else console.log(`[mail] e-posta servisi: ${mailer.summary}`);
 
 // Kalıcı depolama: TURSO_DATABASE_URL varsa Turso, yoksa yerel SQLite; CLOUDINARY_* varsa Cloudinary, yoksa yerel disk
 const dbUrl = process.env.TURSO_DATABASE_URL || undefined;

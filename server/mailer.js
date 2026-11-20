@@ -1,9 +1,11 @@
 /**
  * Esnek ve dayanıklı e-posta servisi (öncelik sırası):
- *   1) RESEND_API_KEY  → Resend HTTP API
- *   2) SMTP_HOST + SMTP_USER + SMTP_PASS → Nodemailer (SMTP_PORT, varsayılan 587; 465 ise TLS)
- *   3) hiçbiri yoksa   → kod sunucu konsoluna yazılır (yerel geliştirme)
- * Gönderen adresi: MAIL_FROM (Resend için doğrulanmış alan adı gerekir).
+ *   1) BREVO_API_KEY   → Brevo Transactional Email API (POST /v3/smtp/email, `api-key` başlığı)
+ *   2) RESEND_API_KEY  → Resend HTTP API
+ *   3) SMTP_HOST + SMTP_USER + SMTP_PASS → Nodemailer (SMTP_PORT, varsayılan 587; 465 ise TLS)
+ *   4) hiçbiri yoksa   → kod sunucu konsoluna yazılır (yerel geliştirme)
+ * Gönderen adresi: MAIL_FROM ("Ad <adres>" ya da yalın adres). Brevo'da zorunludur ve Brevo panelinde doğrulanmış
+ * bir gönderen/alan adı olmalıdır; boş ya da geçersizse açılışta loglanır ve gönderimler config hatası verir.
  *
  * Dayanıklılık: her deneme `timeoutMs` (varsayılan 8000 ms) ile sınırlıdır. Geçici hatalarda (zaman aşımı, ağ,
  * sağlayıcının 5xx / SMTP 4xx yanıtı) kısa bir beklemeden sonra AYNI kodla en fazla 1 kez yeniden denenir —
@@ -59,13 +61,75 @@ function withTimeout(promise, ms, provider) {
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
 }
 
-/** Resend fetch hatası / yanıtı → MailError */
-function resendError(e) {
-  if (e instanceof MailError) return e;
-  if (e?.name === 'TimeoutError' || e?.name === 'AbortError') return new MailError('timeout', 'Resend: istek zaman aşımına uğradı', { provider: 'resend', retryable: true, cause: e });
-  return new MailError('network', `Resend: ağ hatası (${e?.cause?.code ?? e?.message ?? 'bilinmiyor'})`, { provider: 'resend', retryable: true, cause: e });
+/**
+ * MAIL_FROM → { name, email }. "Ad <adres>", "\"Ad\" <adres>" ya da yalın adres; boş/geçersizse null.
+ */
+export function parseSender(value) {
+  const v = String(value ?? '').trim();
+  if (!v) return null;
+  const m = v.match(/^(?:"?([^"<]*?)"?\s*)?<([^<>\s]+)>$/);
+  const name = m ? m[1].trim() || null : null;
+  const email = m ? m[2] : v;
+  return /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email) ? { name, email } : null;
 }
 
+/**
+ * Zaman aşımlı JSON POST. Ağ/zaman aşımı hatalarını MailError'a çevirir; HTTP yanıtını olduğu gibi döner.
+ * Kendi zamanlayıcımız: AbortSignal.timeout olay döngüsünü canlı tutmaz; bu her durumda temizlenir.
+ */
+async function postJson({ fetchImpl, url, headers, body, timeoutMs, provider, label }) {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(new DOMException('zaman aşımı', 'TimeoutError')), timeoutMs);
+  try {
+    return await fetchImpl(url, { method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body, signal: ac.signal });
+  } catch (err) {
+    const e = ac.signal.aborted ? ac.signal.reason : err;
+    if (e?.name === 'TimeoutError' || e?.name === 'AbortError') {
+      throw new MailError('timeout', `${label}: ${timeoutMs} ms içinde yanıt yok`, { provider, retryable: true, cause: e });
+    }
+    throw new MailError('network', `${label}: ağ hatası (${e?.cause?.code ?? e?.message ?? 'bilinmiyor'})`, { provider, retryable: true, cause: e });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Rate-limit bekleme süresi (sn): Retry-After ya da Brevo'nun x-sib-ratelimit-reset başlığı */
+function retryAfterFrom(res) {
+  for (const h of ['retry-after', 'x-sib-ratelimit-reset']) {
+    const n = Number(res.headers.get(h));
+    if (Number.isFinite(n) && n > 0) return Math.ceil(n);
+  }
+  return null;
+}
+
+/**
+ * Brevo hata yanıtı → MailError. Brevo gövdesi: { code, message }.
+ * 401 geçersiz anahtar, 403 yetki/IP kısıtı, 400 + "sender" doğrulanmamış gönderen → config (kullanıcı düzeltemez,
+ * yönetici düzeltmeli); 429 → rate_limit; 5xx → geçici (yeniden denenir); diğer 4xx → sağlayıcı reddi.
+ */
+async function brevoResponseError(res) {
+  const raw = await res.text().catch(() => '');
+  let code = '';
+  let message = raw.slice(0, 300);
+  try {
+    const j = JSON.parse(raw);
+    code = j.code ?? '';
+    message = String(j.message ?? message).slice(0, 300);
+  } catch {
+    /* JSON değil */
+  }
+  const detail = `Brevo ${res.status}${code ? ` ${code}` : ''}: ${message || '(boş yanıt)'}`;
+  const base = { provider: 'brevo', status: res.status };
+  if (res.status === 429) return new MailError('rate_limit', detail, { ...base, retryAfter: retryAfterFrom(res) });
+  if (res.status >= 500) return new MailError('provider', detail, { ...base, retryable: true });
+  if (res.status === 401 || res.status === 403) return new MailError('config', `${detail} (API anahtarını / Brevo hesap yetkilerini ve izinli IP'leri kontrol edin)`, base);
+  if (res.status === 400 && /sender|from/i.test(`${code} ${message}`)) {
+    return new MailError('config', `${detail} (MAIL_FROM adresini Brevo'da gönderen olarak doğrulayın)`, base);
+  }
+  return new MailError('provider', detail, base);
+}
+
+/** Resend hata yanıtı → MailError */
 async function resendResponseError(res) {
   const detail = (await res.text().catch(() => '')).slice(0, 200);
   const base = { provider: 'resend', status: res.status };
@@ -130,33 +194,61 @@ export function createMailer(
     }
   };
 
+  if (env.BREVO_API_KEY) {
+    const sender = parseSender(env.MAIL_FROM);
+    // Gönderen yoksa sunucu yine açılır (diğer özellikler çalışsın) ama sorun açıkça loglanır ve her gönderim reddedilir
+    const configError = sender
+      ? null
+      : `MAIL_FROM ${env.MAIL_FROM ? `geçersiz ("${String(env.MAIL_FROM).slice(0, 80)}")` : 'tanımlı değil'}: Brevo için Brevo'da doğrulanmış bir gönderen adresi gerekir, ör. MAIL_FROM="Tuvaletim Nerede? <noreply@alanadiniz.com>"`;
+    if (configError) logger.error?.(`[mail] brevo yapılandırma hatası: ${configError}`);
+    return {
+      kind: 'brevo',
+      timeoutMs,
+      configError,
+      summary: sender ? `brevo (gönderen: ${sender.email})` : 'brevo (HATALI: MAIL_FROM)',
+      async sendVerificationCode(to, code) {
+        if (configError) {
+          const e = new MailError('config', configError, { provider: 'brevo' });
+          logger.error?.(`[mail] gönderim hatası sağlayıcı=brevo tür=config deneme=0/2 alıcı=${maskEmail(to)}: ${configError}`);
+          throw e;
+        }
+        const { subject, text, html } = verificationMessage(code);
+        const body = JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html, textContent: text });
+        await withRetry('brevo', to, async () => {
+          const res = await postJson({
+            fetchImpl,
+            url: 'https://api.brevo.com/v3/smtp/email',
+            headers: { 'api-key': env.BREVO_API_KEY, Accept: 'application/json' },
+            body,
+            timeoutMs,
+            provider: 'brevo',
+            label: 'Brevo',
+          });
+          if (!res.ok) throw await brevoResponseError(res);
+        })();
+      },
+    };
+  }
+
   if (env.RESEND_API_KEY) {
     const from = env.MAIL_FROM || `${APP} <onboarding@resend.dev>`;
     return {
       kind: 'resend',
       timeoutMs,
+      summary: `resend (gönderen: ${parseSender(from)?.email ?? from}; BREVO_API_KEY tanımlı değil)`,
       async sendVerificationCode(to, code) {
         const body = JSON.stringify({ from, to: [to], ...verificationMessage(code) });
         await withRetry('resend', to, async () => {
-          // Kendi zamanlayıcımız: AbortSignal.timeout olay döngüsünü canlı tutmaz; bu her durumda temizlenir
-          const ac = new AbortController();
-          const timer = setTimeout(() => ac.abort(new DOMException('zaman aşımı', 'TimeoutError')), timeoutMs);
-          try {
-            let res;
-            try {
-              res = await fetchImpl('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-                body,
-                signal: ac.signal,
-              });
-            } catch (e) {
-              throw resendError(ac.signal.aborted ? ac.signal.reason : e);
-            }
-            if (!res.ok) throw await resendResponseError(res);
-          } finally {
-            clearTimeout(timer);
-          }
+          const res = await postJson({
+            fetchImpl,
+            url: 'https://api.resend.com/emails',
+            headers: { Authorization: `Bearer ${env.RESEND_API_KEY}` },
+            body,
+            timeoutMs,
+            provider: 'resend',
+            label: 'Resend',
+          });
+          if (!res.ok) throw await resendResponseError(res);
         })();
       },
     };
@@ -177,6 +269,7 @@ export function createMailer(
     return {
       kind: 'smtp',
       timeoutMs,
+      summary: `smtp (${env.SMTP_HOST}:${port}; BREVO_API_KEY ve RESEND_API_KEY tanımlı değil)`,
       async sendVerificationCode(to, code) {
         await withRetry('smtp', to, async () => {
           try {
@@ -192,6 +285,7 @@ export function createMailer(
   return {
     kind: 'console',
     timeoutMs,
+    summary: 'console (BREVO_API_KEY, RESEND_API_KEY ve SMTP_* tanımlı değil: kodlar sunucu konsoluna yazılır)',
     async sendVerificationCode(to, code) {
       log(`[mail] ${to} için doğrulama kodu: ${code}  (e-posta servisi yapılandırılmadı; RESEND_API_KEY ya da SMTP_* ekleyin)`);
     },
