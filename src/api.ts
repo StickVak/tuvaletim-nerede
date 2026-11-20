@@ -5,6 +5,10 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** Sunucunun bildirdiği bekleme (sn): gövdedeki retryAfter ya da Retry-After başlığı */
+    public retryAfter: number | null = null,
+    /** Sunucunun kararlı hata nedeni (ör. rate_limit, network, unavailable) */
+    public reason: string | null = null,
   ) {
     super(message);
   }
@@ -55,6 +59,10 @@ export async function api<T>(
   }
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw new ApiError(res.status, data?.error ?? 'Beklenmeyen bir hata oluştu.');
+  if (!res.ok) {
+    const header = Number(res.headers.get('Retry-After'));
+    const retryAfter = Number(data?.retryAfter) > 0 ? Number(data.retryAfter) : header > 0 ? header : null;
+    throw new ApiError(res.status, data?.error ?? 'Beklenmeyen bir hata oluştu.', retryAfter, data?.reason ?? null);
+  }
   return data as T;
 }

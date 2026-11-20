@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { User } from '../types';
 import { AUTH_EXPIRED_EVENT, api, getToken, setToken } from '../api';
+import type { SendCodeResponse } from '../lib/otp';
 
 export type AuthMode = 'login' | 'register';
 
@@ -13,7 +14,7 @@ interface AuthState {
   closeAuth: () => void;
   login: (username: string, password: string) => Promise<User>;
   /** Kayıt 1. adım: e-postaya 6 haneli doğrulama kodu gönderir */
-  sendCode: (email: string, username: string) => Promise<{ expiresIn: number; resendIn: number }>;
+  sendCode: (email: string, username: string) => Promise<SendCodeResponse>;
   /** Kayıt 2. adım: kodu doğrular ve hesabı oluşturur */
   register: (username: string, email: string, password: string, code: string) => Promise<User>;
   logout: () => void;
@@ -64,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const sendCode = useCallback(
     (email: string, username: string) =>
-      api<{ expiresIn: number; resendIn: number }>('/auth/send-code', { method: 'POST', body: { email, username } }),
+      api<SendCodeResponse>('/auth/send-code', { method: 'POST', body: { email, username } }),
     [],
   );
   const register = useCallback(

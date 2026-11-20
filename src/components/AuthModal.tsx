@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { ArrowLeft, Eye, EyeOff, Loader2, MailCheck, RotateCw, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { AlertTriangle, ArrowLeft, Clock3, Eye, EyeOff, Loader2, MailCheck, RotateCw, X } from 'lucide-react';
 import { useAuth, type AuthMode } from '../hooks/useAuth';
 import { ApiError } from '../api';
 import Logo from './Logo';
 import CodeInput from './CodeInput';
+import { failureTitle, formatWait, resendLabel, retryHint, secondsLeft, sendButton, waitSecondsFromError } from '../lib/otp';
 
 const input =
   'w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-[15px] font-medium text-ink outline-none transition placeholder:text-ink-muted focus:border-brand-dark';
@@ -11,17 +12,18 @@ const input =
 const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-
 /** Saniyede bir yenilenen "şu an" (geri sayımlar için) */
 function useNow(active: boolean) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) return;
+    setNow(Date.now()); // etkinleşir etkinleşmez güncel zamanla başla (eski değerle ilk kare yanlış görünmesin)
     const t = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(t);
   }, [active]);
-  return now;
+  /** Yeni bir bitiş zamanı ayarlanınca saati de hemen güncelle (sayaç bir an fazladan saniye göstermesin) */
+  const sync = () => setNow(Date.now());
+  return [now, sync] as const;
 }
 
 export default function AuthModal({ onWelcome }: { onWelcome: (username: string) => void }) {
@@ -37,43 +39,66 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   const [code, setCode] = useState('');
   const [resendAt, setResendAt] = useState(0);
   const [expiresAt, setExpiresAt] = useState(0);
-  const [notice, setNotice] = useState('');
-  const now = useNow(step === 'code');
+  const [notice, setNotice] = useState<{ tone: 'ok' | 'warn'; text: string } | null>(null);
+  // Kod isteği sürüyor mu (çift tıklama / Enter ile çift istek engeli: state güncellenmeden de geçerli)
+  const [sending, setSending] = useState(false);
+  const inFlight = useRef(false);
+  // Form adımındaki bekleme: rate-limit ya da gönderim hatası sonrası "ne zaman tekrar deneyebilirim"
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, syncNow] = useNow(step === 'code' || cooldownUntil > Date.now());
 
   if (!authMode) return null;
   const isRegister = authMode === 'register';
   const onCodeStep = isRegister && step === 'code';
-  const resendIn = Math.max(0, Math.ceil((resendAt - now) / 1000));
-  const expiresIn = Math.max(0, Math.ceil((expiresAt - now) / 1000));
+  const resendIn = secondsLeft(resendAt, now);
+  const expiresIn = secondsLeft(expiresAt, now);
+  const cooldown = secondsLeft(cooldownUntil, now);
+  const sendBtn = sendButton({ busy: sending, wait: cooldown });
 
   const switchTo = (m: AuthMode) => {
     setError('');
+    setNotice(null);
     setStep('form');
     openAuth(m);
   };
 
-  /** Kod iste (ilk gönderim ya da tekrar gönder) */
+  /** Kod iste (ilk gönderim ya da tekrar gönder). Aynı anda yalnızca bir istek. */
   const requestCode = async () => {
-    setBusy(true);
+    if (inFlight.current) return;
+    inFlight.current = true;
+    setSending(true);
     setError('');
-    setNotice('');
+    setNotice(null);
+    const fromCodeStep = step === 'code';
     try {
       const r = await sendCode(email.trim(), username.trim());
       const t = Date.now();
       setResendAt(t + r.resendIn * 1000);
       setExpiresAt(t + r.expiresIn * 1000);
+      setCooldownUntil(0);
+      syncNow();
       setCode('');
       setStep('code');
-      setNotice(step === 'code' ? 'Yeni kod gönderildi.' : '');
-    } catch (err) {
-      // 60 sn sınırı: sunucunun söylediği süre kadar geri say
-      if (err instanceof ApiError && err.status === 429) {
-        const s = Number(err.message.match(/(\d+) saniye/)?.[1] ?? 60);
-        setResendAt(Date.now() + s * 1000);
+      if (r.delivery === 'uncertain') {
+        // Sağlayıcı geç yanıt verdi: kod yine de gelebilir; kısa süre sonra yenisi istenebilir
+        setNotice({ tone: 'warn', text: r.message ?? 'E-posta gönderimi gecikiyor; kod birkaç dakika içinde gelebilir.' });
+      } else if (fromCodeStep) {
+        setNotice({ tone: 'ok', text: 'Yeni kod gönderildi. En son gelen kodu kullanın.' });
       }
-      setError((err as Error).message);
+    } catch (err) {
+      const apiErr = err instanceof ApiError ? err : null;
+      const wait = waitSecondsFromError(apiErr);
+      if (wait) {
+        const until = Date.now() + wait * 1000;
+        if (fromCodeStep) setResendAt(until);
+        else setCooldownUntil(until);
+        syncNow();
+      }
+      // Bekleme varsa başlık + canlı geri sayım; yoksa sunucunun mesajı
+      setError(wait && apiErr ? failureTitle(apiErr) : (err as Error).message);
     } finally {
-      setBusy(false);
+      inFlight.current = false;
+      setSending(false);
     }
   };
 
@@ -101,6 +126,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
       if (!USERNAME_RE.test(username.trim())) return setError('Kullanıcı adı 3-30 karakter olmalı; harf, rakam, _ . - kullanılabilir.');
       if (!EMAIL_RE.test(email.trim())) return setError('Geçerli bir e-posta adresi girin.');
       if (password.length < 6) return setError('Şifre en az 6 karakter olmalı.');
+      if (cooldown > 0 || sending) return; // bekleme sürerken Enter ile de gönderilmez
       return requestCode();
     }
     setBusy(true);
@@ -156,15 +182,16 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
 
             <div className="mt-3 flex items-center justify-between text-xs font-semibold">
               <span className={expiresIn > 0 ? 'text-ink-muted' : 'text-red-600'} aria-live="polite">
-                {expiresIn > 0 ? `Kod ${mmss(expiresIn)} içinde geçersiz olur` : 'Kodun süresi doldu'}
+                {expiresIn > 0 ? `Kod ${formatWait(expiresIn)} içinde geçersiz olur` : 'Kodun süresi doldu'}
               </span>
               <button
                 type="button"
                 onClick={() => void requestCode()}
-                disabled={busy || resendIn > 0}
+                disabled={busy || sending || resendIn > 0}
+                aria-busy={sending}
                 className="flex items-center gap-1 rounded-full px-2 py-1 text-ink disabled:text-ink-muted"
               >
-                <RotateCw size={13} /> {resendIn > 0 ? `Kodu tekrar gönder (${mmss(resendIn)})` : 'Kodu tekrar gönder'}
+                {sending ? <Loader2 size={13} className="animate-spin" /> : <RotateCw size={13} />} {resendLabel({ busy: sending, wait: resendIn })}
               </button>
             </div>
           </div>
@@ -226,20 +253,42 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
           </>
         )}
 
-        {notice && !error && <p className="mt-3 rounded-xl bg-green-500/10 px-3 py-2 text-sm font-semibold text-green-700 dark:text-green-400">{notice}</p>}
-        {error && (
-          <p role="alert" className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-600">
-            {error}
+        {notice && !error && (
+          <p
+            role="status"
+            className={`mt-3 flex items-start gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
+              notice.tone === 'warn' ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300' : 'bg-green-500/10 text-green-700 dark:text-green-400'
+            }`}
+          >
+            {notice.tone === 'warn' && <AlertTriangle size={16} className="mt-0.5 shrink-0" />}
+            {notice.text}
           </p>
+        )}
+        {error && (
+          <div role="alert" className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-600">
+            <p>{error}</p>
+            {/* Ne zaman tekrar denenebileceği: canlı geri sayım (form adımı ya da kod adımındaki tekrar gönder) */}
+            {(onCodeStep ? resendAt > 0 && resendIn > 0 : cooldownUntil > 0) && (
+              <p className="mt-1 flex items-center gap-1.5 text-xs font-bold" aria-live="polite" data-testid="retry-countdown">
+                <Clock3 size={13} /> {retryHint(onCodeStep ? resendIn : cooldown)}
+              </p>
+            )}
+          </div>
         )}
 
         <button
           type="submit"
-          disabled={busy || (onCodeStep ? code.length !== 6 : !username || !password || (isRegister && !email))}
+          disabled={
+            busy ||
+            sending ||
+            (onCodeStep ? code.length !== 6 : !username || !password || (isRegister && (!email || sendBtn.disabled)))
+          }
+          aria-busy={busy || sending}
           className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-brand py-3.5 text-base font-extrabold text-onbrand transition hover:bg-brand-dark disabled:opacity-50"
         >
-          {busy && <Loader2 size={18} className="animate-spin" />}
-          {onCodeStep ? 'Doğrula ve Hesap Oluştur' : isRegister ? 'Kod Gönder' : 'Giriş Yap'}
+          {(busy || (sending && !onCodeStep)) && <Loader2 size={18} className="animate-spin" />}
+          {!busy && !sending && !onCodeStep && isRegister && cooldown > 0 && <Clock3 size={18} />}
+          {onCodeStep ? 'Doğrula ve Hesap Oluştur' : isRegister ? sendBtn.label : 'Giriş Yap'}
         </button>
 
         {onCodeStep && (
@@ -248,7 +297,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
             onClick={() => {
               setStep('form');
               setError('');
-              setNotice('');
+              setNotice(null);
             }}
             className="mx-auto mt-3 flex items-center gap-1 text-sm font-semibold text-ink-soft hover:text-ink"
           >

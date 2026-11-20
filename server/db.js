@@ -94,6 +94,8 @@ const ADDED_COLUMNS = {
   places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
   status_reports: ['resolved_at TEXT'],
+  // next_send_at: bu adrese yeni kod istenebilecek en erken zaman (başarılı gönderimde +60 sn, belirsiz teslimde +15 sn)
+  email_codes: ['next_send_at TEXT'],
   votes: ['toilet_type TEXT'],
   // photo_file: dış mekan fotoğrafı — yerel dosya adı (server/data/photos) ya da Cloudinary secure_url
   // (photo sütunu eski base64 içindir, göçte boşaltılır)

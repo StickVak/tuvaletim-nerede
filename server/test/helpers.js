@@ -13,7 +13,19 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
   writeFileSync(seedFile, JSON.stringify(seed));
   /** Sahte posta kutusu: gönderilen doğrulama kodları */
   const outbox = [];
-  const mailer = { kind: 'test', sendVerificationCode: async (to, code) => void outbox.push({ to, code }) };
+  /** failMail(hata): sıradaki gönderim bu hatayla başarısız olur (kod yine de 'gönderilmiş' sayılabilir: deliveredAnyway) */
+  const failures = [];
+  const mailer = {
+    kind: 'test',
+    sendVerificationCode: async (to, code) => {
+      const f = failures.shift();
+      if (f) {
+        if (f.deliveredAnyway) outbox.push({ to, code }); // zaman aşımı oldu ama e-posta aslında ulaştı
+        throw f.error;
+      }
+      outbox.push({ to, code });
+    },
+  };
   const app = await createApp({
     mailer,
     cloudinary,
@@ -67,6 +79,7 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
     register,
     outbox,
     lastCode,
+    failMail: (error, { deliveredAnyway = false } = {}) => failures.push({ error, deliveredAnyway }),
     registerFull,
     admin,
     db: app.locals.db,

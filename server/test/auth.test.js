@@ -64,7 +64,7 @@ test('aynı adrese 60 saniyede ikinci kod → 429 + Retry-After', async () => {
   assert.ok(Number(res.headers.get('retry-after')) > 50);
   // 60 sn geçmiş gibi yap → yeni kod, eski kod geçersiz
   const old = srv.lastCode('acele@example.com');
-  (await srv.db.run("UPDATE email_codes SET sent_at = ? WHERE email = 'acele@example.com'", [new Date(Date.now() - 61000).toISOString()]));
+  await srv.db.run("UPDATE email_codes SET next_send_at = ? WHERE email = 'acele@example.com'", [new Date(Date.now() - 1000).toISOString()]);
   assert.equal((await send('acele@example.com')).status, 200);
   const fresh = srv.lastCode('acele@example.com');
   if (fresh !== old) assert.equal((await reg({ username: 'acele', email: 'acele@example.com', code: old })).status, 400);
@@ -95,14 +95,75 @@ test('5 hatalı denemeden sonra kod geçersiz olur', async () => {
   assert.equal(r.status, 400, 'doğru kod bile artık geçmez');
 });
 
-test('mail gönderilemezse 502 ve kod kaydı silinir', async () => {
-  const { startServer } = await import('./helpers.js');
-  const s2 = await startServer();
-  s2.outbox.push = () => { throw new Error('SMTP kapalı'); };
-  const r = await s2.req('POST', '/api/auth/send-code', { email: 'hata@example.com' });
-  assert.equal(r.status, 502);
-  assert.equal((await s2.db.get("SELECT COUNT(*) AS n FROM email_codes")).n, 0);
-  s2.close();
+// ---------------------------------------------------------------- gönderim hataları: kararlı akış
+const { MailError } = await import('../mailer.js');
+
+test('zaman aşımı (belirsiz teslim): kod korunur, 202 delivery=uncertain; e-posta geç ulaşırsa kod geçerli', async () => {
+  srv.failMail(new MailError('timeout', 'Resend: zaman aşımı', { provider: 'resend', attempts: 2 }), { deliveredAnyway: true });
+  const r = await send('gecikme@example.com', 'gecikme');
+  assert.equal(r.status, 202);
+  assert.equal(r.body.ok, true);
+  assert.equal(r.body.delivery, 'uncertain');
+  assert.equal(r.body.expiresIn, 600);
+  assert.ok(r.body.resendIn > 0 && r.body.resendIn <= 20, `kısa bekleme: ${r.body.resendIn}`);
+  assert.match(r.body.message, /gecik/i);
+  assert.ok(await srv.db.get("SELECT 1 FROM email_codes WHERE email = 'gecikme@example.com'"), 'kod kaydı silinmedi');
+  // geç ulaşan e-postadaki kod çalışır
+  const ok = await reg({ username: 'gecikme', email: 'gecikme@example.com', code: srv.lastCode('gecikme@example.com') });
+  assert.equal(ok.status, 201);
+});
+
+test('belirsiz teslimden sonra kısa bekleme dolunca yeni kod istenebilir; erken istek 429 ve saniye bildirir', async () => {
+  srv.failMail(new MailError('timeout', 'x', { provider: 'resend' }));
+  const first = await send('tekrar@example.com');
+  assert.equal(first.status, 202);
+  const early = await send('tekrar@example.com');
+  assert.equal(early.status, 429);
+  assert.ok(early.body.retryAfter > 0 && early.body.retryAfter <= first.body.resendIn);
+  await srv.db.run("UPDATE email_codes SET next_send_at = ? WHERE email = 'tekrar@example.com'", [new Date(Date.now() - 1000).toISOString()]);
+  const again = await send('tekrar@example.com');
+  assert.equal(again.status, 200);
+  assert.equal(again.body.delivery, 'sent');
+  assert.equal(again.body.resendIn, 60, 'başarılı gönderimden sonra normal 60 sn');
+});
+
+test('sağlayıcı rate-limit: kod silinir, 503 + Retry-After sağlayıcının süresi; mesaj ne zaman denenebileceğini söyler', async () => {
+  srv.failMail(new MailError('rate_limit', 'Resend 429: daily quota', { provider: 'resend', retryAfter: 37 }));
+  const res = await fetch(srv.url + '/api/auth/send-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: 'kota@example.com' }) });
+  const body = await res.json();
+  assert.equal(res.status, 503);
+  assert.equal(res.headers.get('retry-after'), '37');
+  assert.equal(body.retryAfter, 37);
+  assert.equal(body.reason, 'rate_limit');
+  assert.match(body.error, /37 saniye/);
+  assert.ok(!/quota|Resend/i.test(body.error), 'sağlayıcı ayrıntısı sızmaz');
+  assert.equal(await srv.db.get("SELECT 1 FROM email_codes WHERE email = 'kota@example.com'"), undefined);
+  // kod silindiği için hemen yeni istek yapılabilir (sunucu tarafında kilit yok)
+  assert.equal((await send('kota@example.com')).status, 200);
+});
+
+test('ağ hatası (yeniden deneme de başarısız): 503, kısa bekleme; yapılandırma hatası: 503, genel mesaj', async () => {
+  srv.failMail(new MailError('network', 'Resend: ağ hatası (ECONNRESET)', { provider: 'resend', attempts: 2 }));
+  const net = await send('ag@example.com');
+  assert.equal(net.status, 503);
+  assert.equal(net.body.reason, 'network');
+  assert.ok(net.body.retryAfter >= 5 && net.body.retryAfter <= 30);
+  assert.ok(!/ECONNRESET|Resend/.test(net.body.error));
+
+  srv.failMail(new MailError('config', 'Resend 401 (API anahtarı / alan adı): invalid key', { provider: 'resend', status: 401 }));
+  const cfg = await send('ayar@example.com');
+  assert.equal(cfg.status, 503);
+  assert.equal(cfg.body.reason, 'unavailable');
+  assert.ok(cfg.body.retryAfter >= 60);
+  assert.ok(!/401|key|Resend|anahtar/i.test(cfg.body.error), 'yapılandırma ayrıntısı kullanıcıya gösterilmez');
+});
+
+test('beklenmeyen (sınıflanmamış) hata da güvenli mesajla 503 döner, kod silinir', async () => {
+  srv.failMail(new Error('SMTP kapalı'));
+  const r = await send('hata@example.com');
+  assert.equal(r.status, 503);
+  assert.ok(!/SMTP/.test(r.body.error));
+  assert.equal((await srv.db.get('SELECT COUNT(*) AS n FROM email_codes WHERE email = ?', ['hata@example.com'])).n, 0);
 });
 
 test('short password / invalid username → 400 (kod gönderilmeden de)', async () => {

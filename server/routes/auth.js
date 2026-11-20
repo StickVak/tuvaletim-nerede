@@ -1,12 +1,32 @@
 import { createHmac, randomInt, timingSafeEqual } from 'node:crypto';
 import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, signToken, verifyPassword } from '../auth.js';
+import { MailError, maskEmail } from '../mailer.js';
 
 const USERNAME_RE = /^[\p{L}\p{N}_.-]{3,30}$/u;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const CODE_TTL_MS = 10 * 60 * 1000;
 export const RESEND_AFTER_MS = 60 * 1000;
 export const MAX_CODE_ATTEMPTS = 5;
+/** Belirsiz teslim (zaman aşımı) sonrası yeni kod istemeden önceki kısa bekleme */
+export const UNCERTAIN_RESEND_MS = 15 * 1000;
+
+/**
+ * Kesin gönderim hatasında kullanıcıya gösterilecek güvenli mesaj ve bekleme (sn). Sağlayıcı ayrıntısı içermez.
+ * reason: rate_limit | network | unavailable (istemci için kararlı değerler)
+ */
+function deliveryFailure(e) {
+  const kind = e instanceof MailError ? e.kind : 'provider';
+  if (kind === 'rate_limit') {
+    const s = Math.min(Math.max(e.retryAfter ?? 30, 5), 3600);
+    return { reason: 'rate_limit', retryAfter: s, error: `E-posta servisi şu an yoğun. ${s} saniye sonra tekrar deneyin.` };
+  }
+  if (kind === 'network' || kind === 'timeout' || (kind === 'provider' && e.retryable)) {
+    return { reason: 'network', retryAfter: 15, error: 'Doğrulama e-postası şu an gönderilemedi. 15 saniye sonra tekrar deneyin.' };
+  }
+  // config (anahtar/alan adı) ya da sağlayıcının kalıcı reddi: kullanıcı düzeltemez, ayrıntı loglarda
+  return { reason: 'unavailable', retryAfter: 60, error: 'E-posta servisi geçici olarak kullanılamıyor. 1 dakika sonra tekrar deneyin.' };
+}
 
 const normEmail = (v) => String(v ?? '').trim().toLowerCase();
 
@@ -40,29 +60,50 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     const err = (await emailError(email)) ?? (username !== null ? await usernameError(username) : null);
     if (err) return res.status(err[0]).json({ error: err[1] });
 
-    const prev = await db.get('SELECT sent_at FROM email_codes WHERE email = ?', [email]);
-    const wait = prev ? Date.parse(prev.sent_at) + RESEND_AFTER_MS - Date.now() : 0;
+    const prev = await db.get('SELECT sent_at, next_send_at FROM email_codes WHERE email = ?', [email]);
+    const nextAt = prev ? Date.parse(prev.next_send_at ?? '') || Date.parse(prev.sent_at) + RESEND_AFTER_MS : 0;
+    const wait = nextAt - Date.now();
     if (wait > 0) {
       const s = Math.ceil(wait / 1000);
       res.set('Retry-After', String(s));
       return res.status(429).json({ error: `Yeni kod için ${s} saniye bekleyin.`, retryAfter: s });
     }
 
+    // Kod gönderimden ÖNCE kaydedilir; aynı istek içindeki yeniden deneme (mailer) aynı kodu gönderir
     const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
     const now = Date.now();
     await db.run(
-      `INSERT INTO email_codes (email, code_hash, expires_at, attempts, sent_at) VALUES (?, ?, ?, 0, ?)
-       ON CONFLICT (email) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, sent_at = excluded.sent_at`,
-      [email, codeHash(email, code), new Date(now + CODE_TTL_MS).toISOString(), new Date(now).toISOString()],
+      `INSERT INTO email_codes (email, code_hash, expires_at, attempts, sent_at, next_send_at) VALUES (?, ?, ?, 0, ?, ?)
+       ON CONFLICT (email) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0,
+         sent_at = excluded.sent_at, next_send_at = excluded.next_send_at`,
+      [email, codeHash(email, code), new Date(now + CODE_TTL_MS).toISOString(), new Date(now).toISOString(), new Date(now + RESEND_AFTER_MS).toISOString()],
     );
     try {
       await mailer.sendVerificationCode(email, code);
     } catch (e) {
-      console.error('[mail] gönderilemedi:', e.message);
+      const kind = e instanceof MailError ? e.kind : 'bilinmeyen';
+      console.error(`[mail] doğrulama kodu teslim edilemedi tür=${kind} alıcı=${maskEmail(email)} deneme=${e?.attempts ?? 1}: ${e?.message}`);
+
+      if (kind === 'timeout') {
+        // Belirsiz teslim: sağlayıcı yanıt vermedi ama e-posta ulaşmış olabilir. Kod geçerli kalır (geç gelen e-posta
+        // çalışsın) ve kullanıcı kısa süre sonra yeni kod isteyebilir; yeni kod eskisinin yerini alır.
+        await db.run('UPDATE email_codes SET next_send_at = ? WHERE email = ?', [new Date(Date.now() + UNCERTAIN_RESEND_MS).toISOString(), email]);
+        return res.status(202).json({
+          ok: true,
+          delivery: 'uncertain',
+          expiresIn: CODE_TTL_MS / 1000,
+          resendIn: UNCERTAIN_RESEND_MS / 1000,
+          message: 'E-posta gönderimi gecikiyor; kod birkaç dakika içinde gelebilir. Gelmezse kısa süre sonra yeni kod isteyin.',
+        });
+      }
+
+      // Kesin hata: e-posta gitmedi → kod silinir (geçersiz bir kod kalmasın), kullanıcı belirtilen süre sonra yeniden dener
       await db.run('DELETE FROM email_codes WHERE email = ?', [email]);
-      return res.status(502).json({ error: 'Doğrulama e-postası gönderilemedi. Lütfen biraz sonra tekrar deneyin.' });
+      const f = deliveryFailure(e);
+      res.set('Retry-After', String(f.retryAfter));
+      return res.status(503).json(f);
     }
-    res.json({ ok: true, expiresIn: CODE_TTL_MS / 1000, resendIn: RESEND_AFTER_MS / 1000 });
+    res.json({ ok: true, delivery: 'sent', expiresIn: CODE_TTL_MS / 1000, resendIn: RESEND_AFTER_MS / 1000 });
   });
 
   r.post('/register', async (req, res) => {
