@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { createApp } from './app.js';
@@ -7,6 +7,7 @@ import { createMailer } from './mailer.js';
 import { cloudinaryConfig } from './photos.js';
 import { CALLBACK_PATH, googleConfig } from './google.js';
 import { legalContact, PRIVACY_PATH, TERMS_PATH } from './legal.js';
+import { errorHandler, inlineScriptHashes } from './security.js';
 
 try {
   process.loadEnvFile();
@@ -52,8 +53,25 @@ console.log(
     : `[legal] UYARI: CONTACT_EMAIL (ya da MAIL_FROM) tanımlı değil; ${PRIVACY_PATH} ve ${TERMS_PATH} sayfalarında iletişim e-postası yok`,
 );
 
+// Üretim (Render ya da NODE_ENV=production): çerezler her zaman Secure, HSTS açık
+const production = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER) || /^https:/i.test(process.env.APP_URL ?? '');
+// Gerçek istemci IP'si (hız sınırı anahtarı): Render önünde Cloudflare var ve her isteğe CF-Connecting-IP yazar
+// (istemcinin gönderdiği değer korunmaz). Başka bir ortamda CLIENT_IP_HEADER ile değiştirilebilir; "none" → req.ip
+const ipHeaderEnv = (process.env.CLIENT_IP_HEADER ?? '').trim().toLowerCase();
+const clientIpHeader = ipHeaderEnv === 'none' ? null : ipHeaderEnv || (process.env.RENDER ? 'cf-connecting-ip' : null);
+console.log(`[güvenlik] istemci IP: ${clientIpHeader ? `${clientIpHeader} başlığı (yoksa trust proxy)` : `trust proxy (${process.env.TRUST_PROXY || 'loopback'})`} · Secure çerez: ${production ? 'her zaman' : 'yalnızca HTTPS'}`);
+
+const distDir = here('../dist');
+const indexHtml = here('../dist/index.html');
+// index.html'deki satır içi tema betiği CSP'de hash'iyle izinli (unsafe-inline yok)
+const scriptHashes = existsSync(indexHtml) ? inlineScriptHashes(readFileSync(indexHtml, 'utf8')) : [];
+
 const app = await createApp({
   mailer,
+  production,
+  secureCookies: production,
+  clientIpHeader,
+  scriptHashes,
   contactEmail,
   google,
   dbPath: here('./data/tuvaletim.db'),
@@ -74,14 +92,15 @@ if (process.env.TRUST_PROXY) {
 
 // Üretim: `npm run build` çıktısını (dist/) aynı sunucudan yayınla.
 // /api dışındaki her GET isteği index.html'e düşer (React yönlendirmesi). Yönetim paneli ayrı servistir (admin/).
-const distDir = here('../dist');
 if (existsSync(distDir)) {
-  const indexHtml = here('../dist/index.html');
   app.use('/assets', express.static(here('../dist/assets'), { immutable: true, maxAge: '1y' }));
   app.use('/assets', (_req, res) => res.sendStatus(404)); // eksik JS/CSS için HTML döndürme
   app.use(express.static(distDir));
   app.get(/^\/(?!api(\/|$)).*/, (_req, res) => res.sendFile(indexHtml));
   console.log('[web] dist/ klasörü sunuluyor');
 }
+
+// Statik dosya / SPA hataları da genel mesajla (Express'in varsayılan işleyicisi yığın izini HTML olarak gösterirdi)
+app.use(errorHandler);
 
 app.listen(PORT, () => console.log(`[api] http://localhost:${PORT}`));

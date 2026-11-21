@@ -16,6 +16,8 @@ interface TrustedDevice {
   createdAt: string;
   lastUsedAt: string;
   expiresAt: string;
+  /** false: "Bu cihazı hatırla" kapalıydı — tarayıcı kapanınca biter */
+  remembered?: boolean;
   current: boolean;
 }
 
@@ -272,7 +274,10 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
                         <span className="truncate">{d.label}</span>
                         {d.current && <span className="shrink-0 rounded-full bg-brand px-2 py-0.5 text-[10px] font-extrabold text-onbrand">Bu cihaz</span>}
                       </span>
-                      <span className="block text-[11px] text-ink-muted">Son kullanım {relTime(d.lastUsedAt)}</span>
+                      <span className="block text-[11px] text-ink-muted">
+                        Son kullanım {relTime(d.lastUsedAt)}
+                        {d.remembered === false && ' · tarayıcı kapanınca biter'}
+                      </span>
                     </span>
                     {!d.current && (
                       <button type="button" onClick={() => void revokeDevice(d)} disabled={busy === `device-${d.id}`} aria-label={`${d.label} cihazını kaldır`}

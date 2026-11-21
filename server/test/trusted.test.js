@@ -65,13 +65,27 @@ test('OTP ile kayıt tamamlanınca da cihaz güvenilir olur', async () => {
   assert.equal(row.device_label, 'Safari · iPhone');
 });
 
-test('"Bu cihazı hatırla" kapalıysa çerez ve kayıt yok', async () => {
+test('"Bu cihazı hatırla" kapalı: oturum çerezi (Max-Age yok), 1 günlük sunucu kaydı; çıkışta sunucuda iptal edilir', async () => {
   await srv.registerFull('hatirlama');
-  const before = (await srv.db.get('SELECT COUNT(*) AS n FROM trusted_devices')).n;
   const r = await login('hatirlama', { remember: false });
   assert.equal(r.status, 200);
-  assert.equal(deviceCookie(r), null);
-  assert.equal((await srv.db.get('SELECT COUNT(*) AS n FROM trusted_devices')).n, before);
+  const sc = r.headers.get('set-cookie') ?? '';
+  assert.match(sc, /tn_device=[A-Za-z0-9_-]{43};/);
+  assert.match(sc, /HttpOnly/);
+  assert.match(sc, /SameSite=Lax/);
+  assert.doesNotMatch(sc, /Max-Age/, 'tarayıcı kapanınca silinir');
+  const row = await srv.db.get("SELECT persistent, expires_at FROM trusted_devices WHERE user_id = (SELECT id FROM users WHERE username = 'hatirlama') ORDER BY id DESC");
+  assert.equal(row.persistent, 0);
+  assert.ok(Date.parse(row.expires_at) < Date.now() + 25 * 3600e3, '1 gün');
+  // tazeleme oturum çerezini korur (kalıcıya çevirmez)
+  const c = deviceCookie(r);
+  const t = await refresh(c);
+  assert.equal(t.status, 200);
+  assert.doesNotMatch(t.headers.get('set-cookie') ?? '', /Max-Age/);
+  // çıkış: kayıt sunucuda iptal → aynı belirteç ve çerez artık geçersiz
+  assert.equal((await srv.req('POST', '/api/auth/logout', null, r.body.token, asCookie(c))).status, 204);
+  assert.equal((await srv.req('GET', '/api/auth/me', null, r.body.token)).status, 401);
+  assert.equal((await refresh(c)).status, 401);
 });
 
 test('refresh: geçerli cihaz → yeni erişim belirteci + kullanıcı; last_used_at ve süre güncellenir', async () => {
@@ -176,13 +190,12 @@ test('şifre değişince diğer cihazlar iptal edilir; bu cihaz sessiz tazelemey
   assert.equal((await srv.req('GET', '/api/auth/me', null, ra.body.token)).status, 200);
 });
 
-test('eski biçim belirteçler (did/iat yok) çalışmaya devam eder; tüm cihazlardan çıkıştan sonra reddedilir', async () => {
+test('sunucu kaydına (did) bağlı olmayan eski biçim belirteçler reddedilir (çıkışta iptal edilemezlerdi)', async () => {
   const { user } = await srv.registerFull('eskibelirtec');
   const legacy = signToken({ id: user.id, role: 'user' }, SECRET);
-  assert.equal((await srv.req('GET', '/api/auth/me', null, legacy)).status, 200);
-  const fresh = (await login('eskibelirtec')).body.token;
-  await srv.req('POST', '/api/auth/logout-all', null, fresh);
   assert.equal((await srv.req('GET', '/api/auth/me', null, legacy)).status, 401);
+  const unknownDevice = signToken({ id: user.id, role: 'user', did: 999999 }, SECRET);
+  assert.equal((await srv.req('GET', '/api/auth/me', null, unknownDevice)).status, 401);
 });
 
 test('kullanıcı silinince güvenilir cihazları da silinir', async () => {

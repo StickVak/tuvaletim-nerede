@@ -63,7 +63,8 @@ Seçilen sağlayıcı açılışta loglanır, ör. `[mail] e-posta servisi: brev
 E-posta servisi tanımlı değilse doğrulama kodları **sunucu konsoluna** yazılır (`[mail] … için doğrulama kodu: 123456`) — yerel geliştirme için.
 
 **Brevo kurulumu:** Brevo → *SMTP & API* → *API Keys* → yeni anahtar (`xkeysib-…`) → `BREVO_API_KEY`. *Senders, Domains & Dedicated IPs* altında gönderen adresini (ya da alan adını) doğrulayın → `MAIL_FROM`. Hesapta *Authorised IPs* kısıtı açıksa Render'ın değişken IP'leri `403 Unrecognised IP address` alır; kısıtı kapatın. Hata logları Brevo'nun durum kodunu, `code` ve `message` alanlarını içerir (ör. `durum=401 … unauthorized: Key not found`, `400 … Sender … is not valid`); API anahtarı, tam alıcı adresi ve kod loglanmaz.
-| `TRUST_PROXY` | Ters vekil (Render vb.) arkasında gerçek istemci IP'si için Express `trust proxy` değeri, ör. `1` | — |
+| `TRUST_PROXY` | Ters vekil (Render vb.) arkasında Express `trust proxy` değeri (HTTPS algılama ve yedek IP çözümü), ör. `1` | — |
+| `CLIENT_IP_HEADER` | Gerçek istemci IP'sini taşıyan güvenilir başlık (hız sınırı anahtarı); `none` → yalnızca trust proxy | Render'da `cf-connecting-ip` |
 
 ### Üretimde çalıştırma (Render: iki ücretsiz Web Service)
 
@@ -257,16 +258,54 @@ Hatalarda gövde her zaman `{ "error": "<Türkçe mesaj>" }` biçimindedir.
 
 ## Güvenlik notları
 
-- Şifreler `scrypt` ile tuzlanarak saklanır. Oturum, `AUTH_SECRET` ile HMAC-SHA256 imzalı 7 günlük bir belirteçtir; tarayıcıda `localStorage`'da tutulur. Kullanıcının rolü her istekte veritabanından okunur. Belirteç, bağlı olduğu güvenilir cihaz iptal edilmişse ya da “tüm cihazlardan çıkış” / şifre değişikliğinden (`users.tokens_valid_after`) önce verilmişse reddedilir. Kalıcı oturumun ham cihaz token'ı JavaScript'in erişemediği HttpOnly çerezdedir.
+### Hız sınırlama (`server/ratelimit.js`, bellek içi)
+
+Aşımda `429 Too Many Requests`, `Retry-After` başlığı ve `{ error, retryAfter }` gövdesi döner; mesaj Türkçedir ve ne kadar beklenmesi gerektiğini söyler (ör. “Çok fazla hatalı giriş denemesi. Lütfen 12 dakika sonra tekrar deneyin.”).
+
+| Uç | Anahtar | Sınır |
+|---|---|---|
+| Tüm `/api` (fotoğraf GET'leri hariç) | IP | 300 / dakika |
+| `POST /api/auth/login` | IP · **hesap** | 15 dk'da 10 hatalı · hesap başına 15 dk'da 5 hatalı (başarılı girişler sayılmaz) |
+| `POST /api/auth/send-code` | IP · **hedef e-posta** | 15 dk'da 10 · e-posta başına saatte 5 (+ aynı adrese 60 sn bekleme) |
+| `POST /api/auth/register` (kod doğrulama) | IP · **e-posta** | saatte 10 · e-posta başına saatte 10 hatalı (+ kod başına 5 deneme) |
+| `refresh`, `logout`, `logout-all`, `devices` | IP | 5 dk'da 60 |
+| Google ile giriş (`/api/auth/google*`) | IP | 10 dk'da 20 |
+| Oy, bildirim, favori, profil, çıkış, cihaz iptali | IP · **kullanıcı** | dakikada 60 · kullanıcı başına dakikada 30 |
+| Fotoğraf yükleme (yeni mekan, profil fotoğrafı) | kullanıcı | saatte 20 |
+| Yönetim anahtarı | IP | 15 dk'da 10 hatalı |
+
+**Gerçek istemci IP'si:** Render'da önde Cloudflare vardır ve her isteğe `CF-Connecting-IP` yazar (istemcinin gönderdiği değer korunmaz); sunucu Render'da (`RENDER` ortam değişkeni) bu başlığı kullanır. Başlık yoksa/geçersizse Express `trust proxy` (`TRUST_PROXY=1`) ile çözülen `req.ip`'ye düşer; `X-Forwarded-For`'un en solundaki (istemcinin uydurabileceği) değere güvenilmez. Başka bir barındırmada `CLIENT_IP_HEADER` ile değiştirilebilir (`none` → yalnızca trust proxy). Sunucunun sizi hangi IP ile gördüğü: `GET /api/health/ip`.
+
+### Oturum ve çerezler
+
+- Şifreler `scrypt` ile tuzlanarak saklanır (en fazla 128 karakter). Olmayan hesaba giriş denemesi de aynı süreyi harcar (zamanlamadan kayıtlı kullanıcı adı çıkarılamaz).
+- **Her oturum sunucuda kayıtlıdır** (`trusted_devices`): ham oturum token'ı yalnızca `HttpOnly` çerezde (`tn_device`, `Path=/api/auth`), veritabanında `AUTH_SECRET` ile HMAC-SHA256 özeti durur. “Bu cihazı hatırla” açıkken 90 günlük kalıcı çerez; kapalıyken tarayıcı kapanınca silinen oturum çerezi ve 1 günlük kayıt.
+- Erişim belirteci HMAC imzalı, **12 saat** geçerli ve her zaman bir oturum kaydına bağlıdır (`did`). Her istekte kayıt kontrol edilir: çıkış (`logout`), cihaz iptali, “tüm cihazlardan çıkış” ya da şifre değişikliği belirteci anında geçersiz kılar. Süresi dolunca istemci çerezle sessizce yenisini alır. “Hatırla” kapalıysa belirteç `sessionStorage`'da tutulur.
+- Çerezler: `HttpOnly`, `SameSite=Lax` (Google dönüşü gibi üst düzey yönlendirmelerde gönderilir, başka sitenin POST/fetch isteklerinde gönderilmez) ve üretimde (`RENDER` ya da `NODE_ENV=production`) **her zaman `Secure`**. Yerel http geliştirmede `Secure` eklenmez.
+- Bozuk, eksik, aşırı uzun ya da biçimsiz çerez ve `Authorization` başlıkları hata fırlatmaz; istek oturumsuz devam eder, geçersiz çerez silinir.
+
+### Girdi doğrulama (`server/validate.js`)
+
+- Tüm metin alanları yalnızca `string` kabul eder (dizi/nesne/sayı → `400`); Unicode NFC'ye çevrilir, kontrol ve görünmez/yön değiştiren karakterler atılır, uzunluk sınırları sunucuda uygulanır.
+- E-posta biçimi ve uzunluğu, kullanıcı adı (3-30), şifre (6-128), 6 haneli kod, puanlar (1-5 tamsayı), ücret (0-1000, `12,5` kabul), konum (enlem ±90, boylam ±180), kategori/tür listeleri ve yol parametreleri (mekan kimliği, sayısal kimlikler) denetlenir. Hatalı girdi veritabanına gitmeden `400` ve ne düzeltilmesi gerektiğini söyleyen bir mesajla reddedilir.
+- JSON gövdesi nesne olmalı; bozuk JSON → `400`. Gövde sınırı 100 KB (fotoğraf taşıyan uçlarda 7 MB, profil fotoğrafında 3 MB) → aşımda `413`.
+
+### HTTP güvenlik başlıkları (`server/security.js`)
+
+`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` + `frame-ancestors 'none'`, `Referrer-Policy: strict-origin-when-cross-origin` (OSM harita karoları Referer ister), `Permissions-Policy`, `Cross-Origin-Opener-Policy: same-origin`, üretimde `Strict-Transport-Security`; `X-Powered-By` kapalı.
+
+**Content-Security-Policy** yalnızca kullanılan kaynaklara izin verir: kendi kökeni, Google Fonts, OpenStreetMap karoları, Cloudinary ve Google profil fotoğrafları, yaya rota servisleri (`routing.openstreetmap.de`, `router.project-osrm.org`). `index.html`'deki satır içi tema betiği açılışta hesaplanan SHA-256 hash'iyle izinlidir (`unsafe-inline` / `unsafe-eval` yok). Google ile giriş tam sayfa yönlendirmeyle çalıştığı için ek izin gerekmez. JSON yanıtları `default-src 'none'` taşır.
+
+### Hata yanıtları
+
+Beklenmeyen hatalarda istemciye yalnızca “Sunucu hatası. Lütfen biraz sonra tekrar deneyin.” ve kısa bir başvuru kodu (`ref`) döner; yığın izi, SQL hatası ve sağlayıcı yanıtları yalnızca sunucu loguna aynı kodla yazılır. Statik dosya hataları da aynı işleyiciden geçer.
+
+### Diğer
+
 - Örnek (herkese açık) anahtar asla kullanılmaz; yoksa rastgele üretilir.
-- Fotoğraflar yalnızca JPEG / PNG / WebP / GIF olabilir (SVG reddedilir) ve `X-Content-Type-Options: nosniff` ile sunulur.
-- **Yönetim paneli ayrı servistir**; kullanıcı uygulamasının paketinde yönetim kodu yoktur. Yönetim API'si kullanıcı hesaplarıyla açılmaz, yalnızca `ADMIN_SECRET_KEY` ile (sabit süreli karşılaştırma).
-- Panel girişinde anahtar tarayıcıda saklanmaz: panel sunucusu anahtardan türetilen anahtarla imzalı, 12 saatlik `HttpOnly; SameSite=Strict` (HTTPS'te `Secure`) bir çerez verir. Çıkış oturumu sunucuda geçersiz kılar; anahtar değişince tüm oturumlar düşer. Değiştiren istekler ayrıca özel bir başlık ister (CSRF). Panel `X-Frame-Options: DENY`, sıkı CSP ve `noindex` ile sunulur; hatalı anahtar denemeleri sınırlıdır.
-- **Hız sınırı (IP başına, bellek içi):** giriş + kayıt 15 dakikada 20 istek; oy, bildirim, favori, başvuru ve profil yazma dakikada 60 istek. Aşılınca `429` ve `Retry-After`. Sunucu yalnızca kendi makinesindeki (loopback) vekilin `X-Forwarded-For` başlığına güvenir.
-- Profil ve mekan fotoğrafları içerik baytları kontrol edilerek kabul edilir; Cloudinary'ye imzalı istekle (API secret yalnızca sunucuda), tahmin edilemez `public_id` ile yüklenir ya da yerelde rastgele adla `server/data/avatars/` ve `server/data/photos/` altında tutulur (eski sürümlerde veritabanına gömülü fotoğraflar açılışta depoya taşınır).
-- Turso'da yabancı anahtar zinciri bağlantıya özel olduğundan mekan/kullanıcı silmede bağlı oy, favori ve bildirimler kodda açıkça, tek işlemde (`batch`) silinir.
-- Doğrulama kodu isteği aynı adrese 60 saniyede bir ve IP başına 15 dakikada 10 ile sınırlıdır; kod düz metin saklanmaz.
-- HTTPS kurulumu bu projenin kapsamında değildir; internete açmadan önce bir ters vekil sunucu (reverse proxy) ile HTTPS ekleyin.
+- Fotoğraflar yalnızca JPEG / PNG / WebP / GIF olabilir (SVG reddedilir), içerik baytları kontrol edilir ve `nosniff` ile sunulur. Cloudinary'ye imzalı istekle (API secret yalnızca sunucuda), tahmin edilemez `public_id` ile yüklenir ya da yerelde rastgele adla `server/data/avatars/` ve `server/data/photos/` altında tutulur.
+- **Yönetim paneli ayrı servistir**; kullanıcı uygulamasının paketinde yönetim kodu yoktur. Yönetim API'si yalnızca `ADMIN_SECRET_KEY` ile açılır (sabit süreli karşılaştırma). Panel anahtarı tarayıcıda saklamaz: 12 saatlik `HttpOnly; SameSite=Strict` (üretimde `Secure`) imzalı çerez verir; çıkış oturumu sunucuda geçersiz kılar; değiştiren istekler özel başlık ister (CSRF); sıkı CSP, `X-Frame-Options: DENY` ve `noindex` ile sunulur.
+- Turso'da yabancı anahtar zinciri bağlantıya özel olduğundan mekan/kullanıcı silmede bağlı kayıtlar kodda açıkça, tek işlemde (`batch`) silinir.
 - Telefonda gerçek GPS için tarayıcılar HTTPS ister (`localhost` hariç).
 
 ## Proje yapısı

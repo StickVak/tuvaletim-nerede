@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { PASSWORD_LENGTH, PASSWORD_MAX, cleanText, intIdParam, optionalText, validPassword } from '../validate.js';
 import { join } from 'node:path';
 import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, verifyPassword } from '../auth.js';
@@ -38,7 +39,8 @@ const reviewJson = (v) => ({
 });
 
 /** avatars: createPhotoStore() — Cloudinary ya da server/data/avatars */
-export function profileRoutes(db, { avatars, writeLimit }) {
+const pass = (_req, _res, next) => next();
+export function profileRoutes(db, { avatars, writeLimit, uploadLimit = pass }) {
   const r = asyncRouter();
   r.use(requireUser);
   const me = (req) => db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
@@ -79,22 +81,24 @@ export function profileRoutes(db, { avatars, writeLimit }) {
     const sets = {};
     if (b.username !== undefined) {
       // Kullanıcı adı değiştirme: biçim + benzersizlik (büyük/küçük harf duyarsız; kendi adının harf değişimi serbest)
-      const v = String(b.username).trim();
-      if (!USERNAME_RE.test(v)) return res.status(400).json({ error: USERNAME_INVALID, field: 'username' });
+      const v = cleanText(b.username);
+      if (v === null || !USERNAME_RE.test(v)) return res.status(400).json({ error: USERNAME_INVALID, field: 'username' });
       const c = await identityConflict(db, { username: v, exceptUserId: req.user.id });
       if (c) return res.status(c.status).json({ error: c.error, field: c.field });
       sets.username = v;
       sets.username_key = usernameKey(v);
     }
     if (b.displayName !== undefined) {
-      const v = String(b.displayName).trim();
-      if (v.length < 1 || v.length > 40) return res.status(400).json({ error: 'Görünen ad 1-40 karakter olmalı.' });
+      const v = cleanText(b.displayName);
+      if (v === null || v.length < 1 || v.length > 40) return res.status(400).json({ error: 'Görünen ad 1-40 karakter olmalı.', field: 'displayName' });
       sets.display_name = v;
     }
     if (b.bio !== undefined) {
-      const v = String(b.bio ?? '').trim();
-      if (v.length > 160) return res.status(400).json({ error: 'Biyografi en fazla 160 karakter olabilir.' });
-      sets.bio = v || null;
+      try {
+        sets.bio = optionalText(b.bio, 160, 'Biyografi', { multiline: true });
+      } catch (msg) {
+        return res.status(400).json({ error: msg, field: 'bio' });
+      }
     }
     const keys = Object.keys(sets);
     if (keys.length) {
@@ -111,19 +115,21 @@ export function profileRoutes(db, { avatars, writeLimit }) {
 
   r.post('/password', writeLimit, async (req, res) => {
     const { currentPassword, newPassword } = req.body ?? {};
-    if (!verifyPassword(currentPassword ?? '', (await me(req)).password_hash)) return res.status(400).json({ error: 'Mevcut şifre hatalı.' });
-    if (String(newPassword ?? '').length < 6) return res.status(400).json({ error: 'Yeni şifre en az 6 karakter olmalı.' });
+    if (typeof currentPassword !== 'string' || currentPassword.length > PASSWORD_MAX || !verifyPassword(currentPassword, (await me(req)).password_hash)) {
+      return res.status(400).json({ error: 'Mevcut şifre hatalı.' });
+    }
+    if (!validPassword(newPassword)) return res.status(400).json({ error: `Yeni ${PASSWORD_LENGTH.charAt(0).toLowerCase()}${PASSWORD_LENGTH.slice(1)}` });
     // Güvenlik: şifre değişince bu cihaz dışındaki güvenilir cihazlar iptal edilir ve eski erişim belirteçleri geçersizleşir.
     // Bu cihaz (güvenilirse) istemcinin sessiz oturum tazelemesiyle kesintisiz devam eder.
     const now = new Date().toISOString();
     await db.batch([
-      ['UPDATE users SET password_hash = ?, tokens_valid_after = ? WHERE id = ?', [hashPassword(String(newPassword)), now, req.user.id]],
+      ['UPDATE users SET password_hash = ?, tokens_valid_after = ? WHERE id = ?', [hashPassword(newPassword), now, req.user.id]],
       ['UPDATE trusted_devices SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL AND id != ?', [now, req.user.id, req.auth?.deviceId ?? -1]],
     ]);
     res.status(204).end();
   });
 
-  r.put('/avatar', writeLimit, async (req, res) => {
+  r.put('/avatar', writeLimit, uploadLimit, async (req, res) => {
     let ref;
     try {
       ref = await avatars.save(req.body?.image, { prefix: `${req.user.id}-` });
@@ -151,6 +157,7 @@ export function profileRoutes(db, { avatars, writeLimit }) {
 /** Herkese açık profil: şifre, e-posta, rol gibi hiçbir gizli alan dönmez */
 export function userRoutes(db) {
   const r = asyncRouter();
+  r.param('id', intIdParam);
   r.get('/:id', async (req, res) => {
     const u = await db.get('SELECT * FROM users WHERE id = ?', [Number(req.params.id)]);
     if (!u) return res.status(404).json({ error: 'Kullanıcı bulunamadı.' });

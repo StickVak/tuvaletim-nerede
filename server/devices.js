@@ -11,6 +11,14 @@ import { createHmac, randomBytes } from 'node:crypto';
 export const DEVICE_COOKIE = 'tn_device';
 /** Kayan süre: her kullanımda bu kadar uzar */
 export const DEVICE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+/**
+ * "Bu cihazı hatırla" kapalıyken de oturum sunucuda kayıtlıdır (çıkışta iptal edilebilsin) ama çerez tarayıcı
+ * kapanınca silinir (Max-Age yok) ve kayıt 1 gün kullanılmazsa düşer.
+ */
+export const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
+const ttl = (persistent) => (persistent ? DEVICE_TTL_MS : SESSION_TTL_MS);
+/** Token biçimi: 32 bayt base64url (bozuk/uzun çerez veritabanına hiç gitmez) */
+const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
 const COOKIE_PATH = '/api/auth';
 
 /** "Chrome · Android", "Safari · iPhone" gibi okunabilir cihaz adı */
@@ -46,8 +54,9 @@ export function deviceLabel(ua = '') {
 }
 
 export function parseCookies(header = '') {
-  const out = {};
-  for (const part of String(header).split(';')) {
+  const out = Object.create(null);
+  if (typeof header !== 'string' || header.length > 8192) return out;
+  for (const part of header.split(';')) {
     const i = part.indexOf('=');
     if (i > 0) {
       try {
@@ -60,18 +69,33 @@ export function parseCookies(header = '') {
   return out;
 }
 
-/** HTTPS'te (Render: TRUST_PROXY ile req.secure) Secure; yerel http'de değil. Aynı köken → SameSite=Lax yeterli. */
-const cookieAttrs = (req, maxAgeS) => `Path=${COOKIE_PATH}; HttpOnly; SameSite=Lax; Max-Age=${maxAgeS}${req.secure ? '; Secure' : ''}`;
+/**
+ * Secure: üretimde (app.locals.secureCookies) her zaman; aksi halde istek HTTPS ise (req.secure, TRUST_PROXY ile).
+ * Yerel http geliştirmede Secure olmaz (tarayıcı çerezi kaydetmezdi).
+ */
+export const isSecure = (req) => Boolean(req.secure || req.app?.locals?.secureCookies);
 
-export function setDeviceCookie(req, res, token) {
-  res.append('Set-Cookie', `${DEVICE_COOKIE}=${token}; ${cookieAttrs(req, Math.floor(DEVICE_TTL_MS / 1000))}`);
+/**
+ * HttpOnly: JavaScript (XSS) okuyamaz. SameSite=Lax: başka sitelerden gelen POST/fetch isteklerine eklenmez
+ * (Google dönüşü gibi üst düzey GET yönlendirmelerinde gönderilir). Path=/api/auth: yalnızca oturum uçlarına gider.
+ * maxAgeS null → oturum çerezi (tarayıcı kapanınca silinir).
+ */
+const cookieAttrs = (req, maxAgeS) =>
+  `Path=${COOKIE_PATH}; HttpOnly; SameSite=Lax${maxAgeS === null ? '' : `; Max-Age=${maxAgeS}`}${isSecure(req) ? '; Secure' : ''}`;
+
+export function setDeviceCookie(req, res, token, { persistent = true } = {}) {
+  res.append('Set-Cookie', `${DEVICE_COOKIE}=${token}; ${cookieAttrs(req, persistent ? Math.floor(DEVICE_TTL_MS / 1000) : null)}`);
 }
 
 export function clearDeviceCookie(req, res) {
   res.append('Set-Cookie', `${DEVICE_COOKIE}=; ${cookieAttrs(req, 0)}`);
 }
 
-export const readDeviceToken = (req) => parseCookies(req.headers.cookie)[DEVICE_COOKIE] || null;
+/** Çerezdeki token; yoksa ya da biçimi bozuksa null (hata fırlatmaz) */
+export function readDeviceToken(req) {
+  const v = parseCookies(req.headers.cookie)[DEVICE_COOKIE];
+  return typeof v === 'string' && TOKEN_RE.test(v) ? v : null;
+}
 
 export function createDeviceStore(db, secret) {
   const hash = (token) => createHmac('sha256', secret).update(`device:${token}`).digest('hex');
@@ -79,28 +103,32 @@ export function createDeviceStore(db, secret) {
   const activeSql = 'revoked_at IS NULL AND expires_at > ?';
 
   return {
-    /** Yeni güvenilir cihaz: { id, token } (ham token yalnızca çereze yazılır) */
-    async issue(userId, userAgent) {
+    /**
+     * Yeni oturum kaydı: { id, token, persistent } (ham token yalnızca çereze yazılır, veritabanında HMAC-SHA256 özeti).
+     * persistent=false: "Bu cihazı hatırla" kapalı — kısa ömürlü, tarayıcı oturumu boyunca.
+     */
+    async issue(userId, userAgent, { persistent = true } = {}) {
       const token = randomBytes(32).toString('base64url');
       const t = Date.now();
       const { lastId } = await db.run(
-        `INSERT INTO trusted_devices (user_id, device_token_hash, device_label, user_agent, created_at, last_used_at, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [userId, hash(token), deviceLabel(userAgent), String(userAgent ?? '').slice(0, 300), new Date(t).toISOString(), new Date(t).toISOString(), new Date(t + DEVICE_TTL_MS).toISOString()],
+        `INSERT INTO trusted_devices (user_id, device_token_hash, device_label, user_agent, created_at, last_used_at, expires_at, persistent)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userId, hash(token), deviceLabel(userAgent), String(userAgent ?? '').slice(0, 300), new Date(t).toISOString(), new Date(t).toISOString(),
+          new Date(t + ttl(persistent)).toISOString(), persistent ? 1 : 0],
       );
-      return { id: lastId, token };
+      return { id: lastId, token, persistent };
     },
 
     /** Aktif (iptal edilmemiş, süresi dolmamış) kayıt; yoksa null */
     async find(token) {
-      if (!token || typeof token !== 'string' || token.length > 200) return null;
+      if (typeof token !== 'string' || !TOKEN_RE.test(token)) return null;
       return (await db.get(`SELECT * FROM trusted_devices WHERE device_token_hash = ? AND ${activeSql}`, [hash(token), now()])) ?? null;
     },
 
-    /** Kullanım: last_used_at güncellenir, süre 90 gün ileri kayar */
-    async touch(id) {
+    /** Kullanım: last_used_at güncellenir, süre ileri kayar (kalıcı 90 gün, oturumluk 1 gün) */
+    async touch(device) {
       const t = Date.now();
-      await db.run('UPDATE trusted_devices SET last_used_at = ?, expires_at = ? WHERE id = ?', [new Date(t).toISOString(), new Date(t + DEVICE_TTL_MS).toISOString(), id]);
+      await db.run('UPDATE trusted_devices SET last_used_at = ?, expires_at = ? WHERE id = ?', [new Date(t).toISOString(), new Date(t + ttl(device.persistent !== 0)).toISOString(), device.id]);
     },
 
     /** Tek cihazı iptal (userId verilirse yalnızca o kullanıcınınkini); iptal edilen satır sayısı */
@@ -118,7 +146,7 @@ export function createDeviceStore(db, secret) {
     },
 
     async list(userId) {
-      return db.all(`SELECT id, device_label, created_at, last_used_at, expires_at FROM trusted_devices WHERE user_id = ? AND ${activeSql} ORDER BY last_used_at DESC`, [userId, now()]);
+      return db.all(`SELECT id, device_label, created_at, last_used_at, expires_at, persistent FROM trusted_devices WHERE user_id = ? AND ${activeSql} ORDER BY last_used_at DESC`, [userId, now()]);
     },
 
     /** Süresi 30 günden uzun zamandır dolmuş ya da iptal edilmiş kayıtları temizler */

@@ -10,7 +10,7 @@
  *   iss, aud, exp, nonce ve email_verified iddiaları denetlenir.
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
-import { parseCookies } from './devices.js';
+import { isSecure, parseCookies } from './devices.js';
 
 export const OAUTH_COOKIE = 'tn_oauth';
 export const CALLBACK_PATH = '/api/auth/google/callback';
@@ -56,7 +56,7 @@ function decodeJwt(token) {
 export function createGoogleAuth({ clientId, clientSecret, redirectUri = null, fetchImpl = fetch }, secret) {
   const sign = (data) => createHmac('sha256', secret).update(`oauth:${data}`).digest('base64url');
   const usedStates = new Map(); // state → bitiş zamanı (tek kullanımlık)
-  const attrs = (req, maxAge) => `Path=${COOKIE_PATH}; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${req.secure ? '; Secure' : ''}`;
+  const attrs = (req, maxAge) => `Path=${COOKIE_PATH}; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${isSecure(req) ? '; Secure' : ''}`;
 
   return {
     /** Akışı başlatır: oauth çerezini yazar, Google yetkilendirme adresini döner */

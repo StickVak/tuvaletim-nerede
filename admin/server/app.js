@@ -11,7 +11,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypt
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import express from 'express';
-import { rateLimit } from '../../server/ratelimit.js';
+import { clientIp, rateLimit } from '../../server/ratelimit.js';
 
 export const COOKIE = 'tn_admin';
 export const SESSION_TTL_MS = 12 * 60 * 60 * 1000;
@@ -33,10 +33,12 @@ function parseCookies(header = '') {
 /**
  * getKey: ADMIN_SECRET_KEY'i döner (her istekte çağrılır; yerelde anahtar dosyası sonradan oluşabilir).
  * mainApiUrl: ana sunucu kökü, ör. https://tuvaletim.onrender.com
+ * production: oturum çerezi her zaman Secure + HSTS. clientIpHeader: gerçek istemci IP başlığı (Render: cf-connecting-ip).
  */
-export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainApiUrl, limits = {} }) {
+export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainApiUrl, limits = {}, production = false, clientIpHeader = null }) {
   const app = express();
   app.disable('x-powered-by');
+  app.use(clientIp({ header: clientIpHeader }));
   const revoked = new Map(); // çıkış yapılan oturumlar → bitiş zamanı
 
   // Oturum imzalama anahtarı yönetici anahtarından türetilir: anahtar değişince tüm oturumlar düşer
@@ -62,11 +64,14 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
   }
 
   const cookieAttrs = (req, maxAgeS) =>
-    `Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAgeS}${req.secure ? '; Secure' : ''}`;
+    `Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAgeS}${req.secure || production ? '; Secure' : ''}`;
 
   // Güvenlik başlıkları: çerçeveye alınamaz, arama motorlarına kapalı, yalnızca kendi kaynakları
   app.use((_req, res, next) => {
+    if (production) res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     res.set({
+      'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), payment=(), usb=()',
+      'Cross-Origin-Opener-Policy': 'same-origin',
       'X-Frame-Options': 'DENY',
       'X-Content-Type-Options': 'nosniff',
       'Referrer-Policy': 'no-referrer',
@@ -79,6 +84,7 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
         // Cloudinary: kalıcı mekan/profil fotoğrafları (ana sunucu oraya yönlendirir)
         "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://res.cloudinary.com",
         "connect-src 'self'",
+        "object-src 'none'",
         "frame-ancestors 'none'",
         "base-uri 'none'",
         "form-action 'self'",
@@ -91,7 +97,7 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
 
   const L = limits === false ? null : { login: { windowMs: 15 * 60 * 1000, max: 10 }, ...limits };
   const loginLimit = L
-    ? rateLimit(L.login, 'Çok fazla hatalı anahtar denemesi. Lütfen birkaç dakika sonra tekrar deneyin.', (s) => s === 401)
+    ? rateLimit(L.login, { name: 'adminLogin', message: 'Çok fazla hatalı anahtar denemesi.', countIf: (s) => s === 401 })
     : (_req, _res, next) => next();
 
   app.post('/auth/login', loginLimit, express.json({ limit: '2kb' }), (req, res) => {

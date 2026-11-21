@@ -1,5 +1,6 @@
 import { asyncRouter } from '../async.js';
 import { requireUser } from '../auth.js';
+import { optionalText, placeIdParam } from '../validate.js';
 import { computeStats } from '../stats.js';
 import { computeStatus, REPORT_TYPES, STATUS_WINDOW_MS } from '../status.js';
 
@@ -116,11 +117,21 @@ export function parseVote(body) {
   const star = (n) => Number.isInteger(n) && n >= 1 && n <= 5;
   if (!star(body?.cleanliness) || !star(body?.comfort)) return 'Temizlik ve konfor 1-5 arası olmalı.';
   if (typeof body.isPaid !== 'boolean') return 'Ücretli / ücretsiz seçimi yapın.';
-  let priceAmount = body.priceAmount === '' || body.priceAmount == null ? null : Number(body.priceAmount);
-  if (Number.isNaN(priceAmount)) priceAmount = null;
+  // Ücret: sayı ya da sayı metni ("12,5" dahil); başka tür (dizi, nesne, "abc") reddedilir
+  const rawPrice = body.priceAmount;
+  let priceAmount = null;
+  if (rawPrice !== '' && rawPrice != null) {
+    if (typeof rawPrice !== 'number' && typeof rawPrice !== 'string') return 'Ücret tutarı sayı olmalı.';
+    priceAmount = typeof rawPrice === 'number' ? rawPrice : Number(rawPrice.trim().replace(',', '.'));
+    if (!Number.isFinite(priceAmount)) return 'Ücret tutarı sayı olmalı.';
+  }
   if (priceAmount !== null && (priceAmount < 0 || priceAmount > 1000)) return 'Ücret tutarı 0-1000 ₺ arasında olmalı.';
-  const comment = String(body.comment ?? '').trim();
-  if (comment.length > 280) return 'Yorum en fazla 280 karakter olabilir.';
+  let comment;
+  try {
+    comment = optionalText(body.comment, 280, 'Yorum', { multiline: true });
+  } catch (msg) {
+    return msg;
+  }
   const toiletType = body.toiletType ?? null;
   if (toiletType !== null && !TOILET_TYPES.includes(toiletType)) return 'Geçersiz tuvalet tipi.';
   return {
@@ -128,13 +139,14 @@ export function parseVote(body) {
     comfort: body.comfort,
     isPaid: body.isPaid,
     priceAmount: body.isPaid && priceAmount ? Math.round(priceAmount * 100) / 100 : null,
-    comment: comment || null,
+    comment,
     toiletType,
   };
 }
 
 export function placeRoutes(db, writeLimit, photos) {
   const r = asyncRouter();
+  r.param('id', placeIdParam);
   // Kalıcı kapalı mekanlar herkese açık uçlarda yok sayılır
   const exists = (id) => db.get('SELECT 1 FROM places WHERE id = ? AND closed_at IS NULL', [id]);
 
@@ -213,6 +225,7 @@ export function placeRoutes(db, writeLimit, photos) {
 
 export function favoriteRoutes(db, writeLimit) {
   const r = asyncRouter();
+  r.param('placeId', placeIdParam);
   r.use(writeLimit, requireUser);
   r.put('/:placeId', async (req, res) => {
     if (!(await db.get('SELECT 1 FROM places WHERE id = ?', [req.params.placeId]))) return res.status(404).json({ error: 'Mekan bulunamadı.' });

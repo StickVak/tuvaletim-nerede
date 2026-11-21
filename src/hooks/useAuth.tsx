@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired);
   }, []);
 
-  const finish = (r: { token: string; user: User }) => {
-    setToken(r.token);
+  const finish = (r: { token: string; user: User }, remember = true) => {
+    setToken(r.token, remember);
     setUser(r.user);
     setAuthMode(null);
     return r.user;
@@ -71,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (username: string, password: string, remember = true) =>
-      finish(await api('/auth/login', { method: 'POST', body: { username, password, remember } })),
+      finish(await api('/auth/login', { method: 'POST', body: { username, password, remember } }), remember),
     [],
   );
   const sendCode = useCallback(
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const register = useCallback(
     async (username: string, email: string, password: string, code: string, remember = true, acceptTerms = false) =>
-      finish(await api('/auth/register', { method: 'POST', body: { username, email, password, code, remember, acceptTerms } })),
+      finish(await api('/auth/register', { method: 'POST', body: { username, email, password, code, remember, acceptTerms } }), remember),
     [],
   );
   const clearLocal = () => {

@@ -22,16 +22,26 @@ export class ApiError extends Error {
 
 export function getToken(): string | null {
   try {
-    return localStorage.getItem(TOKEN_KEY);
+    return sessionStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
   }
 }
 
-export function setToken(token: string | null) {
+/**
+ * Erişim belirtecini saklar. persistent=false ("Bu cihazı hatırla" kapalı): sessionStorage — tarayıcı kapanınca
+ * silinir (sunucudaki oturum çerezi de öyle). persistent verilmezse (sessiz tazeleme) mevcut yerinde güncellenir.
+ */
+export function setToken(token: string | null, persistent?: boolean) {
   try {
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-    else localStorage.removeItem(TOKEN_KEY);
+    if (!token) {
+      localStorage.removeItem(TOKEN_KEY);
+      sessionStorage.removeItem(TOKEN_KEY);
+      return;
+    }
+    const sessionOnly = persistent === undefined ? sessionStorage.getItem(TOKEN_KEY) !== null : !persistent;
+    (sessionOnly ? sessionStorage : localStorage).setItem(TOKEN_KEY, token);
+    (sessionOnly ? localStorage : sessionStorage).removeItem(TOKEN_KEY);
   } catch {
     /* gizli sekme vb. */
   }

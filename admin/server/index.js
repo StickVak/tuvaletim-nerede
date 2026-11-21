@@ -22,7 +22,10 @@ function getKey() {
 // Render kendi PORT'unu verir; yerelde .env'deki PORT ana sunucuya aittir → ADMIN_PORT (varsayılan 3002)
 const PORT = Number(process.env.ADMIN_PORT || (process.env.RENDER ? process.env.PORT : '')) || 3002;
 const mainApiUrl = (process.env.MAIN_API_URL || 'http://localhost:3001').replace(/\/+$/, '');
-const app = createAdminServer({ getKey, mainApiUrl, distDir: here('../dist'), appUrl: process.env.MAIN_APP_URL || mainApiUrl });
+const production = process.env.NODE_ENV === 'production' || Boolean(process.env.RENDER);
+const ipHeaderEnv = (process.env.CLIENT_IP_HEADER ?? '').trim().toLowerCase();
+const clientIpHeader = ipHeaderEnv === 'none' ? null : ipHeaderEnv || (process.env.RENDER ? 'cf-connecting-ip' : null);
+const app = createAdminServer({ getKey, mainApiUrl, distDir: here('../dist'), appUrl: process.env.MAIN_APP_URL || mainApiUrl, production, clientIpHeader });
 
 if (process.env.TRUST_PROXY) {
   const v = process.env.TRUST_PROXY;

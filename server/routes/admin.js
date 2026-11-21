@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { PLACE_ID_RE, placeIdParam } from '../validate.js';
 import { asyncRouter } from '../async.js';
 import { parsePlaceFields } from '../validate.js';
 import { getPlace, listPlaces } from './places.js';
@@ -18,6 +19,9 @@ const adminPlace = (db, id) => getPlace(db, id, null, { includeClosed: true });
  */
 export function adminRoutes(db, { photos, avatars }) {
   const r = asyncRouter();
+  // :id hem metin (mekan/başvuru) hem sayı (oy, kullanıcı, bildirim) olabilir: ikisini de kapsayan biçim denetimi
+  r.param('id', (_req, res, next, v) => (PLACE_ID_RE.test(v) ? next() : res.status(400).json({ error: 'Geçersiz kimlik.' })));
+  r.param('placeId', placeIdParam);
   /** Fotoğraf kaydeder; doğrulama/yükleme hatasında yanıtı yazıp undefined döner */
   const savePhoto = async (res, dataUrl) => {
     try {

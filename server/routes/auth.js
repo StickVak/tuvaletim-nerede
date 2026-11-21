@@ -2,8 +2,9 @@ import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'node:crypto
 import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, signToken, verifyPassword } from '../auth.js';
 import { MailError, maskEmail } from '../mailer.js';
-import { clearDeviceCookie, createDeviceStore, readDeviceToken, setDeviceCookie } from '../devices.js';
-import { EMAIL_RE, USERNAME_INVALID, USERNAME_RE, conflictFromDbError, emailKey, identityConflict, uniqueUsername, usernameBase, usernameKey } from '../identity.js';
+import { DEVICE_COOKIE, clearDeviceCookie, createDeviceStore, parseCookies, readDeviceToken, setDeviceCookie } from '../devices.js';
+import { PASSWORD_LENGTH, PASSWORD_MAX, cleanText, intIdParam, isEmail, validPassword } from '../validate.js';
+import { USERNAME_INVALID, USERNAME_RE, conflictFromDbError, emailKey, identityConflict, uniqueUsername, usernameBase, usernameKey } from '../identity.js';
 import { OAuthError, createGoogleAuth } from '../google.js';
 import { LEGAL_VERSION } from '../legal.js';
 export const CODE_TTL_MS = 10 * 60 * 1000;
@@ -11,6 +12,8 @@ export const RESEND_AFTER_MS = 60 * 1000;
 export const MAX_CODE_ATTEMPTS = 5;
 /** Belirsiz teslim (zaman aşımı) sonrası yeni kod istemeden önceki kısa bekleme */
 export const UNCERTAIN_RESEND_MS = 15 * 1000;
+/** Olmayan hesaplar için sabit maliyetli karşılaştırma (zamanlama ile kullanıcı adı yoklamasına karşı) */
+const DUMMY_HASH = hashPassword(randomBytes(16).toString('hex'));
 export const TERMS_REQUIRED = "Devam etmek için Hizmet Şartları'nı ve Gizlilik Politikası'nı kabul etmelisiniz.";
 
 /**
@@ -30,27 +33,41 @@ function deliveryFailure(e) {
   return { reason: 'unavailable', retryAfter: 60, error: 'E-posta servisi geçici olarak kullanılamıyor. 1 dakika sonra tekrar deneyin.' };
 }
 
-const normEmail = (v) => String(v ?? '').trim().toLowerCase();
+/** E-posta: yalnızca string kabul edilir; kırpılır ve küçültülür (string değilse boş → biçim hatası) */
+const normEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
 
 /**
  * Kayıt: önce POST /send-code ile e-postaya 6 haneli kod, sonra POST /register ile kod doğrulanıp hesap açılır.
  * mailer.sendVerificationCode(to, code) — bkz. server/mailer.js
  */
-export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimit, mailer, google = null }) {
+/**
+ * limits: app.js'te kurulan hız sınırlayıcıları { login, register, sendCode, session, oauth } (testlerde boş geçiş).
+ * writeLimit: hesap/cihaz değiştiren uçlar (çıkış, cihaz iptali) için.
+ */
+const pass = (_req, _res, next) => next();
+export function authRoutes(db, secret, { limits = {}, writeLimit = pass, mailer, google = null }) {
   const r = asyncRouter();
-  r.use('/register', registerLimit);
-  r.use('/send-code', sendCodeLimit);
-  r.use('/login', loginLimit);
+  const L = { login: pass, register: pass, sendCode: pass, session: pass, oauth: pass, ...limits };
+  r.use('/register', L.register);
+  r.use('/send-code', L.sendCode);
+  r.use('/login', L.login);
+  r.use(['/refresh', '/logout', '/logout-all', '/devices'], L.session);
+  r.use('/google', L.oauth);
+  r.param('id', intIdParam);
   const devices = createDeviceStore(db, secret);
-  /** Erişim belirteci (cihaza bağlıysa did ile: cihaz iptal edilince belirteç de geçersiz olur) */
-  const respond = (res, status, user, deviceId = null) =>
-    res.status(status).json({ token: signToken({ id: user.id, role: user.role, ...(deviceId ? { did: deviceId } : {}) }, secret), user: publicUser(user) });
+  /** Erişim belirteci her zaman bir oturum kaydına (did) bağlıdır: kayıt iptal edilince belirteç de geçersiz olur */
+  const respond = (res, status, user, deviceId) =>
+    res.status(status).json({ token: signToken({ id: user.id, role: user.role, did: deviceId }, secret), user: publicUser(user) });
 
-  /** Başarılı OTP'li kayıt / girişten sonra: "Bu cihazı hatırla" açıksa (varsayılan) güvenilir cihaz + çerez */
+  /**
+   * Başarılı OTP'li kayıt / girişten sonra sunucu tarafı oturum kaydı + HttpOnly çerez.
+   * "Bu cihazı hatırla" açıksa (varsayılan) 90 günlük kalıcı çerez; kapalıysa tarayıcı kapanınca silinen oturum çerezi
+   * ve 1 günlük kayıt. Her iki durumda da çıkış yapınca kayıt sunucuda iptal edilir.
+   */
   async function startSession(req, res, status, user) {
-    if (req.body?.remember === false) return respond(res, status, user);
-    const device = await devices.issue(user.id, req.get('user-agent'));
-    setDeviceCookie(req, res, device.token);
+    const persistent = req.body?.remember !== false;
+    const device = await devices.issue(user.id, req.get('user-agent'), { persistent });
+    setDeviceCookie(req, res, device.token, { persistent });
     return respond(res, status, user, device.id);
   }
 
@@ -69,7 +86,7 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     return c && [c.status, c.error, c.field];
   };
   const emailError = async (email) => {
-    if (!email || !EMAIL_RE.test(email) || email.length > 254) return [400, 'Geçerli bir e-posta adresi girin.', 'email'];
+    if (!isEmail(email)) return [400, 'Geçerli bir e-posta adresi girin.', 'email'];
     const c = await identityConflict(db, { email });
     return c && [c.status, c.error, c.field];
   };
@@ -77,7 +94,7 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
 
   r.post('/send-code', async (req, res) => {
     const email = normEmail(req.body?.email);
-    const username = req.body?.username === undefined ? null : String(req.body.username).trim();
+    const username = req.body?.username === undefined ? null : (cleanText(req.body.username) ?? '');
     const err = (await emailError(email)) ?? (username !== null ? await usernameError(username) : null);
     if (err) return fail(res, err);
 
@@ -128,15 +145,15 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   });
 
   r.post('/register', async (req, res) => {
-    const username = String(req.body?.username ?? '').trim();
+    const username = cleanText(req.body?.username) ?? '';
     const email = normEmail(req.body?.email);
-    const password = String(req.body?.password ?? '');
-    const code = String(req.body?.code ?? '').trim();
+    const password = req.body?.password;
+    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
     const err = (await emailError(email)) ?? (await usernameError(username));
     if (err) return fail(res, err);
     // Hizmet Şartları + Gizlilik Politikası onayı zorunlu (kod tüketilmeden önce denetlenir)
     if (req.body?.acceptTerms !== true) return res.status(400).json({ error: TERMS_REQUIRED, field: 'terms' });
-    if (password.length < 6) return res.status(400).json({ error: 'Şifre en az 6 karakter olmalı.' });
+    if (!validPassword(password)) return res.status(400).json({ error: PASSWORD_LENGTH, field: 'password' });
     if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'E-postanıza gelen 6 haneli kodu girin.' });
 
     const row = await db.get('SELECT * FROM email_codes WHERE email = ?', [email]);
@@ -179,11 +196,15 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   });
 
   r.post('/login', async (req, res) => {
-    const login = String(req.body?.username ?? '').trim();
-    const user = await db.get('SELECT * FROM users WHERE username_key = ? OR email_key = ?', [usernameKey(login), emailKey(login)]);
-    if (!user || !verifyPassword(req.body?.password ?? '', user.password_hash)) {
-      return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
+    const { username, password } = req.body ?? {};
+    if (typeof username !== 'string' || !username.trim() || username.length > 254 || typeof password !== 'string' || !password || password.length > PASSWORD_MAX) {
+      return res.status(400).json({ error: 'Kullanıcı adı (ya da e-posta) ve şifrenizi girin.' });
     }
+    const login = username.trim();
+    const user = await db.get('SELECT * FROM users WHERE username_key = ? OR email_key = ?', [usernameKey(login), emailKey(login)]);
+    // Hesap yoksa da aynı süre harcanır: yanıt süresinden kayıtlı kullanıcı adı/e-posta çıkarılamaz
+    const ok = verifyPassword(password, user?.password_hash ?? DUMMY_HASH);
+    if (!user || !ok) return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.' });
     await startSession(req, res, 200, user);
   });
 
@@ -255,12 +276,13 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   r.get('/google/callback', async (req, res) => {
     const back = (code) => res.redirect(302, `/?auth_error=${code}`);
     if (!googleAuth) return back('google_disabled');
-    const flow = googleAuth.consume(req, String(req.query.state ?? ''));
+    const q = (k) => (typeof req.query[k] === 'string' && req.query[k].length <= 2048 ? req.query[k] : '');
+    const flow = googleAuth.consume(req, q('state'));
     googleAuth.clearCookie(req, res);
     if (!flow) return back('state');
     if (req.query.error) return back(req.query.error === 'access_denied' ? 'cancelled' : 'google');
     try {
-      const profile = await googleAuth.exchange(String(req.query.code ?? ''), flow);
+      const profile = await googleAuth.exchange(q('code'), flow);
       const { user, created } = await googleUser(profile, { termsAccepted: flow.t === 1 });
       // Mevcut güvenilir cihaz mekanizması: uygulama bu çerezle sessizce oturum açar (belirteç URL'de taşınmaz)
       const device = await devices.issue(user.id, req.get('user-agent'));
@@ -282,16 +304,17 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
     const device = await devices.find(token);
     const user = device && (await db.get('SELECT * FROM users WHERE id = ?', [device.user_id]));
     if (!device || !user) {
-      if (token) clearDeviceCookie(req, res);
+      // Geçersiz, bozuk ya da süresi dolmuş çerez temizlenir (istemci standart girişe düşer)
+      if (token || parseCookies(req.headers.cookie)[DEVICE_COOKIE] !== undefined) clearDeviceCookie(req, res);
       return res.status(401).json({ error: 'Oturum yenilenemedi. Lütfen giriş yapın.' });
     }
-    await devices.touch(device.id);
-    setDeviceCookie(req, res, token); // çerez süresi de kayar
+    await devices.touch(device);
+    setDeviceCookie(req, res, token, { persistent: device.persistent !== 0 }); // çerez süresi de kayar
     respond(res, 200, user, device.id);
   });
 
   /** Bu cihazdan çıkış: yalnızca bu cihazın güvenilir kaydı iptal edilir (diğer cihazlar etkilenmez) */
-  r.post('/logout', async (req, res) => {
+  r.post('/logout', writeLimit, async (req, res) => {
     const id = await currentDeviceId(req);
     if (id) await devices.revoke(id);
     clearDeviceCookie(req, res);
@@ -299,7 +322,7 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   });
 
   /** Tüm cihazlardan çıkış: tüm güvenilir cihazlar iptal + daha önce verilmiş tüm erişim belirteçleri geçersiz */
-  r.post('/logout-all', requireUser, async (req, res) => {
+  r.post('/logout-all', writeLimit, requireUser, async (req, res) => {
     await db.batch([devices.revokeAllStmt(req.user.id), ['UPDATE users SET tokens_valid_after = ? WHERE id = ?', [new Date().toISOString(), req.user.id]]]);
     clearDeviceCookie(req, res);
     res.status(204).end();
@@ -309,11 +332,14 @@ export function authRoutes(db, secret, { loginLimit, registerLimit, sendCodeLimi
   r.get('/devices', requireUser, async (req, res) => {
     const current = await currentDeviceId(req);
     const rows = await devices.list(req.user.id);
-    res.json(rows.map((d) => ({ id: d.id, label: d.device_label, createdAt: d.created_at, lastUsedAt: d.last_used_at, expiresAt: d.expires_at, current: d.id === current })));
+    res.json(rows.map((d) => ({
+      id: d.id, label: d.device_label, createdAt: d.created_at, lastUsedAt: d.last_used_at, expiresAt: d.expires_at,
+      remembered: d.persistent !== 0, current: d.id === current,
+    })));
   });
 
   /** Tek cihazı iptal (yalnızca kendi cihazları); o cihazın erişim belirteci de hemen geçersizleşir */
-  r.delete('/devices/:id', requireUser, async (req, res) => {
+  r.delete('/devices/:id', writeLimit, requireUser, async (req, res) => {
     const changes = await devices.revoke(Number(req.params.id), req.user.id);
     res.status(changes ? 204 : 404).end();
   });

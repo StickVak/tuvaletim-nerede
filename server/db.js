@@ -114,6 +114,8 @@ const ADDED_COLUMNS = {
   places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
   status_reports: ['resolved_at TEXT'],
+  // persistent: 1 = "Bu cihazı hatırla" (90 gün, kalıcı çerez); 0 = yalnızca tarayıcı oturumu (1 gün, oturum çerezi)
+  trusted_devices: ['persistent INTEGER NOT NULL DEFAULT 1'],
   // next_send_at: bu adrese yeni kod istenebilecek en erken zaman (başarılı gönderimde +60 sn, belirsiz teslimde +15 sn)
   email_codes: ['next_send_at TEXT'],
   votes: ['toilet_type TEXT'],

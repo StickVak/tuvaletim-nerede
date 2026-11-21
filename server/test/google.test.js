@@ -136,7 +136,7 @@ test('yeni kullanıcı: Google adından kullanıcı adı, doğrulanmış e-posta
     assert.equal(u.email, 'ayse.yilmaz@gmail.com');
     assert.equal(u.email_verified, 1);
     assert.equal(u.avatar_url, 'https://lh3.googleusercontent.com/a/x');
-    assert.equal((await srv.req('POST', '/api/auth/login', { username: 'ayşe.yılmaz', password: '' })).status, 401, 'şifreyle giriş yok');
+    assert.equal((await srv.req('POST', '/api/auth/login', { username: 'ayşe.yılmaz', password: 'herhangi1' })).status, 401, 'şifreyle giriş yok');
     const ref = await srv.req('POST', '/api/auth/refresh', null, null, { Cookie: `tn_device=${r.device}` });
     assert.equal(ref.status, 200);
     assert.equal(ref.body.user.username, 'ayşe.yılmaz');

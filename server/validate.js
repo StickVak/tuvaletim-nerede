@@ -1,3 +1,53 @@
+/**
+ * Sunucu tarafı girdi doğrulama yardımcıları. İstemci doğrulaması yalnızca kolaylıktır; buradakiler bağlayıcıdır.
+ * Hata metinleri kullanıcıya gösterilir: neyin yanlış olduğunu söyler, iç ayrıntı (SQL, yığın izi) içermez.
+ */
+
+/** Görünmez/kontrol karakterleri: C0/C1 kontrol, sıfır genişlikli, yön değiştirme (bidi) işaretleri, BOM */
+const INVISIBLE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F\u200B-\u200F\u202A-\u202E\u2060-\u2064\u2066-\u2069\uFEFF]/g;
+
+/**
+ * Metin alanını temizler: yalnızca string kabul edilir (sayı/dizi/nesne → null), Unicode NFC, görünmez karakterler
+ * atılır, satır sonları multiline değilse boşluğa çevrilir, baş/son boşluk kırpılır.
+ */
+export function cleanText(v, { multiline = false } = {}) {
+  if (typeof v !== 'string') return null;
+  let s = v.normalize('NFC').replace(INVISIBLE, '');
+  s = multiline ? s.replace(/\r\n?/g, '\n').replace(/\t/g, ' ').replace(/\n{3,}/g, '\n\n') : s.replace(/[\t\r\n]+/g, ' ');
+  return s.trim();
+}
+
+/**
+ * İsteğe bağlı metin alanı: undefined/null/"" → null; string değilse ya da çok uzunsa hata metni (throw).
+ * label: kullanıcıya gösterilecek alan adı.
+ */
+export function optionalText(v, max, label, opts) {
+  if (v === undefined || v === null || v === '') return null;
+  const s = cleanText(v, opts);
+  if (s === null) throw `${label} metin olmalı.`;
+  if (s.length > max) throw `${label} en fazla ${max} karakter olabilir.`;
+  return s || null;
+}
+
+/** E-posta biçimi (RFC 5321 uzunlukları; pratik karakter kümesi). Küçük harfe çevrilmiş değer beklenir. */
+export const EMAIL_FORMAT = /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]{1,64}@(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+export const isEmail = (v) => typeof v === 'string' && v.length <= 254 && EMAIL_FORMAT.test(v);
+
+export const PASSWORD_MIN = 6;
+/** scrypt'e çok uzun girdi verilip CPU harcatılmasın */
+export const PASSWORD_MAX = 128;
+export const PASSWORD_LENGTH = `Şifre ${PASSWORD_MIN}-${PASSWORD_MAX} karakter olmalı.`;
+export const validPassword = (v) => typeof v === 'string' && v.length >= PASSWORD_MIN && v.length <= PASSWORD_MAX;
+
+/** Mekan kimliği (seed: "osm-node-123", kullanıcı: "user-…") */
+export const PLACE_ID_RE = /^[A-Za-z0-9_.:-]{1,100}$/;
+/** Pozitif tamsayı kimlik (kullanıcı, cihaz) */
+export const isPositiveInt = (v) => /^[1-9]\d{0,15}$/.test(String(v));
+
+/** Express router.param işleyicileri: biçimi bozuk yol parametresi → 400 (veritabanına hiç gitmez) */
+export const placeIdParam = (_req, res, next, v) => (PLACE_ID_RE.test(v) ? next() : res.status(400).json({ error: 'Geçersiz mekan kimliği.' }));
+export const intIdParam = (_req, res, next, v) => (isPositiveInt(v) ? next() : res.status(400).json({ error: 'Geçersiz kimlik.' }));
+
 export const CATEGORIES = ['avm', 'kafe', 'belediye', 'park', 'diger'];
 const MAX_PHOTO_CHARS = 7_000_000; // ~5 MB base64
 /** Yalnızca raster görseller: SVG aynı kökenden sunulunca betik çalıştırabilir */
@@ -11,16 +61,15 @@ export function parsePlaceFields(body, { partial = false } = {}) {
   const b = body ?? {};
   const has = (k) => !partial || b[k] !== undefined;
   const out = {};
+  const LABELS = { district: 'İlçe', address: 'Adres', hours: 'Çalışma saatleri' };
   const text = (k, max) => {
     if (!has(k)) return;
-    const v = b[k] == null ? '' : String(b[k]).trim();
-    if (v.length > max) throw `${k} en fazla ${max} karakter olabilir.`;
-    out[k] = v || null;
+    out[k] = optionalText(b[k], max, LABELS[k] ?? k);
   };
   try {
     if (has('name')) {
-      const name = String(b.name ?? '').trim();
-      if (name.length < 3 || name.length > 60) throw 'Mekan adı 3-60 karakter olmalı.';
+      const name = cleanText(b.name);
+      if (name === null || name.length < 3 || name.length > 60) throw 'Mekan adı 3-60 karakter olmalı.';
       out.name = name;
     }
     if (has('category')) {
@@ -41,7 +90,12 @@ export function parsePlaceFields(body, { partial = false } = {}) {
       if (p !== null && (typeof p !== 'string' || p.length > MAX_PHOTO_CHARS || !PHOTO_RE.test(p))) throw 'Fotoğraf JPEG, PNG, WebP ya da GIF olmalı (en fazla 5 MB).';
       out.photo = p;
     }
-    for (const k of ['accessible', 'babyChanging']) if (has(k)) out[k] = !!b[k];
+    for (const k of ['accessible', 'babyChanging']) {
+      if (!has(k)) continue;
+      if (b[k] != null && typeof b[k] !== 'boolean') throw 'Geçersiz seçim.';
+      out[k] = !!b[k];
+    }
+    if (b.publicAccess != null && typeof b.publicAccess !== 'boolean') throw 'Geçersiz seçim.';
     if (b.publicAccess !== undefined || !partial) out.publicAccess = b.publicAccess == null ? null : !!b.publicAccess;
     if (b.toiletType !== undefined) {
       if (b.toiletType !== null && !['alafranga', 'alaturka', 'ikisi'].includes(b.toiletType)) throw 'Geçersiz tuvalet tipi.';
