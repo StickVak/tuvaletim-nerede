@@ -1,4 +1,5 @@
-import type { FilterChip, PlaceView, SortMode } from '../types';
+import type { FilterChip, PlaceView, SortMode, ToiletCategory } from '../types';
+import { isCategory } from './categories.ts';
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const toMin = (t: string) => {
@@ -115,3 +116,8 @@ export const CHIP_LABELS: Record<FilterChip, string> = {
   alaturka: 'Alaturka',
   favorites: 'Favorilerim',
 };
+
+/** Mekan türü filtresi: boş ya da tanınmayan değer (eski kayıtlı filtre) = hepsi */
+export function matchesCategory(place: { category: ToiletCategory }, category?: string) {
+  return !category || !isCategory(category) || place.category === category;
+}

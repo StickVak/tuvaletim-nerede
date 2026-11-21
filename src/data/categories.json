@@ -1,0 +1,9 @@
+[
+  { "id": "avm", "label": "AVM" },
+  { "id": "kafe", "label": "Kafe" },
+  { "id": "restoran", "label": "Restoran" },
+  { "id": "belediye", "label": "Belediye" },
+  { "id": "cami", "label": "Cami" },
+  { "id": "park", "label": "Park" },
+  { "id": "diger", "label": "Diğer" }
+]

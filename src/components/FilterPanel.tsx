@@ -2,6 +2,7 @@ import { ArrowDownWideNarrow, Check } from 'lucide-react';
 import type { FilterChip, Filters, SortMode } from '../types';
 import { CHIP_LABELS, SORT_LABELS } from '../lib/filters';
 import LocationSelect from './LocationSelect';
+import { CATEGORIES, CATEGORY_ORDER } from '../lib/categories';
 
 export function Toggle({ on, tone = 'green' }: { on: boolean; tone?: 'green' | 'ink' }) {
   return (
@@ -28,6 +29,22 @@ export default function FilterPanel({ filters, onChange, compact }: { filters: F
           {(Object.keys(SORT_LABELS) as SortMode[]).map((s) => (
             <option key={s} value={s} className="bg-surface text-ink">
               {SORT_LABELS[s]}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="mt-2 flex items-center gap-2 rounded-2xl bg-card px-3 py-2 text-sm font-semibold text-ink">
+        <span className="sr-only">Mekan türü</span>
+        <select
+          value={filters.category ?? ''}
+          onChange={(e) => onChange({ ...filters, category: e.target.value })}
+          aria-label="Mekan türü"
+          className="w-full cursor-pointer bg-transparent font-bold text-ink outline-none"
+        >
+          <option value="" className="bg-surface text-ink">Tüm mekan türleri</option>
+          {CATEGORY_ORDER.map((c) => (
+            <option key={c} value={c} className="bg-surface text-ink">
+              {CATEGORIES[c].label}
             </option>
           ))}
         </select>
@@ -60,9 +77,9 @@ export default function FilterPanel({ filters, onChange, compact }: { filters: F
           );
         })}
       </div>
-      {(filters.chips.length > 0 || filters.province) && (
-        <button type="button" onClick={() => onChange({ ...filters, chips: [], province: '', district: '' })} className="mt-2 text-xs font-bold text-ink-muted hover:text-ink">
-          Filtreleri temizle ({filters.chips.length + (filters.province ? 1 : 0) + (filters.district ? 1 : 0)})
+      {(filters.chips.length > 0 || filters.province || filters.category) && (
+        <button type="button" onClick={() => onChange({ ...filters, chips: [], category: '', province: '', district: '' })} className="mt-2 text-xs font-bold text-ink-muted hover:text-ink">
+          Filtreleri temizle ({filters.chips.length + (filters.category ? 1 : 0) + (filters.province ? 1 : 0) + (filters.district ? 1 : 0)})
         </button>
       )}
     </div>

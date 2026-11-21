@@ -1,4 +1,5 @@
-export type ToiletCategory = 'avm' | 'kafe' | 'belediye' | 'park' | 'diger';
+/** Mekan türleri — liste ve sıra src/data/categories.json'da (tek kaynak; categories.test.ts eşleşmeyi denetler) */
+export type ToiletCategory = 'avm' | 'kafe' | 'restoran' | 'belediye' | 'cami' | 'park' | 'diger';
 
 export interface LatLng {
   lat: number;
@@ -129,6 +130,8 @@ export type FilterChip = 'free' | 'accessible' | 'baby' | 'open' | 'public' | 'a
 export interface Filters {
   sort: SortMode;
   chips: FilterChip[];
+  /** Mekan türü filtresi (boş = hepsi). Eski kayıtlı filtrelerde yok olabilir. */
+  category?: string;
   /** İl / ilçe filtresi (boş = hepsi). Eski kayıtlı filtrelerde yok olabilir. */
   province?: string;
   district?: string;

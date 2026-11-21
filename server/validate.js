@@ -48,12 +48,14 @@ export const isPositiveInt = (v) => /^[1-9]\d{0,15}$/.test(String(v));
 export const placeIdParam = (_req, res, next, v) => (PLACE_ID_RE.test(v) ? next() : res.status(400).json({ error: 'Geçersiz mekan kimliği.' }));
 export const intIdParam = (_req, res, next, v) => (isPositiveInt(v) ? next() : res.status(400).json({ error: 'Geçersiz kimlik.' }));
 
+import { readFileSync } from 'node:fs';
 import { resolveLocation } from './turkey.js';
 
 /** Türkiye + kıyı/kara sınırı payı (enlem/boylam) */
 export const TURKEY_BOX = { south: 35.5, north: 42.5, west: 25.5, east: 45.0 };
 
-export const CATEGORIES = ['avm', 'kafe', 'belediye', 'park', 'diger'];
+/** Mekan türleri: tek kaynak src/data/categories.json (istemci de aynı dosyayı kullanır) */
+export const CATEGORIES = JSON.parse(readFileSync(new URL('../src/data/categories.json', import.meta.url), 'utf8')).map((c) => c.id);
 const MAX_PHOTO_CHARS = 7_000_000; // ~5 MB base64
 /** Yalnızca raster görseller: SVG aynı kökenden sunulunca betik çalıştırabilir */
 export const PHOTO_RE = /^data:image\/(jpeg|png|webp|gif);base64,[A-Za-z0-9+/=]+$/;

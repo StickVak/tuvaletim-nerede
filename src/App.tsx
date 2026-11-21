@@ -7,7 +7,8 @@ import { usePlaces } from './hooks/usePlaces';
 import { useAuth } from './hooks/useAuth';
 import { distanceMeters, pickEmergency, toView } from './lib/geo';
 import { TURKEY_BOUNDS, TURKEY_CENTER, TURKEY_ZOOM, findProvince, matchesLocation } from './lib/turkey';
-import { applyFilters, SORT_LABELS, sortPlaces } from './lib/filters';
+import { applyFilters, matchesCategory, SORT_LABELS, sortPlaces } from './lib/filters';
+import { CATEGORIES } from './lib/categories';
 import { placesOnRoute } from './lib/corridor';
 import { fetchWalkingRoute, WALK_SPEED_MPS } from './lib/route';
 import { STORAGE_ERROR_EVENT, usePersistentState } from './hooks/usePersistentState';
@@ -36,7 +37,7 @@ import AccountButton from './components/AccountButton';
 import ProfileModal from './components/ProfileModal';
 import UserProfileModal from './components/UserProfileModal';
 
-const DEFAULT_FILTERS: Filters = { sort: 'distance', chips: [], province: '', district: '' };
+const DEFAULT_FILTERS: Filters = { sort: 'distance', chips: [], category: '', province: '', district: '' };
 /** Masaüstü: kenar panel (16 + 400 + 16) */
 const SIDEBAR_SPACE = 432;
 const DETAIL_WIDTH = 400;
@@ -156,17 +157,22 @@ export default function App() {
 
   const listed = useMemo(() => {
     const q = normalize(query.trim());
-    let items = routeFilter(applyFilters(views, filters.chips)).filter((t) => matchesLocation(t, filters.province, filters.district));
-    if (q) items = items.filter((t) => normalize([t.name, t.district, t.province, t.address].filter(Boolean).join(' ')).includes(q));
+    let items = routeFilter(applyFilters(views, filters.chips)).filter(
+      (t) => matchesCategory(t, filters.category) && matchesLocation(t, filters.province, filters.district),
+    );
+    // Arama tür adını da kapsar ("cami", "restoran")
+    if (q) items = items.filter((t) => normalize([t.name, CATEGORIES[t.category]?.label, t.district, t.province, t.address].filter(Boolean).join(' ')).includes(q));
     return sortPlaces(items, filters.sort);
   }, [views, filters, query, route, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markers = useMemo(() => {
-    const base = routeFilter(applyFilters(views, filters.chips)).filter((t) => matchesLocation(t, filters.province, filters.district));
+    const base = routeFilter(applyFilters(views, filters.chips)).filter(
+      (t) => matchesCategory(t, filters.category) && matchesLocation(t, filters.province, filters.district),
+    );
     const ensure = [route?.placeId, selectedId].filter(Boolean) as string[];
     const missing = ensure.filter((id) => !base.some((t) => t.id === id));
     return missing.length ? [...base, ...views.filter((t) => missing.includes(t.id))] : base;
-  }, [views, filters.chips, filters.province, filters.district, route, selectedId, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [views, filters.chips, filters.category, filters.province, filters.district, route, selectedId, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selected = selectedId ? views.find((t) => t.id === selectedId) ?? null : null;
   const routePlace = route ? views.find((t) => t.id === route.placeId) ?? null : null;
@@ -378,7 +384,7 @@ export default function App() {
   );
 
   const sortLabel = SORT_LABELS[filters.sort];
-  const filterCount = filters.chips.length + (filters.province ? 1 : 0) + (filters.district ? 1 : 0);
+  const filterCount = filters.chips.length + (filters.category ? 1 : 0) + (filters.province ? 1 : 0) + (filters.district ? 1 : 0);
 
   return (
     <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-surface text-ink">

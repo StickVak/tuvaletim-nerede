@@ -307,7 +307,7 @@ Aşımda `429 Too Many Requests`, `Retry-After` başlığı ve `{ error, retryAf
 ### Girdi doğrulama (`server/validate.js`)
 
 - Tüm metin alanları yalnızca `string` kabul eder (dizi/nesne/sayı → `400`); Unicode NFC'ye çevrilir, kontrol ve görünmez/yön değiştiren karakterler atılır, uzunluk sınırları sunucuda uygulanır.
-- E-posta biçimi ve uzunluğu, kullanıcı adı (3-30), şifre (6-128), 6 haneli kod, puanlar (1-5 tamsayı), ücret (0-1000, `12,5` kabul), konum (enlem ±90, boylam ±180), kategori/tür listeleri ve yol parametreleri (mekan kimliği, sayısal kimlikler) denetlenir. Hatalı girdi veritabanına gitmeden `400` ve ne düzeltilmesi gerektiğini söyleyen bir mesajla reddedilir.
+- E-posta biçimi ve uzunluğu, kullanıcı adı (3-30), şifre (6-128), 6 haneli kod, puanlar (1-5 tamsayı), ücret (0-1000, `12,5` kabul), konum (Türkiye sınırları içinde), mekan türü ([`src/data/categories.json`](src/data/categories.json): AVM, Kafe, Restoran, Belediye, Cami, Park, Diğer — istemci ve sunucu aynı listeyi kullanır; yeni tür eklemek için bu dosyaya ve `src/lib/categories.ts`'teki simge/renk tablosuna bir satır), tuvalet tipi listeleri ve yol parametreleri (mekan kimliği, sayısal kimlikler) denetlenir. Hatalı girdi veritabanına gitmeden `400` ve ne düzeltilmesi gerektiğini söyleyen bir mesajla reddedilir.
 - JSON gövdesi nesne olmalı; bozuk JSON → `400`. Gövde sınırı 100 KB (fotoğraf taşıyan uçlarda 7 MB, profil fotoğrafında 3 MB) → aşımda `413`.
 
 ### Harita karoları (`src/lib/tiles.ts`, `src/components/BaseTiles.tsx`)

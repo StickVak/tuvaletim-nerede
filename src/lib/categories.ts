@@ -1,15 +1,27 @@
-import { Coffee, Landmark, MapPin, ShoppingBag, Trees, type LucideIcon } from 'lucide-react';
+import { Coffee, Landmark, MapPin, MoonStar, ShoppingBag, Trees, UtensilsCrossed, type LucideIcon } from 'lucide-react';
 import type { Place, PlaceStats, ToiletCategory } from '../types';
+import list from '../data/categories.json' with { type: 'json' };
 
-export const CATEGORIES: Record<ToiletCategory, { label: string; icon: LucideIcon; from: string; to: string }> = {
-  avm: { label: 'AVM', icon: ShoppingBag, from: '#FFE566', to: '#FFC300' },
-  kafe: { label: 'Kafe', icon: Coffee, from: '#F7DDBF', to: '#D4A373' },
-  belediye: { label: 'Belediye', icon: Landmark, from: '#CFE3FF', to: '#6FA8F7' },
-  park: { label: 'Park', icon: Trees, from: '#C9F5D6', to: '#5AD27F' },
-  diger: { label: 'Diğer', icon: MapPin, from: '#ECEDEF', to: '#A9AEB6' },
+/** Türlerin listesi, sırası ve etiketi tek kaynaktan (src/data/categories.json; sunucu da aynı dosyayı okur) */
+export const CATEGORY_ORDER = list.map((c) => c.id) as ToiletCategory[];
+
+/** Yalnızca istemcide: simge ve temsili görsel renkleri (her tür için zorunlu — tip denetimi eksiği yakalar) */
+const STYLE: Record<ToiletCategory, { icon: LucideIcon; from: string; to: string }> = {
+  avm: { icon: ShoppingBag, from: '#FFE566', to: '#FFC300' },
+  kafe: { icon: Coffee, from: '#F7DDBF', to: '#D4A373' },
+  restoran: { icon: UtensilsCrossed, from: '#FFD9C7', to: '#F08A5D' },
+  belediye: { icon: Landmark, from: '#CFE3FF', to: '#6FA8F7' },
+  cami: { icon: MoonStar, from: '#CDEFE6', to: '#3FAE93' },
+  park: { icon: Trees, from: '#C9F5D6', to: '#5AD27F' },
+  diger: { icon: MapPin, from: '#ECEDEF', to: '#A9AEB6' },
 };
 
-export const CATEGORY_ORDER: ToiletCategory[] = ['avm', 'kafe', 'belediye', 'park', 'diger'];
+export const CATEGORIES = Object.fromEntries(list.map((c) => [c.id, { label: c.label, ...STYLE[c.id as ToiletCategory] }])) as Record<
+  ToiletCategory,
+  { label: string; icon: LucideIcon; from: string; to: string }
+>;
+
+export const isCategory = (v: unknown): v is ToiletCategory => typeof v === 'string' && (CATEGORY_ORDER as string[]).includes(v);
 
 /** `Ücretsiz`, `Ücretli` ya da `Ücretli • Ort. 12,5 ₺` */
 export function feeLabel(stats: Pick<PlaceStats, 'isPaid' | 'avgPrice'>): string {

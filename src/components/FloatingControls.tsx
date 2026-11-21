@@ -20,7 +20,7 @@ const round = 'flex h-12 w-12 items-center justify-center rounded-full bg-surfac
 export default function FloatingControls({ desktop, filters, onFiltersChange, onLocate, onAdd, onZoom, bottom, hidden }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const active = filters.chips.length > 0 || filters.sort !== 'distance';
+  const active = filters.chips.length > 0 || filters.sort !== 'distance' || Boolean(filters.category || filters.province);
 
   useEffect(() => {
     if (!open) return;
