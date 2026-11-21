@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { TileLayer } from 'react-leaflet';
 import type { TileEvent } from 'leaflet';
 import { MapPinOff, RotateCw } from 'lucide-react';
-import { BLANK_TILE, TILE_PROVIDERS, providerFailed } from '../lib/tiles';
+import { BLANK_TILE, TILE_PROVIDERS, TILE_REFERRER_POLICY, providerFailed } from '../lib/tiles';
 
 /**
  * Taban harita katmanı: sağlayıcı çalışmazsa sıradakine otomatik geçer; hiçbiri yüklenemezse haritanın üstünde
@@ -50,6 +50,7 @@ export default function BaseTiles({ compact = false }: { compact?: boolean }) {
           subdomains={provider.subdomains ?? 'abc'}
           maxZoom={provider.maxZoom}
           attribution={provider.attribution}
+          referrerPolicy={TILE_REFERRER_POLICY}
           errorTileUrl={BLANK_TILE}
           eventHandlers={handlers}
         />

@@ -114,7 +114,7 @@ sağlayıcılara aktarılır:</p>
   <li><b>Cloudinary</b> — mekan ve profil fotoğraflarının saklanması.</li>
   <li><b>Brevo</b> (veya yapılandırılmışsa başka bir e-posta sağlayıcısı) — doğrulama kodu e-postalarının gönderilmesi.</li>
   <li><b>Google</b> — “Google ile Giriş Yap” seçeneğini kullanırsanız kimlik doğrulama.</li>
-  <li><b>Esri</b> (server.arcgisonline.com) ve yedek olarak <b>OpenStreetMap France</b> (tile.openstreetmap.fr) — harita görüntülerinin yüklenmesi.</li>
+  <li><b>OpenStreetMap</b> harita sunucuları (tile.openstreetmap.org; ulaşılamazsa yedek olarak <b>Esri</b>, server.arcgisonline.com) — harita görüntülerinin yüklenmesi.</li>
   <li><b>routing.openstreetmap.de</b> ve <b>router.project-osrm.org</b> — yalnızca yol tarifi istediğinizde rota
   hesaplanması.</li>
   <li><b>Google Fonts</b> — yazı tipinin yüklenmesi.</li>

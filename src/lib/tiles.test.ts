@@ -1,15 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ERROR_LIMIT, TILE_PROVIDERS, providerFailed } from './tiles.ts';
+import { ERROR_LIMIT, TILE_PROVIDERS, TILE_REFERRER_POLICY, providerFailed } from './tiles.ts';
 
-test('karo sağlayıcıları: kısıtlı OSM sunucusu ve anahtar isteyen CARTO yok; her birinde OpenStreetMap atfı', () => {
+test('karo sağlayıcıları: önceki görünüm (OSM standart) birincil, Esri yalnızca yedek; Referer gönderilir', () => {
+  assert.equal(TILE_PROVIDERS[0].url, 'https://tile.openstreetmap.org/{z}/{x}/{y}.png');
+  assert.equal(TILE_PROVIDERS[0].attribution, '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıcıları');
   assert.ok(TILE_PROVIDERS.length >= 2, 'en az bir yedek');
   for (const p of TILE_PROVIDERS) {
-    assert.ok(!/tile\.openstreetmap\.org|cartocdn/.test(p.url), p.url);
+    assert.ok(!/cartocdn/.test(p.url), p.url);
     assert.match(p.url, /^https:\/\//);
     assert.match(p.attribution, /OpenStreetMap/);
   }
-  assert.equal(TILE_PROVIDERS[0].id, 'esri-street');
+  assert.equal(TILE_REFERRER_POLICY, 'strict-origin-when-cross-origin', 'no-referrer olmamalı (OSM 403 verir)');
 });
 
 test('sağlayıcı ancak hiç karo yüklenemeden ERROR_LIMIT hataya ulaşınca değiştirilir', () => {

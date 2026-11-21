@@ -82,7 +82,7 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         // Cloudinary: kalıcı mekan/profil fotoğrafları (ana sunucu oraya yönlendirir)
-        "img-src 'self' data: blob: https://server.arcgisonline.com https://*.tile.openstreetmap.fr https://res.cloudinary.com",
+        "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://server.arcgisonline.com https://res.cloudinary.com",
         "connect-src 'self'",
         "object-src 'none'",
         "frame-ancestors 'none'",

@@ -1,37 +1,35 @@
 /**
- * Harita karo sağlayıcıları (sırayla denenir; ilki çalışmazsa sıradakine geçilir).
- * - tile.openstreetmap.org kullanılmaz: OSM'nin kendi sunucuları yalnızca sınırlı kullanım içindir; Referer göndermeyen
- *   ya da yoğun kullanan uygulamalara "403 Access blocked" görseli döndürür.
- * - CARTO basemaps kullanılmaz: anahtarsız isteklere artık her yakınlaştırmada "API KEY REQUIRED" görseli (HTTP 200)
- *   döndürüyor; bu hata olarak algılanamaz.
- * Esri World Street Map anahtarsız çalışır ve Türkçe etiketlidir; yedek olarak OpenStreetMap Fransa topluluk sunucusu.
+ * Harita karo sağlayıcıları. Görünüm: OpenStreetMap'in standart haritası (kullanıcıların alıştığı stil).
+ * - OSM karo sunucusu Referer göndermeyen tarayıcı isteklerini "403 Access blocked" görseliyle reddeder; yönetim paneli
+ *   güvenlik için genel olarak Referer göndermez (Referrer-Policy: no-referrer). Bu yüzden karo isteklerinde
+ *   referrerPolicy yalnızca karolar için açıkça "strict-origin-when-cross-origin" (yalnızca köken gönderilir) yapılır.
+ * - OSM'ye hiç ulaşılamazsa (ağ/HTTP hatası) yedek olarak Esri World Street Map kullanılır.
  */
 export interface TileProvider {
   id: string;
-  label: string;
   url: string;
   subdomains?: string;
   maxZoom: number;
   attribution: string;
 }
 
-const OSM = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> katkıcıları';
+/** Karo isteklerinde gönderilecek Referer politikası (OSM karo kullanım kuralı geçerli bir Referer ister) */
+export const TILE_REFERRER_POLICY = 'strict-origin-when-cross-origin';
+
+const OSM_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıcıları';
 
 export const TILE_PROVIDERS: TileProvider[] = [
   {
-    id: 'esri-street',
-    label: 'Esri',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+    id: 'osm',
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
     maxZoom: 19,
-    attribution: 'Karolar &copy; <a href="https://www.esri.com" target="_blank" rel="noopener">Esri</a> — Esri, HERE, Garmin, USGS, ' + OSM,
+    attribution: OSM_ATTRIBUTION,
   },
   {
-    id: 'osm-fr',
-    label: 'OpenStreetMap France',
-    url: 'https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
-    subdomains: 'abc',
+    id: 'esri-street',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
     maxZoom: 19,
-    attribution: `${OSM} — karolar <a href="https://www.openstreetmap.fr" target="_blank" rel="noopener">OpenStreetMap France</a>`,
+    attribution: `Karolar &copy; Esri — ${OSM_ATTRIBUTION}`,
   },
 ];
 

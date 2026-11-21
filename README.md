@@ -164,7 +164,7 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
 - **Yönetim paneli (ayrı servis, [`admin/`](admin/)):** Kullanıcı uygulamasında yönetim kodu yoktur. Panel yalnızca `ADMIN_SECRET_KEY` ile açılır:
   - **Temiz Kalp ihbarları:** Kullanıcıların “Kapalı / Kağıt-sabun yok / Çok kalabalık” bildirimleri mekan başına gruplanır; aynı sorunu **en az 2 farklı kullanıcı** bildirdiyse mekan *şüpheli* sayılır ve üstte listelenir. **Onayla** → mekan *kalıcı kapalı* işaretlenir ve haritadan gizlenir (silinmez, Mekanlar'dan yeniden açılabilir). **Reddet** → ihbarlar çözülür, mekanın canlı durumunu artık etkilemez (kullanıcının katkı sayısında kalır). Tek tek ihbar silinebilir.
   - **Mekanlar:** arama/filtre, yeni mekan ekleme (haritadan konum seçerek), düzenleme, kalıcı kapatma/yeniden açma, kalıcı silme.
-  - **Başvurular:** `+` ile gönderilen mekanları düzenleme (ad, tür, il/ilçe, adres, ücret, özellikler; haritaya tıklayarak ya da işaretçiyi sürükleyerek konum; il/ilçe seçince ya da “Adresten bul” ile harita odaklanır), onaylama/reddetme. Onaylanan başvuru düzenlenen bilgilerle ve konumda yayınlanır.
+  - **Başvurular:** `+` ile gönderilen mekanlar kart üzerinde, açılır pencere olmadan düzenlenir: ad, tür, il/ilçe, adres (“Adresten bul”), ücret, özellikler ve konum (haritaya tıklama ya da işaretçiyi sürükleme; il/ilçe seçince harita odaklanır). **Değişiklikleri Kaydet** yalnızca değişiklik varsa etkindir; **Onayla** kaydedilmemiş değişiklik varsa önce kaydeder (“Kaydet ve Onayla”), sonra mekanı düzenlenen bilgilerle ve konumda yayınlar.
   - **Kullanıcılar:** oy, yorum, ihbar, eklenen mekan ve son etkinlik; kullanıcı ayrıntısında tek tek oy/ihbar silme ya da kullanıcıyı silme.
   - **Oylar:** oy/yorum moderasyonu (silinen oy istatistiklerden düşer).
 
@@ -312,12 +312,11 @@ Aşımda `429 Too Many Requests`, `Retry-After` başlığı ve `{ error, retryAf
 
 ### Harita karoları (`src/lib/tiles.ts`, `src/components/BaseTiles.tsx`)
 
-Harita verisi OpenStreetMap'tir; karo görüntüleri **Esri World Street Map**'ten (anahtarsız, Türkçe etiketli), çalışmazsa otomatik olarak **OpenStreetMap France** topluluk sunucusundan yüklenir.
+Harita OpenStreetMap'in standart görünümünü kullanır (`tile.openstreetmap.org`).
 
-- `tile.openstreetmap.org` kullanılmaz: OSM'nin kendi karo sunucusu sınırlı kullanım içindir ve `Referer` göndermeyen (ör. yönetim panelindeki `Referrer-Policy: no-referrer`) ya da yoğun kullanan uygulamalara **"403 Access blocked"** görseli döndürür.
-- CARTO basemaps de kullanılmaz: anahtarsız isteklere her yakınlaştırmada HTTP 200 ile **"API KEY REQUIRED"** görseli döndürüyor (hata olarak algılanamaz).
-- Bir sağlayıcının ilk karolarından hiçbiri yüklenemezse sıradakine geçilir. Yüklenemeyen karonun yerine saydam görsel konur (bozuk/hata görseli görünmez). Hiçbir sağlayıcı çalışmazsa haritanın üzerinde tıklamayı engellemeyen bir bilgi kutusu ve **Tekrar dene** düğmesi çıkar; kaydırma, yakınlaştırma, işaretçiler ve konum seçimi çalışmaya devam eder.
-- Yoğun/ticari kullanımda anahtarlı bir sağlayıcı (ör. Esri ArcGIS, MapTiler, Stadia) eklemek için `TILE_PROVIDERS` listesine bir kayıt ve CSP'ye (`server/security.js`, `admin/server/app.js`) alan adı eklemek yeterlidir.
+- OSM karo sunucusu `Referer` göndermeyen tarayıcı isteklerine **"403 Access blocked"** görseli döndürür. Yönetim paneli güvenlik için genel olarak Referer göndermez (`Referrer-Policy: no-referrer`); bu yüzden yalnızca karo isteklerinde Leaflet'in `referrerPolicy` seçeneğiyle `strict-origin-when-cross-origin` (yalnızca köken) gönderilir.
+- OSM'ye hiç ulaşılamazsa (ağ/HTTP hatası) karolar otomatik olarak Esri World Street Map'ten yüklenir. Yüklenemeyen karonun yerine saydam görsel konur; hiçbiri yüklenemezse haritanın üzerinde tıklamayı engellemeyen bir bilgi kutusu ve **Tekrar dene** düğmesi çıkar, harita etkileşimli kalır.
+- CARTO basemaps kullanılmaz: anahtarsız isteklere HTTP 200 ile "API KEY REQUIRED" görseli döndürüyor.
 
 ### HTTP güvenlik başlıkları (`server/security.js`)
 

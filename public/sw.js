@@ -2,7 +2,7 @@
  * Uygulama kabuğu: network-first (çevrimdışıyken önbellekten)
  * Harita karoları: cache-first (gezilen bölgeler çevrimdışı da görünür) */
 const APP_CACHE = 'tn-app-v7';
-const TILE_CACHE = 'tn-tiles-v5';
+const TILE_CACHE = 'tn-tiles-v6';
 const MAX_TILES = 400;
 
 self.addEventListener('install', (event) => {
@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
 
-  if (/^server\.arcgisonline\.com$|(^|\.)tile\.openstreetmap\.fr$/.test(url.hostname)) {
+  if (/(^|\.)tile\.openstreetmap\.org$|^server\.arcgisonline\.com$/.test(url.hostname)) {
     event.respondWith(
       caches.open(TILE_CACHE).then(async (cache) => {
         const hit = await cache.match(request);

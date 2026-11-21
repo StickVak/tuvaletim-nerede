@@ -60,10 +60,10 @@ export default function MiniMap({ center, category = 'diger', className = 'h-48'
       <MapContainer
         center={[center.lat, center.lng]}
         zoom={16}
-        zoomControl={editable}
+        zoomControl={false}
         scrollWheelZoom={editable}
         dragging={editable}
-        attributionControl
+        attributionControl={false}
         className="h-full w-full"
       >
         <BaseTiles compact />
@@ -79,6 +79,9 @@ export default function MiniMap({ center, category = 'diger', className = 'h-48'
           keyboard={false}
         />
       </MapContainer>
+      <span className="pointer-events-none absolute bottom-1.5 right-2 z-[400] rounded bg-white/80 px-1.5 text-[9px] text-ink-muted">
+        © OpenStreetMap
+      </span>
     </div>
   );
 }
