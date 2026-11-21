@@ -232,7 +232,8 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | POST | `/api/places/:id/reports` | kullanıcı | `{ type: 'closed' \| 'no_supplies' \| 'crowded' \| 'open' }` canlı durum bildirimi |
 | PUT / DELETE | `/api/favorites/:placeId` | kullanıcı | Favoriye ekle / çıkar |
 | GET / PATCH | `/api/profile` | kullanıcı | Profilim (istatistik + etkinlik) / kullanıcı adı (`409` alınmışsa), görünen ad ve biyografi |
-| POST | `/api/profile/password` | kullanıcı | `{ currentPassword, newPassword }` |
+| POST | `/api/profile/password/code` | kullanıcı | Kayıtlı e-postaya 6 haneli şifre kodu → `{ sentTo (maskeli), expiresIn, resendIn }`; 60 sn'de bir, gönderim hatasında `503` + mesaj (loglanır) |
+| POST | `/api/profile/password` | kullanıcı | `{ currentPassword, newPassword }` ya da `{ code, newPassword }` (şifresiz — yalnızca Google — hesap yalnızca kodla şifre belirler); bu cihaz dışındaki oturumlar kapanır |
 | PUT / DELETE | `/api/profile/avatar` | kullanıcı | `{ image: dataURL }` profil fotoğrafı yükle / kaldır |
 | GET | `/api/users/:id` | — | Herkese açık profil |
 | GET | `/api/avatars/:file` | — | Profil fotoğrafı (`nosniff`) |

@@ -5,13 +5,20 @@ import { asyncRouter } from '../async.js';
 import { hashPassword, publicUser, requireUser, verifyPassword } from '../auth.js';
 import { contributionsOf } from './places.js';
 import { PhotoError } from '../photos.js';
+import { RESET_RESEND_MS, RESET_TTL_MS, createResetCodes } from '../resetCodes.js';
+import { MailError, maskEmail } from '../mailer.js';
+import { RESET_INVALID, deliveryFailure } from './auth.js';
 import { USERNAME_INVALID, USERNAME_RE, conflictFromDbError, identityConflict, usernameKey } from '../identity.js';
 
 const AVATAR_FILE_RE = /^\d+-[a-f0-9]+\.(jpg|png|webp|gif)$/;
 const MIME = { jpg: 'image/jpeg', png: 'image/png', webp: 'image/webp', gif: 'image/gif' };
 
+/** Şifresiz hesap: yalnızca Google ile açılmış (şifre özeti "oauth$…" yer tutucusu, scrypt değil) */
+const hasPassword = (u) => String(u.password_hash ?? '').startsWith('scrypt$');
+
+/** Kendi profilim (yalnızca sahibine döner): şifre durumu dahil (e-posta dönmez; kod yanıtı maskeli adresi verir) */
 function profileUser(u) {
-  return { ...publicUser(u), bio: u.bio ?? '', createdAt: u.created_at };
+  return { ...publicUser(u), bio: u.bio ?? '', createdAt: u.created_at, hasPassword: hasPassword(u) };
 }
 
 async function counts(db, id) {
@@ -40,7 +47,8 @@ const reviewJson = (v) => ({
 
 /** avatars: createPhotoStore() — Cloudinary ya da server/data/avatars */
 const pass = (_req, _res, next) => next();
-export function profileRoutes(db, { avatars, writeLimit, uploadLimit = pass }) {
+export function profileRoutes(db, { avatars, writeLimit, uploadLimit = pass, codeLimit = pass, secret, mailer }) {
+  const resetCodes = createResetCodes(db, secret);
   const r = asyncRouter();
   r.use(requireUser);
   const me = (req) => db.get('SELECT * FROM users WHERE id = ?', [req.user.id]);
@@ -113,17 +121,60 @@ export function profileRoutes(db, { avatars, writeLimit, uploadLimit = pass }) {
     res.json({ user: profileUser(await me(req)) });
   });
 
-  r.post('/password', writeLimit, async (req, res) => {
-    const { currentPassword, newPassword } = req.body ?? {};
-    if (typeof currentPassword !== 'string' || currentPassword.length > PASSWORD_MAX || !verifyPassword(currentPassword, (await me(req)).password_hash)) {
-      return res.status(400).json({ error: 'Mevcut şifre hatalı.' });
+  /**
+   * Şifre değiştirme/belirleme kodu: oturumdaki kullanıcının kayıtlı e-postasına gönderilir (mevcut şifreyi
+   * hatırlamayan ya da hiç şifresi olmayan — yalnızca Google ile açılmış — hesaplar için). Kullanıcı belli olduğu için
+   * gönderim hataları gizlenmez: loglanır ve anlaşılır mesajla döner.
+   */
+  r.post('/password/code', writeLimit, codeLimit, async (req, res) => {
+    const user = await me(req);
+    if (!user.email) return res.status(400).json({ error: 'Hesabınızda kayıtlı bir e-posta adresi yok; kod gönderilemiyor.' });
+    const issued = await resetCodes.issue(user.id);
+    if (issued.wait) {
+      res.set('Retry-After', String(issued.wait));
+      return res.status(429).json({ error: `Yeni kod için ${issued.wait} saniye bekleyin.`, retryAfter: issued.wait });
     }
-    if (!validPassword(newPassword)) return res.status(400).json({ error: `Yeni ${PASSWORD_LENGTH.charAt(0).toLowerCase()}${PASSWORD_LENGTH.slice(1)}` });
+    const body = { ok: true, sentTo: maskEmail(user.email), expiresIn: RESET_TTL_MS / 1000, resendIn: RESET_RESEND_MS / 1000 };
+    try {
+      await mailer.sendPasswordResetCode(user.email, issued.code);
+    } catch (e) {
+      const kind = e instanceof MailError ? e.kind : 'bilinmeyen';
+      console.error(`[mail] şifre kodu gönderilemedi (profil) tür=${kind} kullanıcı=${user.id} alıcı=${maskEmail(user.email)}: ${e?.message}`);
+      if (kind === 'timeout') {
+        // Belirsiz teslim: e-posta yine de ulaşmış olabilir, kod geçerli kalır
+        return res.status(202).json({ ...body, delivery: 'uncertain', message: 'E-posta gönderimi gecikiyor; kod birkaç dakika içinde gelebilir. Gelmezse kısa süre sonra yeni kod isteyin.' });
+      }
+      await resetCodes.discard(user.id);
+      const f = deliveryFailure(e);
+      res.set('Retry-After', String(f.retryAfter));
+      return res.status(503).json(f);
+    }
+    res.json({ ...body, delivery: 'sent' });
+  });
+
+  /**
+   * Şifre değiştir/belirle: { currentPassword, newPassword } ya da { code, newPassword } (e-postaya gelen kod).
+   * Şifresi olmayan (yalnızca Google) hesap yalnızca kodla şifre belirleyebilir. Başarıda bu cihaz dışındaki tüm
+   * oturumlar iptal edilir ve eski erişim belirteçleri geçersizleşir; bu cihaz sessiz tazelemeyle devam eder.
+   */
+  r.post('/password', writeLimit, async (req, res) => {
+    const { currentPassword, newPassword, code } = req.body ?? {};
+    const user = await me(req);
+    if (code !== undefined) {
+      if (typeof code !== 'string' || !/^\d{6}$/.test(code.trim())) return res.status(400).json({ error: 'E-postanıza gelen 6 haneli kodu girin.', field: 'code' });
+    } else if (!hasPassword(user)) {
+      return res.status(400).json({ error: 'Hesabınız Google ile oluşturuldu ve henüz şifresi yok. Şifre belirlemek için e-postanıza kod gönderin.', field: 'code' });
+    } else if (typeof currentPassword !== 'string' || currentPassword.length > PASSWORD_MAX || !verifyPassword(currentPassword, user.password_hash)) {
+      return res.status(400).json({ error: 'Mevcut şifre hatalı.', field: 'currentPassword' });
+    }
+    if (!validPassword(newPassword)) return res.status(400).json({ error: `Yeni ${PASSWORD_LENGTH.charAt(0).toLowerCase()}${PASSWORD_LENGTH.slice(1)}`, field: 'newPassword' });
+    if (code !== undefined && !(await resetCodes.consume(user.id, code.trim()))) return res.status(400).json({ error: RESET_INVALID, field: 'code' });
     // Güvenlik: şifre değişince bu cihaz dışındaki güvenilir cihazlar iptal edilir ve eski erişim belirteçleri geçersizleşir.
     // Bu cihaz (güvenilirse) istemcinin sessiz oturum tazelemesiyle kesintisiz devam eder.
     const now = new Date().toISOString();
     await db.batch([
-      ['UPDATE users SET password_hash = ?, tokens_valid_after = ? WHERE id = ?', [hashPassword(newPassword), now, req.user.id]],
+      ['UPDATE users SET password_hash = ?, tokens_valid_after = ?, email_verified = CASE WHEN ? THEN 1 ELSE email_verified END WHERE id = ?',
+        [hashPassword(newPassword), now, code !== undefined ? 1 : 0, req.user.id]],
       ['UPDATE trusted_devices SET revoked_at = ? WHERE user_id = ? AND revoked_at IS NULL AND id != ?', [now, req.user.id, req.auth?.deviceId ?? -1]],
     ]);
     res.status(204).end();

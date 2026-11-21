@@ -191,3 +191,114 @@ test('hız sınırı: talepte IP ve e-posta başına (kayıtlı/kayıtsız aynı
     s.close();
   }
 });
+
+// ------------------------------------------------------------------ profil: kodla şifre değiştir / belirle
+
+const profileCode = (token, s = srv) => s.req('POST', '/api/profile/password/code', null, token);
+const changePw = (token, body, s = srv) => s.req('POST', '/api/profile/password', body, token);
+
+test('profil: hasPassword alanı — normal hesapta true, yalnızca Google ile açılmış hesapta false', async () => {
+  const { token } = await srv.registerFull('sifreli');
+  assert.equal((await srv.req('GET', '/api/profile', null, token)).body.user.hasPassword, true);
+  const { lastId } = await srv.db.run(
+    "INSERT INTO users (username, username_key, email, email_key, email_verified, google_id, password_hash, role, created_at) VALUES ('yalnizgoogle', 'yalnizgoogle', 'yg@example.com', 'yg@example.com', 1, 'sub-yg', 'oauth$x', 'user', ?)",
+    [new Date().toISOString()],
+  );
+  const gToken = await srv.tokenFor(lastId);
+  assert.equal((await srv.req('GET', '/api/profile', null, gToken)).body.user.hasPassword, false);
+});
+
+test('profil kodu: oturumdaki kullanıcının e-postasına gider (maskeli adres döner); oturumsuz 401; 60 sn içinde 429', async () => {
+  const { token } = await srv.registerFull('profilkod');
+  assert.equal((await profileCode(null)).status, 401);
+  const r = await profileCode(token);
+  assert.equal(r.status, 200);
+  assert.equal(r.body.delivery, 'sent');
+  assert.match(r.body.sentTo, /^p\*+@test\.local$/);
+  assert.ok(await srv.lastResetCode('profilkod@test.local'));
+  const again = await profileCode(token);
+  assert.equal(again.status, 429);
+  assert.match(again.body.error, /saniye bekleyin/);
+  assert.ok(Number(again.headers.get('retry-after')) > 0);
+});
+
+test('profil kodu: e-posta gönderilemezse sessizce yutulmaz — loglanır, 503 + anlaşılır mesaj, kod silinir (hemen yeniden istenebilir)', async () => {
+  const { token } = await srv.registerFull('postahatasi');
+  const logs = [];
+  const orig = console.error;
+  console.error = (...a) => logs.push(a.join(' '));
+  try {
+    srv.failMail(new MailError('provider', 'Brevo 500', { provider: 'brevo', retryable: true }));
+    const r = await profileCode(token);
+    assert.equal(r.status, 503);
+    assert.match(r.body.error, /E-posta|gönderil/);
+    assert.ok(r.body.retryAfter > 0);
+    assert.ok(logs.some((l) => l.includes('şifre kodu gönderilemedi (profil)') && l.includes('Brevo 500')));
+    assert.equal((await profileCode(token)).status, 200, 'başarısız kod beklemeye takılmaz');
+  } finally {
+    console.error = orig;
+  }
+});
+
+test('profil: kodla şifre değiştir — mevcut şifre gerekmez; bu cihaz kalır, diğer cihazlar kapanır; kod tek kullanımlık', async () => {
+  await srv.registerFull('kodladegis', 'eskiSifre1');
+  const a = await login('kodladegis', 'eskiSifre1');
+  const b = await login('kodladegis', 'eskiSifre1');
+  const cookieA = a.headers.get('set-cookie').match(/tn_device=([^;]+)/)[1];
+  const cookieB = b.headers.get('set-cookie').match(/tn_device=([^;]+)/)[1];
+  await profileCode(a.body.token);
+  const code = await srv.lastResetCode('kodladegis@test.local');
+
+  assert.equal((await changePw(a.body.token, { code: wrongCode(code), newPassword: 'yeniSifre1' })).body.error, RESET_INVALID);
+  assert.equal((await changePw(a.body.token, { code, newPassword: '123' })).body.field, 'newPassword');
+  assert.equal((await changePw(a.body.token, { code, newPassword: 'yeniSifre1' })).status, 204);
+  const refresh = (c) => srv.req('POST', '/api/auth/refresh', null, null, { Cookie: `tn_device=${c}` });
+  assert.equal((await srv.req('GET', '/api/auth/me', null, a.body.token)).status, 401, 'eski erişim belirteci geçersiz');
+  const fresh = await refresh(cookieA);
+  assert.equal(fresh.status, 200, 'işlemi yapan cihaz oturumda kalır (sessiz tazeleme)');
+  assert.equal((await changePw(fresh.body.token, { code, newPassword: 'baskaSifre1' })).status, 400, 'aynı kod ikinci kez geçmez');
+
+  assert.equal((await login('kodladegis', 'eskiSifre1')).status, 401);
+  assert.equal((await login('kodladegis', 'yeniSifre1')).status, 200);
+  assert.equal((await refresh(cookieB)).status, 401, 'diğer cihaz kapandı');
+});
+
+test('profil: yalnızca Google ile açılmış hesap — mevcut şifreyle değiştiremez (net mesaj), kodla şifre belirler ve şifreyle girebilir', async () => {
+  const { lastId } = await srv.db.run(
+    "INSERT INTO users (username, username_key, email, email_key, email_verified, google_id, password_hash, role, created_at) VALUES ('googlebelirle', 'googlebelirle', 'gb@example.com', 'gb@example.com', 1, 'sub-gb', 'oauth$x', 'user', ?)",
+    [new Date().toISOString()],
+  );
+  const token = await srv.tokenFor(lastId);
+  const noPw = await changePw(token, { currentPassword: 'herhangi1', newPassword: 'yeniSifre1' });
+  assert.equal(noPw.status, 400);
+  assert.match(noPw.body.error, /Google ile oluşturuldu ve henüz şifresi yok/);
+  assert.equal((await profileCode(token)).status, 200);
+  const code = await srv.lastResetCode('gb@example.com');
+  assert.equal((await changePw(token, { code, newPassword: 'ilkSifre1' })).status, 204);
+  assert.equal((await login('googlebelirle', 'ilkSifre1')).status, 200);
+});
+
+test('profil: mevcut şifreyle değiştirme çalışmaya devam eder; hatalı mevcut şifre alan bilgisiyle 400', async () => {
+  const { token } = await srv.registerFull('klasik', 'eskiSifre1');
+  const bad = await changePw(token, { currentPassword: 'yanlis11', newPassword: 'yeniSifre1' });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.body.field, 'currentPassword');
+  assert.equal((await changePw(token, { currentPassword: 'eskiSifre1', newPassword: 'yeniSifre1' })).status, 204);
+  assert.equal((await login('klasik', 'yeniSifre1')).status, 200);
+});
+
+test('şifremi unuttum: e-posta servisi hiç yapılandırılmamışsa (her adres için aynı) 503 ve açık mesaj', async () => {
+  const s = await startServer({ mailer: { kind: 'brevo', configError: 'MAIL_FROM tanımlı değil', sendVerificationCode: async () => {}, sendPasswordResetCode: async () => {} } });
+  const orig = console.error;
+  console.error = () => {};
+  try {
+    for (const email of ['kayitli-olabilir@example.com', 'baska@example.com']) {
+      const r = await request(email, s);
+      assert.equal(r.status, 503);
+      assert.match(r.body.error, /E-posta servisi şu anda kullanılamıyor/);
+    }
+  } finally {
+    console.error = orig;
+    s.close();
+  }
+});

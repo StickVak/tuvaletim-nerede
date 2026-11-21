@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Camera, Clock3, Heart, KeyRound, Loader2, LogOut, MapPinPlus, MessageSquareText, MonitorSmartphone, ShieldCheck, Star, Trash2, UserRound } from 'lucide-react';
+import { AlertTriangle, Camera, Clock3, Heart, Loader2, LogOut, MapPinPlus, MessageSquareText, MonitorSmartphone, ShieldCheck, Star, Trash2, UserRound } from 'lucide-react';
 import type { MyProfile } from '../types';
 import { ApiError, api } from '../api';
 import { useAuth } from '../hooks/useAuth';
@@ -7,6 +7,7 @@ import { readImageAsDataUrl } from '../lib/image';
 import { joinedLabel, relTime } from '../lib/time';
 import Avatar from './Avatar';
 import ModalShell from './ModalShell';
+import PasswordSection from './PasswordSection';
 
 const input = 'w-full rounded-2xl border-2 border-transparent bg-card px-4 py-2.5 text-sm font-medium text-ink outline-none focus:border-brand-dark';
 /** GET /api/auth/devices */
@@ -40,8 +41,6 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
   const [username, setUsername] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [bio, setBio] = useState('');
-  const [currentPw, setCurrentPw] = useState('');
-  const [newPw, setNewPw] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -106,12 +105,6 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
       setBusy(null);
     }
   };
-  const changePassword = () =>
-    run('password', async () => {
-      await api('/profile/password', { method: 'POST', body: { currentPassword: currentPw, newPassword: newPw } });
-      setCurrentPw('');
-      setNewPw('');
-    }, 'Şifreniz değiştirildi.');
   const uploadAvatar = (file?: File) => {
     if (!file) return;
     void run('avatar', async () => {
@@ -217,14 +210,7 @@ export default function ProfileModal({ onClose, onOpenPlace, onOpenPublic, onToa
             </button>
           </section>
 
-          <section className="mt-6 space-y-2">
-            <h3 className="flex items-center gap-2 text-sm font-extrabold"><KeyRound size={15} /> Şifre değiştir</h3>
-            <input type="password" value={currentPw} onChange={(e) => setCurrentPw(e.target.value)} placeholder="Mevcut şifre" aria-label="Mevcut şifre" autoComplete="current-password" className={input} />
-            <input type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} placeholder="Yeni şifre (en az 6 karakter)" aria-label="Yeni şifre" autoComplete="new-password" className={input} />
-            <button type="button" onClick={changePassword} disabled={!currentPw || !newPw || busy === 'password'} className="w-full rounded-2xl bg-card py-3 text-sm font-bold text-ink ring-1 ring-line disabled:opacity-50">
-              Şifreyi değiştir
-            </button>
-          </section>
+          <PasswordSection hasPassword={p.user.hasPassword !== false} onToast={onToast} onChanged={() => void load()} />
 
           <section className="mt-6">
             <h3 className="flex items-center gap-2 text-sm font-extrabold"><Clock3 size={15} /> Etkinliklerim</h3>

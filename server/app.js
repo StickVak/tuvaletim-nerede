@@ -119,7 +119,9 @@ export async function createApp({
   app.use('/api/places', placeRoutes(db, writeLimit, photos));
   app.use('/api/favorites', favoriteRoutes(db, writeLimit));
   app.use('/api/pending', pendingRoutes(db, chain(writeLimit, uploadLimit), photos));
-  app.use('/api/profile', profileRoutes(db, { avatars, writeLimit, uploadLimit }));
+  // Profilden şifre kodu: kullanıcı başına (şifre sıfırlama e-posta sınırıyla aynı: saatte 5)
+  const profileCodeLimit = limit('resetRequestEmail', 'Çok fazla kod istendi.', { key: userKey, name: 'profileCode' });
+  app.use('/api/profile', profileRoutes(db, { avatars, writeLimit, uploadLimit, codeLimit: profileCodeLimit, secret, mailer }));
   app.use('/api/users', userRoutes(db));
   app.use('/api/avatars', avatarRoutes(avatarDir));
   app.use('/api/admin', adminAuthLimit, requireAdminKey(adminKey), adminRoutes(db, { photos, avatars }));

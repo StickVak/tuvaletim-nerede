@@ -64,6 +64,8 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   const [now, syncNow] = useNow(step === 'code' || cooldownUntil > Date.now());
   // "Şifremi unuttum" ekranı (giriş sekmesinden açılır)
   const [forgot, setForgot] = useState(false);
+  // Son giriş denemesi "kullanıcı adı veya şifre hatalı" ile bitti mi (hata kutusunda sıfırlama önerisi)
+  const [loginFailed, setLoginFailed] = useState(false);
 
   if (!authMode) return null;
   if (forgot) {
@@ -202,6 +204,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
       setPassword('');
       onWelcome(u.username);
     } catch (err) {
+      setLoginFailed(err instanceof ApiError && err.status === 401);
       setError((err as Error).message);
     } finally {
       setBusy(false);
@@ -366,7 +369,7 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
                       setNotice(null);
                       setForgot(true);
                     }}
-                    className="text-sm font-semibold text-ink-soft underline-offset-2 hover:text-ink hover:underline"
+                    className="text-sm font-bold text-ink underline underline-offset-2 hover:text-brand-dark"
                   >
                     Şifremi unuttum
                   </button>
@@ -424,6 +427,11 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
         {error && (
           <div role="alert" className="mt-3 rounded-xl bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-600">
             <p>{error}</p>
+            {!isRegister && loginFailed && (
+              <button type="button" onClick={() => { setError(''); setNotice(null); setForgot(true); }} className="mt-1 text-xs font-bold text-ink underline">
+                Şifrenizi mi unuttunuz? Kodla sıfırlayın
+              </button>
+            )}
             {/* Ne zaman tekrar denenebileceği: canlı geri sayım (form adımı ya da kod adımındaki tekrar gönder) */}
             {(onCodeStep ? resendAt > 0 && resendIn > 0 : cooldownUntil > 0) && (
               <p className="mt-1 flex items-center gap-1.5 text-xs font-bold" aria-live="polite" data-testid="retry-countdown">
