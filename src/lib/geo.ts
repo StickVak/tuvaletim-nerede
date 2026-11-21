@@ -1,8 +1,5 @@
 import type { LatLng, Place, PlaceView } from '../types';
 
-/** Konum bilinmezken harita merkezi: İzmir, Konak */
-export const IZMIR_CENTER: LatLng = { lat: 38.4189, lng: 27.1287 };
-
 const R = 6371000;
 const rad = (d: number) => (d * Math.PI) / 180;
 

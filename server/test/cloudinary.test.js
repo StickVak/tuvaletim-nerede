@@ -98,7 +98,7 @@ test('Cloudinary modunda başvuru fotoğrafı yüklenir, mekana bağlanır, sili
   const { join } = await import('node:path');
   try {
     const user = await srv.register('bulutcu');
-    const sub = await srv.req('POST', '/api/pending', { name: 'Bulut WC', category: 'park', lat: 38.4, lng: 27.1, vote: { cleanliness: 3, comfort: 3, isPaid: false }, photo: JPEG }, user);
+    const sub = await srv.req('POST', '/api/pending', { name: 'Bulut WC', category: 'park', lat: 38.4, lng: 27.1, province: 'İzmir', district: 'Konak', vote: { cleanliness: 3, comfort: 3, isPaid: false }, photo: JPEG }, user);
     assert.equal(sub.status, 201);
     const ref = (await srv.db.get('SELECT photo_file FROM pending_places WHERE id = ?', [sub.body.id])).photo_file;
     assert.match(ref, /^https:\/\/res\.cloudinary\.com\//, 'veritabanında secure_url');
@@ -114,7 +114,7 @@ test('Cloudinary modunda başvuru fotoğrafı yüklenir, mekana bağlanır, sili
     assert.equal(destroy.form.public_id, publicIdFromUrl(ref));
 
     // reddedilen başvuru da Cloudinary'den silinir
-    const sub2 = await srv.req('POST', '/api/pending', { name: 'Ret WC', category: 'park', lat: 38.4, lng: 27.1, vote: { cleanliness: 3, comfort: 3, isPaid: false }, photo: JPEG }, user);
+    const sub2 = await srv.req('POST', '/api/pending', { name: 'Ret WC', category: 'park', lat: 38.4, lng: 27.1, province: 'İzmir', district: 'Konak', vote: { cleanliness: 3, comfort: 3, isPaid: false }, photo: JPEG }, user);
     const ref2 = (await srv.db.get('SELECT photo_file FROM pending_places WHERE id = ?', [sub2.body.id])).photo_file;
     await srv.admin('DELETE', `/api/admin/pending/${sub2.body.id}`);
     assert.ok(calls.some((c) => c.url.endsWith('/destroy') && c.form.public_id === publicIdFromUrl(ref2)));

@@ -1,4 +1,5 @@
 import { createClient } from '@libsql/client';
+import { resolveLocation } from './turkey.js';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, sep } from 'node:path';
 import { emailKey, usernameKey } from './identity.js';
@@ -120,7 +121,8 @@ const ADDED_COLUMNS = {
     'username_key TEXT', 'email_key TEXT', 'google_id TEXT', 'email_verified INTEGER NOT NULL DEFAULT 0',
     'terms_accepted_at TEXT', 'terms_version TEXT'],
   // closed_at: yönetici onaylı kalıcı kapalı (haritada gösterilmez)
-  places: ['toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
+  // province: il (src/data/turkiye.json yazımıyla); district artık listedeki ilçe adı
+  places: ['province TEXT', 'toilet_type TEXT', 'public_access INTEGER', 'added_by INTEGER REFERENCES users(id) ON DELETE SET NULL', 'closed_at TEXT', 'photo_file TEXT'],
   // resolved_at: yönetici ihbarı onayladı/reddetti; canlı durum ve kuyruk dışında kalır (katkı sayısında kalır)
   status_reports: ['resolved_at TEXT'],
   // persistent: 1 = "Bu cihazı hatırla" (90 gün, kalıcı çerez); 0 = yalnızca tarayıcı oturumu (1 gün, oturum çerezi)
@@ -130,7 +132,7 @@ const ADDED_COLUMNS = {
   votes: ['toilet_type TEXT'],
   // photo_file: dış mekan fotoğrafı — yerel dosya adı (server/data/photos) ya da Cloudinary secure_url
   // (photo sütunu eski base64 içindir, göçte boşaltılır)
-  pending_places: ['toilet_type TEXT', 'public_access INTEGER', 'photo_file TEXT'],
+  pending_places: ['province TEXT', 'toilet_type TEXT', 'public_access INTEGER', 'photo_file TEXT'],
 };
 
 const norm = (v) => (v === undefined ? null : typeof v === 'boolean' ? (v ? 1 : 0) : v);
@@ -193,6 +195,23 @@ export async function openDb(path, { seedFile, url, authToken } = {}) {
     await client.execute("UPDATE users SET email_verified = 1 WHERE email IS NOT NULL AND created_at >= '2026-11-18T11:50:48Z'");
   }
   await migrateIdentityKeys();
+
+  /**
+   * İli boş olan eski kayıtlar: ilçe adından il bulunur (aynı ad birden çok ilde varsa kaydın konumuna en yakın il),
+   * ilçe yazımı listedekine çevrilir ("cigli", "ÇİĞLİ " → "Çiğli"). Listede olmayan serbest metin olduğu gibi kalır.
+   * Yalnızca ili boş satırlara dokunur; her açılışta güvenle çalışır.
+   */
+  async function migrateLocations() {
+    for (const table of ['places', 'pending_places']) {
+      const rows = await all(`SELECT id, district, lat, lng FROM ${table} WHERE province IS NULL AND district IS NOT NULL AND district != ''`);
+      const stmts = [];
+      for (const r of rows) {
+        const loc = resolveLocation({ district: r.district, near: r });
+        if (typeof loc !== 'string') stmts.push([`UPDATE ${table} SET province = ?, district = ? WHERE id = ?`, [loc.province, loc.district, r.id]]);
+      }
+      if (stmts.length) await batch(stmts);
+    }
+  }
 
   /**
    * Eski kayıtların benzersizlik anahtarlarını doldurur, sonra UNIQUE indeksleri kurar. Eski sürümde ASCII NOCASE'in
@@ -274,14 +293,16 @@ export async function openDb(path, { seedFile, url, authToken } = {}) {
     if (missing.length) {
       await batch(
         missing.map((p) => [
-          `INSERT INTO places (id, name, category, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
-          [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
+          `INSERT INTO places (id, name, category, province, district, address, lat, lng, hours, accessible, baby_changing, toilet_type, public_access, source, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'seed', ?, ?)`,
+          [p.id, p.name, p.category, p.province ?? null, p.district, p.address, p.lat, p.lng, p.hours, !!p.accessible, !!p.babyChanging,
             p.toiletType ?? null, p.publicAccess ?? null, now, now],
         ]),
       );
     }
   }
+  // Seed eşitlemesinden SONRA: hem eski kayıtlar hem ili belirtilmemiş seed kayıtları il kazanır
+  await migrateLocations();
 
   return api;
 }

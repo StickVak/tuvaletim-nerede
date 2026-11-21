@@ -17,7 +17,8 @@
    "id": 402049604,
    "display_name": "İzmir Optimum, Akçay Caddesi, Beyazevler Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-forum-bornova",
@@ -37,7 +38,8 @@
    "id": 153653899,
    "display_name": "Forum Bornova, 372. Sokak, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-istinyepark-izmir",
@@ -57,7 +59,8 @@
    "id": 496188242,
    "display_name": "İstinyePark İzmir, Ali Resmi Tufan Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-agora-avm",
@@ -77,7 +80,8 @@
    "id": 12008698,
    "display_name": "Agora AVM, Mithatpaşa Caddesi Yanyolu, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-hilltown-karsiyaka",
@@ -97,7 +101,8 @@
    "id": 92918712,
    "display_name": "Hilltown Karşıyaka, 8293. Sokak, Ataşehir Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-mavibahce-avm",
@@ -117,7 +122,8 @@
    "id": 5960237,
    "display_name": "MaviBahçe, 2040/4.Sokak, Mavişehir Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-konak-pier",
@@ -137,7 +143,8 @@
    "id": 1360403892,
    "display_name": "Konak Pier, 19, Atatürk Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-point-bornova",
@@ -157,7 +164,8 @@
    "id": 839313143,
    "display_name": "Point Bornova, Yeşilova Mahallesi, Bornova, İzmir, Ege Bölgesi, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-ege-perla",
@@ -177,7 +185,8 @@
    "id": 1304501841,
    "display_name": "Ege Perla, Çınarlı Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-starbucks-buca-tinaztepe",
@@ -197,7 +206,8 @@
    "id": 8008907824,
    "display_name": "Starbucks, 6/A, 203/52. Sokak, Kuruçeşme Mahallesi, Buca, İzmir, Ege Bölgesi, 35400, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-sirinyer-izban-kafe",
@@ -217,7 +227,8 @@
    "id": 761081377,
    "display_name": "Coffee Lab, Aydın Hatboyu Caddesi, Şirinyer, Hürriyet Mahallesi, Buca, İzmir, Ege Bölgesi, 35370, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-starbucks-kibris-sehitleri",
@@ -237,7 +248,8 @@
    "id": 5284001055,
    "display_name": "Starbucks, Kıbrıs Şehitleri Caddesi, Alsancak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-starbucks-konak-pier",
@@ -257,7 +269,8 @@
    "id": 12593565907,
    "display_name": "Starbucks, 19, Atatürk Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-starbucks-bornova-kucukpark",
@@ -277,7 +290,8 @@
    "id": 6797009581,
    "display_name": "Starbucks, Süvari Caddesi, Özkanlar, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-starbucks-karsiyaka-carsi",
@@ -297,7 +311,8 @@
    "id": 13327610272,
    "display_name": "Starbucks, Yalı Bulvarı, Donanmacı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35580, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-starbucks-bostanli",
@@ -317,7 +332,8 @@
    "id": 6672553563,
    "display_name": "Starbucks, Girne Bulvarı, Bostanlı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-buca-hasanaga",
@@ -337,7 +353,8 @@
    "id": 14244999501,
    "display_name": "63. Sokak, Adatepe Mahallesi, Buca, İzmir, Ege Bölgesi, 35400, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-sirinyer",
@@ -357,7 +374,8 @@
    "id": 1052446932,
    "display_name": "Aydın Hatboyu Caddesi, İnkılap Mahallesi, Buca, İzmir, Ege Bölgesi, 35380, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-konak-kemeralti",
@@ -377,7 +395,8 @@
    "id": 1453413507,
    "display_name": "Mustafa Kemal Sahil Bulvarı, Kemeraltı, Konak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-alsancak-gundogdu",
@@ -397,7 +416,8 @@
    "id": 913402649,
    "display_name": "Atatürk Caddesi, Alsancak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-kulturpark",
@@ -417,7 +437,8 @@
    "id": 12214265201,
    "display_name": "Şair Eşref Bulvarı, Mimar Sinan Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-bornova-meydan",
@@ -433,7 +454,8 @@
   "toiletType": null,
   "publicAccess": null,
   "osm": null,
-  "approximate": true
+  "approximate": true,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-karsiyaka-iskele",
@@ -449,7 +471,8 @@
   "toiletType": null,
   "publicAccess": null,
   "osm": null,
-  "approximate": true
+  "approximate": true,
+  "province": "İzmir"
  },
  {
   "id": "seed-wc-bostanli-sahil",
@@ -469,7 +492,8 @@
    "id": 9779419008,
    "display_name": "Hasan Ali Yücel Bulvarı, Bostanlı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14204624001",
@@ -489,7 +513,8 @@
    "id": 14204624001,
    "display_name": "11004. Sokak, Alaçatı Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35937, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n10110098518",
@@ -509,7 +534,8 @@
    "id": 10110098518,
    "display_name": "Starbucks, 1016. Sokak, Musalla Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11269527625",
@@ -529,7 +555,8 @@
    "id": 11269527625,
    "display_name": "3053. Sokak, Musalla Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14209680931",
@@ -549,7 +576,8 @@
    "id": 14209680931,
    "display_name": "5219. Sokak, Celal Bayar Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14209705373",
@@ -569,7 +597,8 @@
    "id": 14209705373,
    "display_name": "5221. Sokak, Celal Bayar Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14219211539",
@@ -589,7 +618,8 @@
    "id": 14219211539,
    "display_name": "Starbucks, İzmir-Çeşme yolu, İYTE Yerleşkesi, Gülbahçe Mahallesi, Urla, İzmir, Ege Bölgesi, 35433, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9863956700",
@@ -609,7 +639,8 @@
    "id": 9863956700,
    "display_name": "6000. Sokak, Yalı Mahallesi, Germiyan Mahallesi, Çeşme, İzmir, Ege Bölgesi, 35930, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12842912500",
@@ -629,7 +660,8 @@
    "id": 12842912500,
    "display_name": "Karaburun Yolu, İYTE Yerleşkesi, Gülbahçe Mahallesi, Urla, İzmir, Ege Bölgesi, 35433, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11022634380",
@@ -649,7 +681,8 @@
    "id": 11022634380,
    "display_name": "D 505, Mordoğan Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35970, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9002730910",
@@ -669,7 +702,8 @@
    "id": 9002730910,
    "display_name": "Aşağı Çeşme Sokak, Merkez Mahallesi, Saip Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35960, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5538727153",
@@ -689,7 +723,8 @@
    "id": 5538727153,
    "display_name": "Kuyucak Caddesi, Akçakilise, İskele Mahallesi, Bozköy Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35960, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n2959837669",
@@ -709,7 +744,8 @@
    "id": 2959837669,
    "display_name": "2100. Sokak, Merkez Mahallesi, Karaburun, İzmir, Ege Bölgesi, 35960, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1540726048",
@@ -729,7 +765,8 @@
    "id": 1540726048,
    "display_name": "Park Renna, Hıdırlık Caddesi, Camikebir Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5093856452",
@@ -749,7 +786,8 @@
    "id": 5093856452,
    "display_name": "Teos Marina AVM, Teos marina İçyolu, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13050125370",
@@ -769,7 +807,8 @@
    "id": 13050125370,
    "display_name": "Starbucks, 54, İzmir Seferihisar Yolu, Camikebir Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w868144899",
@@ -789,7 +828,8 @@
    "id": 868144899,
    "display_name": "137. Sokak, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w865916982",
@@ -809,7 +849,8 @@
    "id": 865916982,
    "display_name": "Teos Caddesi, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11161986076",
@@ -829,7 +870,8 @@
    "id": 11161986076,
    "display_name": "İnönü Caddesi, Hıdırlık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9968202902",
@@ -849,7 +891,8 @@
    "id": 9968202902,
    "display_name": "Akkum Caddesi, Sığacık Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14056235261",
@@ -869,7 +912,8 @@
    "id": 14056235261,
    "display_name": "Azmak Mevki, Düzce Mahallesi, Seferihisar, İzmir, Ege Bölgesi, 35460, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1553970629",
@@ -889,7 +933,8 @@
    "id": 1553970629,
    "display_name": "Urla Mall, İzmir-Çeşme Otoyolu, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w923203738",
@@ -909,7 +954,8 @@
    "id": 923203738,
    "display_name": "Urla Bamboo AVM, 6, İzmir-Çeşme Yolu, Kalabak Mahallesi, Urla, İzmir, Ege Bölgesi, 35441, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w915525694",
@@ -929,7 +975,8 @@
    "id": 915525694,
    "display_name": "Migros, 111. Sokak, Denizli Mahallesi, Urla, İzmir, Ege Bölgesi, 35430, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1553970630",
@@ -949,7 +996,8 @@
    "id": 1553970630,
    "display_name": "Starbucks, İzmir-Çeşme Otoyolu, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5440936449",
@@ -969,7 +1017,8 @@
    "id": 5440936449,
    "display_name": "Starbucks, İzmir-Çeşme Otoyolu, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12812065201",
@@ -989,7 +1038,8 @@
    "id": 12812065201,
    "display_name": "Starbucks, 743. Sokak, Kahramandere Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9966726424",
@@ -1009,7 +1059,8 @@
    "id": 9966726424,
    "display_name": "Gediz Deltası Yolu, 75.Yıl Cumhuriyet Mahallesi, Süzbeyli Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5265418190",
@@ -1029,7 +1080,8 @@
    "id": 5265418190,
    "display_name": "Mareşal Fevzi Çakmak Bulvarı, Kalabak Mahallesi, Urla, İzmir, Ege Bölgesi, 35441, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n3921776090",
@@ -1049,7 +1101,8 @@
    "id": 3921776090,
    "display_name": "Pazaryeri Sokak, Hacı İsa Mahallesi, Urla, İzmir, Ege Bölgesi, 35430, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1164885061",
@@ -1069,7 +1122,8 @@
    "id": 1164885061,
    "display_name": "2712/1. Sokak, Yelki Mahallesi, Güzelbahçe, İzmir, Ege Bölgesi, 35310, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n2512676620",
@@ -1089,7 +1143,8 @@
    "id": 2512676620,
    "display_name": "Foça, Reha Midilli Cd., Fevzipaşa Mahallesi, Foça, İzmir, Ege Bölgesi, 35680, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13423627885",
@@ -1109,7 +1164,8 @@
    "id": 13423627885,
    "display_name": "Ali Stair Caddesi, Yenifoça, Mustafa Kemal Atatürk Mahallesi, Foça, İzmir, Ege Bölgesi, 35680, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14173457775",
@@ -1129,7 +1185,8 @@
    "id": 14173457775,
    "display_name": "Namık Kemal Caddesi, Çandarlı Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n7018070870",
@@ -1149,7 +1206,8 @@
    "id": 7018070870,
    "display_name": "Denizköy 1 Sokağı, Denizköy, Denizköy Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14091912476",
@@ -1169,7 +1227,8 @@
    "id": 14091912476,
    "display_name": "Polyak 6. Sokak, Polyak Sitesi, Kabakum Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1096782925",
@@ -1189,7 +1248,8 @@
    "id": 1096782925,
    "display_name": "Şehit Sami Akbulut Caddesi, Gazipaşa Mahallesi, Dikili, İzmir, Ege Bölgesi, 35980, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11266338690",
@@ -1209,7 +1269,8 @@
    "id": 11266338690,
    "display_name": "Klaros yolu, Ahmetbeyli Mahallesi, Menderes, İzmir, Ege Bölgesi, 35471, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w502731151",
@@ -1229,7 +1290,8 @@
    "id": 502731151,
    "display_name": "ÜLKEA Merkez Menderes AVM, No:24, İzmir-Aydın yolu, Görece Cumhuriyet Mahallesi, Menderes, İzmir, Ege Bölgesi, 35470, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n7020202185",
@@ -1249,7 +1311,8 @@
    "id": 7020202185,
    "display_name": "Starbucks, İç Hatlar Gidiş, Dokuz Eylül Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13094257349",
@@ -1269,7 +1332,8 @@
    "id": 13094257349,
    "display_name": "No:51,53, Sahil Cd., Gümüldür Atatürk Mahallesi, Menderes, İzmir, Ege Bölgesi, 35480, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w37254624",
@@ -1289,7 +1353,8 @@
    "id": 37254624,
    "display_name": "Çiğli AVM, Atatürk Organize Sanayi Bölgesi Yan Yolu, Ataşehir Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35630, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w593414707",
@@ -1309,7 +1374,8 @@
    "id": 593414707,
    "display_name": "Westpark Outlet A Blok, S-12/9A, İzmir Çevre Yolu, 100. Yıl Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35540, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w330844703",
@@ -1329,7 +1395,8 @@
    "id": 330844703,
    "display_name": "Balçova Kipa Alışveriş Merkezi, No:46, Mithatpaşa Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w387585142",
@@ -1349,7 +1416,8 @@
    "id": 387585142,
    "display_name": "Özdilek, İnciraltı Caddesi, İnciraltı Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-r6031617",
@@ -1369,7 +1437,8 @@
    "id": 6031617,
    "display_name": "Ege Park, 44, Mithatpaşa Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w37373244",
@@ -1389,7 +1458,8 @@
    "id": 37373244,
    "display_name": "Gaziemir Outlet Center, Akçay Caddesi Yanyol, Emrez Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w312215616",
@@ -1409,7 +1479,8 @@
    "id": 312215616,
    "display_name": "Palmiye AVM, 34, Mithatpaşa Caddesi, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w859049564",
@@ -1429,7 +1500,8 @@
    "id": 859049564,
    "display_name": "İzmirPARK AVM, 518 sokak, Güneşli Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35270, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w386075185",
@@ -1449,7 +1521,8 @@
    "id": 386075185,
    "display_name": "Migros, 8820. Sokak, Egekent Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w684817648",
@@ -1469,7 +1542,8 @@
    "id": 684817648,
    "display_name": "Migros, Menderes Caddesi, İnkılap Mahallesi, Buca, İzmir, Ege Bölgesi, 35380, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w432900088",
@@ -1489,7 +1563,8 @@
    "id": 432900088,
    "display_name": "Egekent Alışveriş Merkezi, 8837. Sokak, İzkent Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5087889664",
@@ -1509,7 +1584,8 @@
    "id": 5087889664,
    "display_name": "Selway Outlet Balçova, Çetin Emeç Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5087889665",
@@ -1529,7 +1605,8 @@
    "id": 5087889665,
    "display_name": "Novada Outlet Balçova, Selway Outlet Balçova, Çetin Emeç Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w637305655",
@@ -1549,7 +1626,8 @@
    "id": 637305655,
    "display_name": "Starbucks, Bora Sokak, Fevzi Çakmak Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n4464895893",
@@ -1569,7 +1647,8 @@
    "id": 4464895893,
    "display_name": "Starbucks, İnönü Caddesi, Küçükyalı, Basın Sitesi Mahallesi, İzmir, Karabağlar, İzmir, Ege Bölgesi, 35280, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5287447537",
@@ -1589,7 +1668,8 @@
    "id": 5287447537,
    "display_name": "Starbucks, Atatürk Caddesi, Kültür Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13342248013",
@@ -1609,7 +1689,8 @@
    "id": 13342248013,
    "display_name": "Starbucks, Altınyol, Halkapınar Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35170, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13299667101",
@@ -1629,7 +1710,8 @@
    "id": 13299667101,
    "display_name": "Starbucks, 2, 1593/1. Sokak, Mansuroğlu Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35535, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9215806359",
@@ -1649,7 +1731,8 @@
    "id": 9215806359,
    "display_name": "Starbucks, Mithatpaşa Caddesi, Yenikale Mahallesi, Narlıdere, İzmir, Ege Bölgesi, 35320, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13100280725",
@@ -1669,7 +1752,8 @@
    "id": 13100280725,
    "display_name": "Starbucks, Ordu Bulvarı, Şemikler Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35560, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13363702255",
@@ -1689,7 +1773,8 @@
    "id": 13363702255,
    "display_name": "Starbucks, 6525. Sokak, Yalı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35550, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n6720558086",
@@ -1709,7 +1794,8 @@
    "id": 6720558086,
    "display_name": "Starbucks, Akdeniz Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35210, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n6792299186",
@@ -1729,7 +1815,8 @@
    "id": 6792299186,
    "display_name": "Starbucks, Manas Bulvarı, Adalet Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35530, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11447354269",
@@ -1749,7 +1836,8 @@
    "id": 11447354269,
    "display_name": "Starbucks, 108, Eski Havaalanı Caddesi, Yeni Mahalle Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5576265262",
@@ -1769,7 +1857,8 @@
    "id": 5576265262,
    "display_name": "Starbucks, Cahar Dudayev Bulvarı, Ataşehir Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n4358654791",
@@ -1789,7 +1878,8 @@
    "id": 4358654791,
    "display_name": "Starbucks, Mustafa Kemal Sahil Bulvarı, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13357543484",
@@ -1809,7 +1899,8 @@
    "id": 13357543484,
    "display_name": "Starbucks, Cengiz Topel Caddesi, Bostanlı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35590, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13529158613",
@@ -1829,7 +1920,8 @@
    "id": 13529158613,
    "display_name": "Starbucks, 1583. Sokak, Çınarlı Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35170, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5293941622",
@@ -1849,7 +1941,8 @@
    "id": 5293941622,
    "display_name": "Starbucks, Mustafa Enver Bey Caddesi, Kültür Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11624047702",
@@ -1869,7 +1962,8 @@
    "id": 11624047702,
    "display_name": "Starbucks, 341. Sokak, Beyazevler Mahallesi, Gaziemir, İzmir, Ege Bölgesi, 35410, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n7814490112",
@@ -1889,7 +1983,8 @@
    "id": 7814490112,
    "display_name": "Starbucks, 1729. Sokak, Donanmacı Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35580, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12985833590",
@@ -1909,7 +2004,8 @@
    "id": 12985833590,
    "display_name": "Starbucks, 275/6. Sokak, Manavkuyu Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35535, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13663064463",
@@ -1929,7 +2025,8 @@
    "id": 13663064463,
    "display_name": "Starbucks, Selway Outlet Balçova, Çetin Emeç Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5702977817",
@@ -1949,7 +2046,8 @@
    "id": 5702977817,
    "display_name": "Starbucks, Yalı Bulvarı, Tuna Mahallesi, Karşıyaka, İzmir, Ege Bölgesi, 35580, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12966135671",
@@ -1969,7 +2067,8 @@
    "id": 12966135671,
    "display_name": "Starbucks, Havra Sokağı, Güzelyurt Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w758442409",
@@ -1989,7 +2088,8 @@
    "id": 758442409,
    "display_name": "Dokuzçeşmeler Yerleşkesi İç Yolu, Adatepe Mahallesi, Buca, İzmir, Ege Bölgesi, 35400, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1557963656",
@@ -2009,7 +2109,8 @@
    "id": 1557963656,
    "display_name": "Atatürk Caddesi, Kültür Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1071055200",
@@ -2029,7 +2130,8 @@
    "id": 1071055200,
    "display_name": "7334/2. Sokak, Yamanlar Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35510, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w391107059",
@@ -2049,7 +2151,8 @@
    "id": 391107059,
    "display_name": "Siteiçi Sokak, Evka-5 Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1208432039",
@@ -2069,7 +2172,8 @@
    "id": 1208432039,
    "display_name": "Şehit Teğmen Güngör Dolunay Yaya Üst Geçidi, Yeşiltepe Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35260, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1453073144",
@@ -2089,7 +2193,8 @@
    "id": 1453073144,
    "display_name": "Bayraklı Üst Geçit, Bayraklı Mahallesi, Bayraklı, İzmir, Ege Bölgesi, 35530, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w387617181",
@@ -2109,7 +2214,8 @@
    "id": 387617181,
    "display_name": "884. Sokak, Egekent Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35610, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w876469303",
@@ -2129,7 +2235,8 @@
    "id": 876469303,
    "display_name": "1403. Sokak, Buca Koop Mahallesi, Buca, İzmir, Ege Bölgesi, 35390, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1320055049",
@@ -2149,7 +2256,8 @@
    "id": 1320055049,
    "display_name": "108/2. Sokak, Basın Sitesi Mahallesi, Karabağlar, İzmir, Ege Bölgesi, 35150, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n4930999423",
@@ -2169,7 +2277,8 @@
    "id": 4930999423,
    "display_name": "5134. Sokak, Yıldırım Beyazıt Mahallesi, Bornova, İzmir, Ege Bölgesi, 35090, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n10969508474",
@@ -2189,7 +2298,8 @@
    "id": 10969508474,
    "display_name": "Haydar Aliyev Bulvarı, Bahçelerarası Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11832468800",
@@ -2209,7 +2319,8 @@
    "id": 11832468800,
    "display_name": "Ayşe Mayda Sokağı, Küçükyalı, Çankaya Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35280, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9795398805",
@@ -2229,7 +2340,8 @@
    "id": 9795398805,
    "display_name": "Mithatpaşa Alt Geçidi, Karantina, Mithatpaşa Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35280, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13423466469",
@@ -2249,7 +2361,8 @@
    "id": 13423466469,
    "display_name": "Atatürk Caddesi, Umurbey Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11091677273",
@@ -2269,7 +2382,8 @@
    "id": 11091677273,
    "display_name": "Mustafa Kemal Sahil Bulvarı, Yeşiltepe Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35260, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12238139355",
@@ -2289,7 +2403,8 @@
    "id": 12238139355,
    "display_name": "Zafer Payzın Kavşağı, Çınarlı Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35170, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n8046299689",
@@ -2309,7 +2424,8 @@
    "id": 8046299689,
    "display_name": "817. Sokak, Namazgah Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35240, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11131434855",
@@ -2329,7 +2445,8 @@
    "id": 11131434855,
    "display_name": "873.Sokak, Kemeraltı, Konak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n7088337685",
@@ -2349,7 +2466,8 @@
    "id": 7088337685,
    "display_name": "863. Sokak, Kemeraltı, Konak Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11126031885",
@@ -2369,7 +2487,8 @@
    "id": 11126031885,
    "display_name": "Rakım Erkutlu Caddesi, Kadifekale Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35240, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n10031675867",
@@ -2389,7 +2508,8 @@
    "id": 10031675867,
    "display_name": "19, Atatürk Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11918147591",
@@ -2409,7 +2529,8 @@
    "id": 11918147591,
    "display_name": "Sakarya Caddesi, Fevzi Çakmak Mahallesi, Balçova, İzmir, Ege Bölgesi, 35330, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11131443544",
@@ -2429,7 +2550,8 @@
    "id": 11131443544,
    "display_name": "Mimar Kemalettin Caddesi, Pasaport, Akdeniz Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35210, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13844319602",
@@ -2449,7 +2571,8 @@
    "id": 13844319602,
    "display_name": "Dr. Refik Saydam Bulvarı, Mimar Sinan Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n3063672929",
@@ -2469,7 +2592,8 @@
    "id": 3063672929,
    "display_name": "1396. Sokak, Mimar Sinan Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35220, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12213603301",
@@ -2489,7 +2613,8 @@
    "id": 12213603301,
    "display_name": "Anafartalar Caddesi, Yenigün Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35250, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n3063665576",
@@ -2509,7 +2634,8 @@
    "id": 3063665576,
    "display_name": "1268. Sokak, Basmane, Etiler Mahallesi, İzmir, Konak, İzmir, Ege Bölgesi, 35240, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1026803326",
@@ -2529,7 +2655,8 @@
    "id": 1026803326,
    "display_name": "Ahmet Piriştina Bulvarı, Kaklıç Mahallesi, Sasalı Merkez Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n10225253970",
@@ -2549,7 +2676,8 @@
    "id": 10225253970,
    "display_name": "Ahmet Piriştina Bulvarı, Sasalı, Sasalı Merkez Mahallesi, Çiğli, İzmir, Ege Bölgesi, 35620, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1431526374",
@@ -2569,7 +2697,8 @@
    "id": 1431526374,
    "display_name": "Novada Menemen Avm, 46, Çanakkale Asfaltı Caddesi, Yıldırım Mahallesi, Buruncuk Mahallesi, Menemen, İzmir, Ege Bölgesi, 35676, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w779934636",
@@ -2589,7 +2718,8 @@
    "id": 779934636,
    "display_name": "Sakıpağa Outlet, Nene Hatun Caddesi, Menemen, Ulus Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14380867786",
@@ -2609,7 +2739,8 @@
    "id": 14380867786,
    "display_name": "Starbucks, 3. Cadde, 30 Ağustos Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1064859223",
@@ -2629,7 +2760,8 @@
    "id": 1064859223,
    "display_name": "Kuzey Ege Otoyolu, Doğa Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1064642233",
@@ -2649,7 +2781,8 @@
    "id": 1064642233,
    "display_name": "Kuzey Ege Otoyolu, Yanıkköy Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1282826423",
@@ -2669,7 +2802,8 @@
    "id": 1282826423,
    "display_name": "Yalı Cd., Şakran Sayfiye Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w701582020",
@@ -2689,7 +2823,8 @@
    "id": 701582020,
    "display_name": "3133 Sokak, Şakran Sayfiye Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1283206025",
@@ -2709,7 +2844,8 @@
    "id": 1283206025,
    "display_name": "Ord. Prof. Sebastiana Logana Caddesi, Kültür Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14200498772",
@@ -2729,7 +2865,8 @@
    "id": 14200498772,
    "display_name": "Ord. Prof. Sebastiana Logana Caddesi, Kültür Mahallesi, Aliağa, İzmir, Ege Bölgesi, 35800, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w377274238",
@@ -2749,7 +2886,8 @@
    "id": 377274238,
    "display_name": "Olympos AVM, Atatürk Bulvarı, Bahçelievler Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12348360572",
@@ -2769,7 +2907,8 @@
    "id": 12348360572,
    "display_name": "FORS AVM, Böblingen Caddesi, Maltepe Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11341492142",
@@ -2789,7 +2928,8 @@
    "id": 11341492142,
    "display_name": "Via Tecta, Zafer Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11341536850",
@@ -2809,7 +2949,8 @@
    "id": 11341536850,
    "display_name": "Üç Kemer Caddesi, İslamsaray Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n415563326",
@@ -2829,7 +2970,8 @@
    "id": 415563326,
    "display_name": "Akropol Caddesi, Ulucami Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n415564620",
@@ -2849,7 +2991,8 @@
    "id": 415564620,
    "display_name": "Tiyelti Caddesi, Zafer Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n8151437217",
@@ -2869,7 +3012,8 @@
    "id": 8151437217,
    "display_name": "1. Türkeli Sokak, Ulucami Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14177372939",
@@ -2889,7 +3033,8 @@
    "id": 14177372939,
    "display_name": "Kasapoğlu Caddesi, Barbaros Mahallesi, Bergama, İzmir, Ege Bölgesi, 35700, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n785047304",
@@ -2909,7 +3054,8 @@
    "id": 785047304,
    "display_name": "Toilets, 220 Sokak, Şirince Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1205957282",
@@ -2929,7 +3075,8 @@
    "id": 1205957282,
    "display_name": "Kuşadası - Selçuk Eski Yolu, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w186411318",
@@ -2949,7 +3096,8 @@
    "id": 186411318,
    "display_name": "Meryem Ana yolu, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1210931536",
@@ -2969,7 +3117,8 @@
    "id": 1210931536,
    "display_name": "Muhtariyet Caddesi, Nesin Matematik Köyü, Şirince Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5221511121",
@@ -2989,7 +3138,8 @@
    "id": 5221511121,
    "display_name": "Meryem Ana Yolu, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11825031469",
@@ -3009,7 +3159,8 @@
    "id": 11825031469,
    "display_name": "Çarşı Sokağı, Şirince Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14317744121",
@@ -3029,7 +3180,8 @@
    "id": 14317744121,
    "display_name": "35-40, Çamlık, Çamlık Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14322442892",
@@ -3049,7 +3201,8 @@
    "id": 14322442892,
    "display_name": "Abuhayat Caddesi, İsa Bey Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n7673542889",
@@ -3069,7 +3222,8 @@
    "id": 7673542889,
    "display_name": "St. Jean Caddesi, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11127534460",
@@ -3089,7 +3243,8 @@
    "id": 11127534460,
    "display_name": "1050. Sokak, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n730469609",
@@ -3109,7 +3264,8 @@
    "id": 730469609,
    "display_name": "Arkadiane, Atatürk Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1333715286",
@@ -3129,7 +3285,8 @@
    "id": 1333715286,
    "display_name": "Kipa AVM, 5013. Sokak, Torbalı Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35860, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12062620346",
@@ -3149,7 +3306,8 @@
    "id": 12062620346,
    "display_name": "AVLU TORBALI, İzmir-Aydın yolu, Torbalı Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35860, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9999731500",
@@ -3169,7 +3327,8 @@
    "id": 9999731500,
    "display_name": "İzmir - Aydın Otoyolu, Belevi Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35860, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n9999731501",
@@ -3189,7 +3348,8 @@
    "id": 9999731501,
    "display_name": "İzmir - Aydın Otoyolu, Belevi Mahallesi, Selçuk, İzmir, Ege Bölgesi, 35920, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1525239510",
@@ -3209,7 +3369,8 @@
    "id": 1525239510,
    "display_name": "Mustafa Kemal Atatürk Bulvarı, Kazım Karabekir Mahallesi, Pancar Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35865, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1219807516",
@@ -3229,7 +3390,8 @@
    "id": 1219807516,
    "display_name": "Bayrak Caddesi, Yeniköy Mahallesi, Torbalı, İzmir, Ege Bölgesi, 35860, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w282933410",
@@ -3249,7 +3411,8 @@
    "id": 282933410,
    "display_name": "Park Bornova, 1592. Sokak, Doğanlar Mahallesi, Bornova, İzmir, Ege Bölgesi, 35050, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w617646032",
@@ -3269,7 +3432,8 @@
    "id": 617646032,
    "display_name": "Migros, Fevzi Çakmak Caddesi, Erzene Mahallesi, Bornova, İzmir, Ege Bölgesi, 35040, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n6911846317",
@@ -3289,7 +3453,8 @@
    "id": 6911846317,
    "display_name": "Starbucks, 372/11. Sokak, Özkanlar, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1062205068",
@@ -3309,7 +3474,8 @@
    "id": 1062205068,
    "display_name": "Yüzbaşı İbrahim Hakkı Caddesi, Kızılay Mahallesi, Bornova, İzmir, Ege Bölgesi, 35030, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1453729418",
@@ -3329,7 +3495,8 @@
    "id": 1453729418,
    "display_name": "Üniversite Caddesi, Kazımdirik Mahallesi, Bornova, İzmir, Ege Bölgesi, 35100, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n5078998293",
@@ -3349,7 +3516,8 @@
    "id": 5078998293,
    "display_name": "Manisa - İzmir Yolu, Erzene Mahallesi, Bornova, İzmir, Ege Bölgesi, 35040, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13174965260",
@@ -3369,7 +3537,8 @@
    "id": 13174965260,
    "display_name": "Ankara Caddesi, Erzene Mahallesi, Bornova, İzmir, Ege Bölgesi, 35040, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n11195499050",
@@ -3389,7 +3558,8 @@
    "id": 11195499050,
    "display_name": "84, 4174. Sokak, Point Bornova, Yeşilova Mahallesi, Bornova, İzmir, Ege Bölgesi, 35080, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n2988168104",
@@ -3409,7 +3579,8 @@
    "id": 2988168104,
    "display_name": "Karagöl - Alaniçi yolu, Kır Mahallesi, Alaniçi Mahallesi, Menemen, İzmir, Ege Bölgesi, 35660, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n10015641580",
@@ -3429,7 +3600,8 @@
    "id": 10015641580,
    "display_name": "Beşpınar Bağlantı Yolu Küme Evleri, Sütçüler Mahallesi, Kemalpaşa, İzmir, Ege Bölgesi, 35730, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w502157944",
@@ -3449,7 +3621,8 @@
    "id": 502157944,
    "display_name": "Pamuk Pazarı Sokak, Camii Mahallesi, Bayındır, İzmir, Ege Bölgesi, 35840, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-w1216410712",
@@ -3469,7 +3642,8 @@
    "id": 1216410712,
    "display_name": "Ankara Caddesi, 85. Yıl Cumhuriyet Mahallesi, Çambel Mahallesi, Kemalpaşa, İzmir, Ege Bölgesi, 35737, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n12566204777",
@@ -3489,7 +3663,8 @@
    "id": 12566204777,
    "display_name": "Dereköy Yolu, Dereköy Mahallesi, Kemalpaşa, İzmir, Ege Bölgesi, 35730, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13909793508",
@@ -3509,7 +3684,8 @@
    "id": 13909793508,
    "display_name": "Kızılca yolu, Kızılca Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14306544096",
@@ -3529,7 +3705,8 @@
    "id": 14306544096,
    "display_name": "Tire-Kaplan Yolu, Kaplan Mahallesi, Tire, İzmir, Ege Bölgesi, 35900, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14306544093",
@@ -3549,7 +3726,8 @@
    "id": 14306544093,
    "display_name": "İncirliova - Tire Yolu, Dere, Dere Mahallesi, Tire, İzmir, Ege Bölgesi, 35900, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14305373625",
@@ -3569,7 +3747,8 @@
    "id": 14305373625,
    "display_name": "35-41, Küçükören Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13920791007",
@@ -3589,7 +3768,8 @@
    "id": 13920791007,
    "display_name": "Birgi-Kiraz Yolu, Birgi Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n1256853198",
@@ -3609,7 +3789,8 @@
    "id": 1256853198,
    "display_name": "Gölcük Yolu, Zeytinlik, Gölcük Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13920800537",
@@ -3629,7 +3810,8 @@
    "id": 13920800537,
    "display_name": "Şehit Güral Maden Caddesi, Birgi Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n13917455443",
@@ -3649,7 +3831,8 @@
    "id": 13917455443,
    "display_name": "Bozdağ Kayak Tesisleri Yolu, Bozdağ Mahallesi, Ödemiş, İzmir, Ege Bölgesi, 35750, Türkiye"
   },
-  "approximate": false
+  "approximate": false,
+  "province": "İzmir"
  },
  {
   "id": "osm-n14286240340",
@@ -3668,6 +3851,847 @@
    "type": "node",
    "id": 14286240340,
    "display_name": "Beydağ - Nazilli yolu, Cevizdibi, Palamutçuk Mahallesi, Beydağ, İzmir, Ege Bölgesi, 35790, Türkiye"
+  },
+  "approximate": false,
+  "province": "İzmir"
+ },
+ {
+  "id": "seed-tr-istanbul-taksimmeydanibelediyewc",
+  "name": "Taksim Meydanı Belediye WC",
+  "category": "belediye",
+  "province": "İstanbul",
+  "district": "Beyoğlu",
+  "address": "Gümüşsuyu",
+  "lat": 41.0378331,
+  "lng": 28.9850165,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "relation",
+   "id": 4473230,
+   "display_name": "Taksim Meydanı, Taksim, Gümüşsuyu, Gümüşsuyu Mahallesi, Beyoğlu, İstanbul, Marmara Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-istanbul-sirkecigari",
+  "name": "Sirkeci Garı",
+  "category": "diger",
+  "province": "İstanbul",
+  "district": "Fatih",
+  "address": "Ankara Caddesi, Hocapaşa Mahallesi",
+  "lat": 41.015206,
+  "lng": 28.9763512,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 11812453791,
+   "display_name": "Sirkeci Garı, Ankara Caddesi, Cağaloğlu, Hocapaşa Mahallesi, İstanbul, Fatih, İstanbul, Marmara Bölgesi, 34110, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-istanbul-kadikoyiskelesi",
+  "name": "Kadıköy İskelesi",
+  "category": "diger",
+  "province": "İstanbul",
+  "district": "Kadıköy",
+  "address": "Kadıköy 2 İskelesi, Kadıköy",
+  "lat": 40.9929083,
+  "lng": 29.0228684,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 560203763,
+   "display_name": "Kadıköy İskelesi, Kadıköy 2 İskelesi, Kadıköy, Yeldeğirmeni, İstanbul, Marmara Bölgesi, 34710, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-istanbul-cevahiravm",
+  "name": "Cevahir AVM",
+  "category": "avm",
+  "province": "İstanbul",
+  "district": "Şişli",
+  "address": "Büyükdere Caddesi, 19 Mayıs Mahallesi",
+  "lat": 41.0626036,
+  "lng": 28.9929943,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 46962419,
+   "display_name": "İstanbul Cevahir Alışveriş ve Eğlence Merkezi, 22, Büyükdere Caddesi, 19 Mayıs Mahallesi, Osmanbey, Şişli, İstanbul, Marmara Bölgesi, 34363, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-istanbul-forumistanbulavm",
+  "name": "Forum İstanbul AVM",
+  "category": "avm",
+  "province": "İstanbul",
+  "district": "Bayrampaşa",
+  "address": "Cicoz Yolu Caddesi, Kocatepe Mahallesi",
+  "lat": 41.049142,
+  "lng": 28.899338,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 11663792097,
+   "display_name": "Forum İstanbul, Cicoz Yolu Caddesi, Kocatepe Mahallesi, Bayrampaşa, İstanbul, Marmara Bölgesi, 34045, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-istanbul-emirgankorusu",
+  "name": "Emirgan Korusu",
+  "category": "park",
+  "province": "İstanbul",
+  "district": "Sarıyer",
+  "address": "Emirgan Mahallesi",
+  "lat": 41.1090119,
+  "lng": 29.0525172,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 569310851,
+   "display_name": "Emirgan Korusu, Emirgan Mahallesi, Sarıyer, İstanbul, Marmara Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-ankara-kizilaymeydanibelediyewc",
+  "name": "Kızılay Meydanı Belediye WC",
+  "category": "belediye",
+  "province": "Ankara",
+  "district": "Çankaya",
+  "address": "Kızılay Mahallesi",
+  "lat": 39.9209927,
+  "lng": 32.8540176,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 9456598160,
+   "display_name": "15 Temmuz Kızılay Millî İrade Meydanı, Kızılay Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06420, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-ankara-ankaragari",
+  "name": "Ankara Garı",
+  "category": "diger",
+  "province": "Ankara",
+  "district": "Altındağ",
+  "address": "Talatpaşa Bulvarı, Hacı Bayram Mahallesi",
+  "lat": 39.9360386,
+  "lng": 32.8437962,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 1079039328,
+   "display_name": "Ankara Garı, Talatpaşa Bulvarı, Opera, Hacı Bayram Mahallesi, Altındağ, Ankara, İç Anadolu Bölgesi, 06050, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-ankara-astiotogari",
+  "name": "AŞTİ Otogarı",
+  "category": "diger",
+  "province": "Ankara",
+  "district": "Çankaya",
+  "address": "AŞTİ Alt Geçidi, Emek Mahallesi",
+  "lat": 39.9182467,
+  "lng": 32.8143741,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 2722494903,
+   "display_name": "AŞTİ, AŞTİ Alt Geçidi, Emek Mahallesi, Çankaya, Ankara, İç Anadolu Bölgesi, 06560, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-ankara-ankamallavm",
+  "name": "ANKAmall AVM",
+  "category": "avm",
+  "province": "Ankara",
+  "district": "Yenimahalle",
+  "address": "Ankamall Taksi Yolu, Gazi Mahallesi",
+  "lat": 39.9512444,
+  "lng": 32.8315117,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "relation",
+   "id": 12002789,
+   "display_name": "ANKAmall, Ankamall Taksi Yolu, Gazi Mahallesi, Yenimahalle, Ankara, İç Anadolu Bölgesi, 06560, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-ankara-genclikparki",
+  "name": "Gençlik Parkı",
+  "category": "park",
+  "province": "Ankara",
+  "district": "Altındağ",
+  "address": "Hacı Bayram Mahallesi",
+  "lat": 39.9372493,
+  "lng": 32.84961,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 10711293,
+   "display_name": "Gençlik Parkı, Hacı Bayram Mahallesi, Altındağ, Ankara, İç Anadolu Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-ankara-kentparkavm",
+  "name": "Kentpark AVM",
+  "category": "avm",
+  "province": "Ankara",
+  "district": "Çankaya",
+  "address": "Dumlupınar Bulvarı, Mustafa Kemal Mahallesi",
+  "lat": 39.909939,
+  "lng": 32.7763208,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 420040753,
+   "display_name": "Kentpark AVM, 164, Dumlupınar Bulvarı, Mustafa Kemal Mahallesi, Ankara, Çankaya, Ankara, İç Anadolu Bölgesi, 06530, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-antalya-cumhuriyetmeydanibelediyewc",
+  "name": "Cumhuriyet Meydanı Belediye WC",
+  "category": "belediye",
+  "province": "Antalya",
+  "district": "Muratpaşa",
+  "address": "Selçuk Mahallesi",
+  "lat": 36.8865654,
+  "lng": 30.702972,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 79234506,
+   "display_name": "Cumhuriyet Meydanı, Selçuk Mahallesi, Antalya, Muratpaşa, Antalya, Akdeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-antalya-konyaaltiplaji",
+  "name": "Konyaaltı Plajı",
+  "category": "park",
+  "province": "Antalya",
+  "district": "Konyaaltı",
+  "address": null,
+  "lat": 36.8647657,
+  "lng": 30.6449266,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "relation",
+   "id": 7447994,
+   "display_name": "Konyaaltı Plajı, Konyaaltı, Antalya, Akdeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-antalya-markantalyaavm",
+  "name": "MarkAntalya AVM",
+  "category": "avm",
+  "province": "Antalya",
+  "district": "Muratpaşa",
+  "address": "Şarampol Caddesi, Kızılsaray Mahallesi",
+  "lat": 36.8929234,
+  "lng": 30.7040381,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 1152366389,
+   "display_name": "MarkAntalya, 84, Şarampol Caddesi, Kızılsaray Mahallesi, Antalya, Muratpaşa, Antalya, Akdeniz Bölgesi, 07050, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-antalya-antalyaotogari",
+  "name": "Antalya Otogarı",
+  "category": "diger",
+  "province": "Antalya",
+  "district": "Kepez",
+  "address": "Otobüs Çıkış, Yeni Doğan Mahallesi",
+  "lat": 36.9191801,
+  "lng": 30.6639824,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 228052667,
+   "display_name": "Antalya Otogarı Otobüs Park Alanı, Otobüs Çıkış, Yeni Doğan Mahallesi, Kepez, Antalya, Akdeniz Bölgesi, 07090, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-antalya-karaaliogluparki",
+  "name": "Karaalioğlu Parkı",
+  "category": "park",
+  "province": "Antalya",
+  "district": "Muratpaşa",
+  "address": "Haşimişcan Mahallesi",
+  "lat": 36.8796823,
+  "lng": 30.7048115,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 110321827,
+   "display_name": "Karaalioğlu Parkı, Haşimişcan Mahallesi, Antalya, Muratpaşa, Antalya, Akdeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-bursa-zaferplazaavm",
+  "name": "Zafer Plaza AVM",
+  "category": "avm",
+  "province": "Bursa",
+  "district": "Osmangazi",
+  "address": "18. Okul Sokak, Şehreküstü",
+  "lat": 40.1875729,
+  "lng": 29.0595272,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 26470681,
+   "display_name": "Zafer Plaza, 18. Okul Sokak, Şehreküstü, Şehreküstü Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16040, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-bursa-bursaotogari",
+  "name": "Bursa Otogarı",
+  "category": "diger",
+  "province": "Bursa",
+  "district": "Osmangazi",
+  "address": "Terminal Kavşağı",
+  "lat": 40.2659105,
+  "lng": 29.0525904,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 191171800,
+   "display_name": "Bursa Şehirlerarası Otobüs Terminali, Terminal Kavşağı, Alaşarköy Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16245, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-bursa-kulturpark",
+  "name": "Kültürpark",
+  "category": "park",
+  "province": "Bursa",
+  "district": "Osmangazi",
+  "address": "Emek İstasyonu Giriş/Çıkışı ve Altgeçit, Gaziakdemir",
+  "lat": 40.2003138,
+  "lng": 29.0406498,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 5315484816,
+   "display_name": "Kültürpark, Emek İstasyonu Giriş/Çıkışı ve Altgeçit, Gaziakdemir, Gaziakdemir Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16104, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-bursa-kentmeydaniavm",
+  "name": "Kent Meydanı AVM",
+  "category": "avm",
+  "province": "Bursa",
+  "district": "Osmangazi",
+  "address": "4. Hayat Sokak, Kemerçeşme",
+  "lat": 40.2094552,
+  "lng": 29.0611477,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 895501367,
+   "display_name": "T2 Kent Meydanı - Terminal Tramvay Hattı, 4. Hayat Sokak, Kemerçeşme, Kemerçeşme Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16240, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-konya-mevlanameydanibelediyewc",
+  "name": "Mevlana Meydanı Belediye WC",
+  "category": "belediye",
+  "province": "Konya",
+  "district": "Karatay",
+  "address": "Mevlâna Meydanı, Aziziye Mahallesi",
+  "lat": 37.870962,
+  "lng": 32.5057106,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "relation",
+   "id": 13763858,
+   "display_name": "Mevlâna Müzesi, Mevlâna Meydanı, Aziziye Mahallesi, Karatay, Konya, İç Anadolu Bölgesi, 42040, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-konya-alaaddintepesi",
+  "name": "Alaaddin Tepesi",
+  "category": "park",
+  "province": "Konya",
+  "district": "Selçuklu",
+  "address": "İhsaniye Mahallesi",
+  "lat": 37.8725928,
+  "lng": 32.4922063,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 259023284,
+   "display_name": "Alaaddin Tepesi, İhsaniye Mahallesi, Konya, Selçuklu, Konya, İç Anadolu Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-konya-kentplazaavm",
+  "name": "Kent Plaza AVM",
+  "category": "avm",
+  "province": "Konya",
+  "district": "Selçuklu",
+  "address": "Ataseven Caddesi, Bedir Mahallesi",
+  "lat": 37.9056038,
+  "lng": 32.4948299,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 527221774,
+   "display_name": "Kent Plaza AVM, 2, Ataseven Caddesi, Bedir Mahallesi, Konya, Selçuklu, Konya, İç Anadolu Bölgesi, 42100, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-adana-merkezpark",
+  "name": "Merkez Park",
+  "category": "park",
+  "province": "Adana",
+  "district": "Seyhan",
+  "address": "Reşatbey",
+  "lat": 36.9971209,
+  "lng": 35.3328811,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 1064350191,
+   "display_name": "Merkez Park Akarsu, Reşatbey, Reşatbey Mahallesi, Seyhan, Adana, Akdeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-adana-taskoprubelediyewc",
+  "name": "Taşköprü Belediye WC",
+  "category": "belediye",
+  "province": "Adana",
+  "district": "Seyhan",
+  "address": "Ulus Caddesi, Ulucamii",
+  "lat": 36.9840207,
+  "lng": 35.3328752,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 12092510812,
+   "display_name": "Adana Büyükşehir Belediyesi Taşköprü Konuk Evi, Ulus Caddesi, Ulucamii, Ulucamii Mahallesi, Seyhan, Adana, Akdeniz Bölgesi, 01010, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-adana-optimumadanaavm",
+  "name": "Optimum Adana AVM",
+  "category": "avm",
+  "province": "Adana",
+  "district": "Yüreğir",
+  "address": "Sinanpaşa",
+  "lat": 36.9906006,
+  "lng": 35.3402105,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 1319213553,
+   "display_name": "Adana Optimum AVM, Sinanpaşa, Sinanpaşa Mahallesi, Yüreğir, Adana, Akdeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-adana-m1adanaavm",
+  "name": "M1 Adana AVM",
+  "category": "avm",
+  "province": "Adana",
+  "district": "Seyhan",
+  "address": "Ali Çöğür Caddesi, Yeni Mahalle",
+  "lat": 37.0176602,
+  "lng": 35.2418671,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 1202381128,
+   "display_name": "M1 Adana AVM, Ali Çöğür Caddesi, Yeni Mahalle, Adana, Seyhan, Adana, Akdeniz Bölgesi, 01200, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-trabzon-meydanparkibelediyewc",
+  "name": "Meydan Parkı Belediye WC",
+  "category": "belediye",
+  "province": "Trabzon",
+  "district": "Ortahisar",
+  "address": "İskenderpaşa Mahallesi",
+  "lat": 41.0053254,
+  "lng": 39.7315089,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "relation",
+   "id": 12305361,
+   "display_name": "Trabzon Meydan Parkı, İskenderpaşa Mahallesi, Trabzon, Ortahisar, Trabzon, Karadeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-trabzon-forumtrabzonavm",
+  "name": "Forum Trabzon AVM",
+  "category": "avm",
+  "province": "Trabzon",
+  "district": "Ortahisar",
+  "address": "Devlet Karayolu Caddesi, Kalkınma Mahallesi",
+  "lat": 40.9997997,
+  "lng": 39.7613949,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 157111157,
+   "display_name": "Forum Trabzon, Devlet Karayolu Caddesi, Kalkınma Mahallesi, Trabzon, Ortahisar, Trabzon, Karadeniz Bölgesi, 61200, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-trabzon-boztepeseyirterasi",
+  "name": "Boztepe Seyir Terası",
+  "category": "park",
+  "province": "Trabzon",
+  "district": "Ortahisar",
+  "address": "Boztepe Mahallesi",
+  "lat": 40.9974509,
+  "lng": 39.7269013,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "relation",
+   "id": 16173823,
+   "display_name": "Boztepe Mahallesi, Trabzon, Ortahisar, Trabzon, Karadeniz Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-trabzon-trabzonsahilparki",
+  "name": "Trabzon Sahil Parkı",
+  "category": "park",
+  "province": "Trabzon",
+  "district": "Ortahisar",
+  "address": "İskenderpaşa Mahallesi",
+  "lat": 41.0076117,
+  "lng": 39.7341239,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 4938835260,
+   "display_name": "Ganita, İskenderpaşa Mahallesi, Trabzon, Ortahisar, Trabzon, Karadeniz Bölgesi, 61050, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-eskisehir-adalar",
+  "name": "Adalar",
+  "category": "park",
+  "province": "Eskişehir",
+  "district": "Odunpazarı",
+  "address": "Adalar Sokak, İstiklal Mahallesi",
+  "lat": 39.7761937,
+  "lng": 30.5158212,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 138227800,
+   "display_name": "Adalar Sokak, İstiklal Mahallesi, Eskişehir, Odunpazarı, Eskişehir, İç Anadolu Bölgesi, 26010, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-eskisehir-esparkavm",
+  "name": "Espark AVM",
+  "category": "avm",
+  "province": "Eskişehir",
+  "district": "Tepebaşı",
+  "address": "Yılmaz Büyükerşen Bulvarı, Eskibağlar Mahallesi",
+  "lat": 39.7826371,
+  "lng": 30.5104937,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 207891035,
+   "display_name": "Espark AVM, 21, Yılmaz Büyükerşen Bulvarı, Eskibağlar Mahallesi, Tepebaşı, Eskişehir, İç Anadolu Bölgesi, 26170, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-eskisehir-kentparkeskisehir",
+  "name": "Kentpark Eskişehir",
+  "category": "park",
+  "province": "Eskişehir",
+  "district": "Tepebaşı",
+  "address": "Sivrihisar-2 Caddesi, Şeker Mahallesi",
+  "lat": 39.7747016,
+  "lng": 30.5514431,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 12520431272,
+   "display_name": "Kentpark, Sivrihisar-2 Caddesi, Şeker Mahallesi, Tepebaşı, Eskişehir, İç Anadolu Bölgesi, 26100, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-bursa-heykelcumhuriyetalanibelediyewc",
+  "name": "Heykel (Cumhuriyet Alanı) Belediye WC",
+  "category": "belediye",
+  "province": "Bursa",
+  "district": "Osmangazi",
+  "address": "Atatürk Caddesi, Alacamescit",
+  "lat": 40.1829728,
+  "lng": 29.0660047,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "node",
+   "id": 4563016551,
+   "display_name": "Heykel, Atatürk Caddesi, Alacamescit, Alacamascit Mahallesi, Osmangazi, Bursa, Marmara Bölgesi, 16010, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-trabzon-trabzonotogari",
+  "name": "Trabzon Otogarı",
+  "category": "diger",
+  "province": "Trabzon",
+  "district": "Ortahisar",
+  "address": "Anadolu 13 Nolu Sokak, Sanayi Mahallesi",
+  "lat": 40.9905934,
+  "lng": 39.7502326,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 1159816589,
+   "display_name": "Trabzon Şehirler Arası Otobüs Terminali, Anadolu 13 Nolu Sokak, Trabzon Oto Galericiler Sitesi, Sanayi Mahallesi, Trabzon, Ortahisar, Trabzon, Karadeniz Bölgesi, 61117, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-eskisehir-sazovaparki",
+  "name": "Sazova Parkı",
+  "category": "park",
+  "province": "Eskişehir",
+  "district": "Tepebaşı",
+  "address": "Sazova Mahallesi",
+  "lat": 39.7650855,
+  "lng": 30.4742162,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 261834480,
+   "display_name": "Sazova Bilim Kültür Sanat Parkı, Sazova Mahallesi, Tepebaşı, Eskişehir, İç Anadolu Bölgesi, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-konya-konyagari",
+  "name": "Konya Garı",
+  "category": "diger",
+  "province": "Konya",
+  "district": "Selçuklu",
+  "address": "Demiryolu Caddesi, Musalla Bağları Mahallesi",
+  "lat": 37.898066,
+  "lng": 32.4985461,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 527606417,
+   "display_name": "Selçuklu YHT Garı, Demiryolu Caddesi, Musalla Bağları Mahallesi, Konya, Selçuklu, Konya, İç Anadolu Bölgesi, 42110, Türkiye"
+  },
+  "approximate": false
+ },
+ {
+  "id": "seed-tr-konya-kulesiteavm",
+  "name": "Kulesite AVM",
+  "category": "avm",
+  "province": "Konya",
+  "district": "Selçuklu",
+  "address": "Kule Caddesi, Feritpaşa Mahallesi",
+  "lat": 37.8895709,
+  "lng": 32.4934521,
+  "hours": null,
+  "accessible": false,
+  "babyChanging": false,
+  "toiletType": null,
+  "publicAccess": null,
+  "osm": {
+   "type": "way",
+   "id": 527615714,
+   "display_name": "Kulesite AVM, Kule Caddesi, Feritpaşa Mahallesi, Konya, Selçuklu, Konya, İç Anadolu Bölgesi, 42060, Türkiye"
   },
   "approximate": false
  }

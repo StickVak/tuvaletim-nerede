@@ -59,7 +59,7 @@ export default function ReportsPage({ reports, act }: { reports: AdminReportGrou
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-ink-muted">{CATEGORIES[p.category].label} · {p.district || '—'} · son ihbar {relTime(g.lastReportAt)}</p>
+                    <p className="text-xs text-ink-muted">{CATEGORIES[p.category].label} · {[p.district, p.province].filter(Boolean).join(', ') || '—'} · son ihbar {relTime(g.lastReportAt)}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {(Object.keys(g.counts) as ReportType[]).filter((t) => g.counts[t] > 0).map((t) => (
                         <span key={t} className={`rounded-full px-2.5 py-1 text-xs font-bold ${TONE[t]}`}>

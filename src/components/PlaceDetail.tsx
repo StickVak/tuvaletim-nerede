@@ -123,10 +123,10 @@ export default function PlaceDetail({ place, desktop, onClose, onVoted, onRoute,
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <h2 className="text-xl font-extrabold leading-tight text-ink">{place.name}</h2>
-                {(place.address || place.district) && (
+                {(place.address || place.district || place.province) && (
                   <p className="mt-1 flex items-start gap-1 text-sm text-ink-muted">
                     <MapPin size={14} className="mt-0.5 shrink-0" />
-                    {[place.address, place.district].filter(Boolean).join(', ')}
+                    {[place.address, place.district && place.province ? `${place.district} / ${place.province}` : place.district || place.province].filter(Boolean).join(', ')}
                   </p>
                 )}
               </div>

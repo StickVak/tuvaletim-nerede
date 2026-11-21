@@ -5,13 +5,15 @@ import type { Act, AdminVote } from './types';
 import { api } from './api';
 import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../../src/lib/categories';
 import { formatScore } from '../../src/lib/geo';
+import { matchesLocation } from '../../src/lib/turkey';
+import LocationSelect from '../../src/components/LocationSelect';
 import { PriceBadge } from '../../src/components/Badges';
 import PlaceEditModal from './PlaceEditModal';
 import { ConfirmDialog, EmptyState, PageHeader, selectCls } from './ui';
 
 export default function PlacesPage({ places, votes, act }: { places: Place[]; votes: AdminVote[]; act: Act }) {
   const [q, setQ] = useState('');
-  const [district, setDistrict] = useState('');
+  const [loc, setLoc] = useState({ province: '', district: '' });
   const [category, setCategory] = useState<ToiletCategory | ''>('');
   const [fee, setFee] = useState<'' | 'paid' | 'free'>('');
   const [source, setSource] = useState<'' | 'seed' | 'user' | 'admin'>('');
@@ -20,7 +22,6 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
   const [creating, setCreating] = useState(false);
   const [deleting, setDeleting] = useState<Place | null>(null);
 
-  const districts = useMemo(() => [...new Set(places.map((p) => p.district).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, 'tr')), [places]);
   const reviewCount = useMemo(() => {
     const m = new Map<string, number>();
     for (const v of votes) m.set(v.placeId, (m.get(v.placeId) ?? 0) + 1);
@@ -30,14 +31,14 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
   const items = useMemo(() => {
     const needle = q.trim().toLocaleLowerCase('tr-TR');
     return places
-      .filter((p) => !district || p.district === district)
+      .filter((p) => matchesLocation(p, loc.province, loc.district))
       .filter((p) => !category || p.category === category)
       .filter((p) => !fee || p.stats.isPaid === (fee === 'paid'))
       .filter((p) => !source || p.source === source)
       .filter((p) => !state || (state === 'closed') === Boolean(p.closedAt))
-      .filter((p) => !needle || [p.name, p.district, p.address].join(' ').toLocaleLowerCase('tr-TR').includes(needle))
+      .filter((p) => !needle || [p.name, p.district, p.province, p.address].join(' ').toLocaleLowerCase('tr-TR').includes(needle))
       .sort((a, b) => a.name.localeCompare(b.name, 'tr'));
-  }, [places, q, district, category, fee, source, state]);
+  }, [places, q, loc, category, fee, source, state]);
 
   return (
     <>
@@ -54,12 +55,11 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
       <div className="mb-4 flex flex-wrap gap-2">
         <label className="flex min-w-[220px] flex-1 items-center gap-2 rounded-xl bg-surface px-3.5 py-2.5 ring-1 ring-line focus-within:ring-2 focus-within:ring-brand-dark">
           <Search size={16} className="text-ink-muted" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad, ilçe, adres ara" className="w-full bg-transparent text-sm outline-none" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Ad, il, ilçe, adres ara" className="w-full bg-transparent text-sm outline-none" />
         </label>
-        <select value={district} onChange={(e) => setDistrict(e.target.value)} className={selectCls} aria-label="İlçe">
-          <option value="">Tüm ilçeler</option>
-          {districts.map((d) => <option key={d}>{d}</option>)}
-        </select>
+        <div className="min-w-[280px]">
+          <LocationSelect mode="filter" province={loc.province} district={loc.district} onChange={setLoc} className={`${selectCls} w-full`} />
+        </div>
         <select value={category} onChange={(e) => setCategory(e.target.value as ToiletCategory | '')} className={selectCls} aria-label="Tür">
           <option value="">Tüm türler</option>
           {CATEGORY_ORDER.map((c) => <option key={c} value={c}>{CATEGORIES[c].label}</option>)}
@@ -98,7 +98,7 @@ export default function PlacesPage({ places, votes, act }: { places: Place[]; vo
                       {p.closedAt && <span className="rounded-md bg-red-600 px-1.5 py-0.5 text-[10px] font-bold text-white">Kalıcı kapalı</span>}
                     </div>
                     <div className="mt-0.5 text-xs text-ink-muted">
-                      {CATEGORIES[p.category].label} · {p.district || '—'}
+                      {CATEGORIES[p.category].label} · {[p.district, p.province].filter(Boolean).join(', ') || '—'}
                     </div>
                   </div>
                   <PriceBadge stats={p.stats} />

@@ -49,7 +49,7 @@ export default function ToiletListItem({ place, active, onRouteBadge, onSelect, 
             <PriceBadge stats={place.stats} />
             <span className="truncate text-[11px] font-semibold text-ink-muted">
               {cat.label}
-              {place.district ? ` · ${place.district}` : ''}
+              {place.district || place.province ? ` · ${[place.district, place.province].filter(Boolean).join(', ')}` : ''}
             </span>
             <FeatureIcons place={place} />
           </div>

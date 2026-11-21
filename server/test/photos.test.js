@@ -11,7 +11,7 @@ const FAKE_PNG = 'data:image/png;base64,' + Buffer.from('<html><script>alert(1)<
 
 const SEED = [{ id: 'seed-forum', name: 'Forum Bornova', category: 'avm', district: 'Bornova', lat: 38.45, lng: 27.21 }];
 const submission = (o = {}) => ({
-  name: 'Fotoğraflı WC', category: 'kafe', lat: 38.44, lng: 27.14,
+  name: 'Fotoğraflı WC', category: 'kafe', lat: 38.44, lng: 27.14, province: 'İzmir', district: 'Konak',
   vote: { cleanliness: 4, comfort: 4, isPaid: false }, photo: JPEG, ...o,
 });
 

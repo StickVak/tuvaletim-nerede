@@ -26,6 +26,7 @@ function placeJson(row, votes, reports, userId, favorite) {
     id: row.id,
     name: row.name,
     category: row.category,
+    province: row.province ?? null,
     district: row.district,
     address: row.address,
     lat: row.lat,

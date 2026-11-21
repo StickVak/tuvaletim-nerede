@@ -48,6 +48,8 @@ export const isPositiveInt = (v) => /^[1-9]\d{0,15}$/.test(String(v));
 export const placeIdParam = (_req, res, next, v) => (PLACE_ID_RE.test(v) ? next() : res.status(400).json({ error: 'Geçersiz mekan kimliği.' }));
 export const intIdParam = (_req, res, next, v) => (isPositiveInt(v) ? next() : res.status(400).json({ error: 'Geçersiz kimlik.' }));
 
+import { resolveLocation } from './turkey.js';
+
 export const CATEGORIES = ['avm', 'kafe', 'belediye', 'park', 'diger'];
 const MAX_PHOTO_CHARS = 7_000_000; // ~5 MB base64
 /** Yalnızca raster görseller: SVG aynı kökenden sunulunca betik çalıştırabilir */
@@ -61,7 +63,7 @@ export function parsePlaceFields(body, { partial = false } = {}) {
   const b = body ?? {};
   const has = (k) => !partial || b[k] !== undefined;
   const out = {};
-  const LABELS = { district: 'İlçe', address: 'Adres', hours: 'Çalışma saatleri' };
+  const LABELS = { address: 'Adres', hours: 'Çalışma saatleri' };
   const text = (k, max) => {
     if (!has(k)) return;
     out[k] = optionalText(b[k], max, LABELS[k] ?? k);
@@ -82,7 +84,14 @@ export function parsePlaceFields(body, { partial = false } = {}) {
       if (!Number.isFinite(n) || Math.abs(n) > lim) throw 'Geçerli bir konum seçin.';
       out[k] = n;
     }
-    text('district', 60);
+    // İl / ilçe: listeden (src/data/turkiye.json); büyük/küçük harf ve Türkçe karakter farkı tolere edilir, listedeki yazıma çevrilir
+    if (has('province') || has('district')) {
+      for (const k of ['province', 'district']) if (b[k] != null && typeof b[k] !== 'string') throw 'Geçersiz il/ilçe.';
+      const loc = resolveLocation({ province: b.province, district: b.district, near: typeof b.lat === 'number' ? { lat: b.lat, lng: b.lng } : null });
+      if (typeof loc === 'string') throw loc;
+      out.province = loc.province;
+      out.district = loc.district;
+    }
     text('address', 120);
     text('hours', 60);
     if (has('photo')) {

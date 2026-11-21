@@ -5,6 +5,8 @@ import { CATEGORIES, CATEGORY_ORDER } from '../lib/categories';
 import FeeVoteInput, { parsePrice } from './FeeVoteInput';
 import { readImageAsDataUrl } from '../lib/image';
 import StarRating from './StarRating';
+import LocationSelect from './LocationSelect';
+import { nearestProvince } from '../lib/turkey';
 
 interface Props {
   visible: boolean;
@@ -28,7 +30,10 @@ export default function AddToiletModal({
   const [name, setName] = useState('');
   const [category, setCategory] = useState<ToiletCategory>('kafe');
   const [isPaid, setIsPaid] = useState<boolean | null>(null);
+  // İl → ilçe (listeden). İl, seçilen konuma en yakın il merkezine göre önceden seçilir; kullanıcı değiştirebilir.
+  const [province, setProvince] = useState('');
   const [district, setDistrict] = useState('');
+  const provinceTouched = useRef(false);
   const [toiletType, setToiletType] = useState<ToiletType | null>(null);
   const [address, setAddress] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -46,7 +51,14 @@ export default function AddToiletModal({
 
   useEffect(() => {
     if (location) setErrors((e) => ({ ...e, location: '' }));
-  }, [location]);
+    if (location && !provinceTouched.current) {
+      const il = nearestProvince(location).il;
+      if (il !== province) {
+        setProvince(il);
+        setDistrict('');
+      }
+    }
+  }, [location]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleFile = async (file?: File) => {
     if (!file) return;
@@ -71,6 +83,7 @@ export default function AddToiletModal({
     if (!photo) errs.photo = 'Dış mekan fotoğrafı zorunlu: girişin ya da bina cephesinin fotoğrafını ekleyin.';
     if (name.trim().length < 3) errs.name = 'Mekan adı en az 3 karakter olmalı.';
     if (!location) errs.location = 'Haritadan bir konum seçin.';
+    if (!province || !district) errs.district = !province ? 'İl seçin.' : 'İlçe seçin.';
     if (!cleanliness) errs.cleanliness = 'Temizlik puanı verin.';
     if (!comfort) errs.comfort = 'Konfor puanı verin.';
     if (isPaid === null) errs.fee = 'Ücretli mi ücretsiz mi, seçin.';
@@ -85,7 +98,8 @@ export default function AddToiletModal({
         category,
         lat: location.lat,
         lng: location.lng,
-        district: district.trim() || undefined,
+        province,
+        district,
         address: address.trim() || undefined,
         photo,
         hours: hours.trim() || undefined,
@@ -237,13 +251,18 @@ export default function AddToiletModal({
             {errors.name && <p className="mt-1 text-xs font-semibold text-red-600">{errors.name}</p>}
           </label>
 
-          <div className="grid grid-cols-[2fr_3fr] gap-2">
-            <input
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              placeholder="İlçe"
-              maxLength={60}
-              className="w-full rounded-2xl border-2 border-transparent bg-card px-4 py-3 text-sm font-medium outline-none focus:border-brand-dark focus:bg-surface"
+          <div className="space-y-2">
+            <span className="block text-sm font-bold">İl / İlçe</span>
+            <LocationSelect
+              province={province}
+              district={district}
+              onChange={(v) => {
+                provinceTouched.current = true;
+                setProvince(v.province);
+                setDistrict(v.district);
+                if (v.province && v.district) setErrors((e) => ({ ...e, district: '' }));
+              }}
+              error={errors.district || undefined}
             />
             <input
               value={address}

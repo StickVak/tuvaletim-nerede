@@ -53,7 +53,7 @@ export default function PendingPage({ pending, act }: { pending: AdminPending[];
                       <dd className="mt-1"><StarRating value={s.vote.comfort} size={14} /></dd>
                     </div>
                     <div className="col-span-2 rounded-2xl bg-card p-3 text-ink-soft">
-                      <span className="font-semibold text-ink">{[s.address, s.district].filter(Boolean).join(', ') || 'Adres belirtilmemiş'}</span>
+                      <span className="font-semibold text-ink">{[s.address, s.district, s.province].filter(Boolean).join(', ') || 'Adres belirtilmemiş'}</span>
                       {s.hours && <span> · {s.hours}</span>}
                       {(s.accessible || s.babyChanging) && (
                         <span className="ml-2 inline-flex gap-1.5 align-middle">

@@ -11,6 +11,7 @@ export function pendingRoutes(db, writeLimit, photos) {
   r.post('/', writeLimit, requireUser, async (req, res) => {
     const place = parsePlaceFields(req.body);
     if (typeof place === 'string') return res.status(400).json({ error: place });
+    if (!place.province || !place.district) return res.status(400).json({ error: 'İl ve ilçe seçin.', field: 'district' });
     const vote = parseVote(req.body.vote);
     if (typeof vote === 'string') return res.status(400).json({ error: vote });
     // Dış mekan (giriş / bina cephesi) fotoğrafı zorunlu: inceleyen yönetici mekanı doğrulayabilsin
@@ -25,10 +26,10 @@ export function pendingRoutes(db, writeLimit, photos) {
     const id = `user-${Date.now().toString(36)}-${randomBytes(3).toString('hex')}`;
     try {
       await db.run(
-        `INSERT INTO pending_places (id, user_id, name, category, district, address, lat, lng, photo_file, hours, accessible, baby_changing,
+        `INSERT INTO pending_places (id, user_id, name, category, province, district, address, lat, lng, photo_file, hours, accessible, baby_changing,
            public_access, toilet_type, cleanliness, comfort, is_paid, price_amount, comment, submitted_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [id, req.user.id, place.name, place.category, place.district, place.address, place.lat, place.lng, photoRef, place.hours,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [id, req.user.id, place.name, place.category, place.province, place.district, place.address, place.lat, place.lng, photoRef, place.hours,
           place.accessible, place.babyChanging, place.publicAccess, vote.toiletType, vote.cleanliness, vote.comfort, vote.isPaid,
           vote.priceAmount, vote.comment, new Date().toISOString()],
       );

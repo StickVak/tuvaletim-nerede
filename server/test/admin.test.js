@@ -13,6 +13,8 @@ const submission = (o = {}) => ({
   category: 'kafe',
   lat: 38.44,
   lng: 27.14,
+  province: 'İzmir',
+  district: 'Konak',
   district: 'Konak',
   accessible: true,
   vote: { cleanliness: 4, comfort: 5, isPaid: false, priceAmount: null, comment: 'Güzel' },

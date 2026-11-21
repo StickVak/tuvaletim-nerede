@@ -17,6 +17,7 @@ export interface AdminPending {
   id: string;
   name: string;
   category: ToiletCategory;
+  province: string | null;
   district: string | null;
   address: string | null;
   lat: number;

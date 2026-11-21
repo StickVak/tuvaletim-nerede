@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { findProvince } from '../turkey.js';
 
 const seed = JSON.parse(readFileSync(new URL('../seed-places.json', import.meta.url), 'utf8'));
 
@@ -28,10 +29,26 @@ test('province-wide scan adds more than the named 24', () => {
   assert.ok(seed.length > 24, `toplam ${seed.length}`);
 });
 
-test('every place is inside İzmir province bounds', () => {
+test('her kayıt Türkiye sınırları içinde, il/ilçesi listede ve ilinin yakınında (İzmir dışı illerde de)', () => {
   for (const p of seed) {
-    assert.ok(p.lat >= 37.8 && p.lat <= 39.45 && p.lng >= 26.2 && p.lng <= 28.5, `${p.id} ${p.lat},${p.lng}`);
+    assert.ok(p.lat >= 35.8 && p.lat <= 42.2 && p.lng >= 25.6 && p.lng <= 44.9, `${p.id} ${p.lat},${p.lng}`);
+    const il = findProvince(p.province);
+    assert.ok(il, `${p.id}: il yok (${p.province})`);
+    assert.equal(il.il, p.province, `${p.id}: il yazımı listedekiyle aynı`);
+    assert.ok(il.ilceler.includes(p.district), `${p.id}: ${p.district} ${p.province} ilçesi değil`);
+    // il merkezinden en fazla ~150 km (yanlış ile düşen konumları yakalar)
+    const km = Math.hypot(p.lat - il.lat, (p.lng - il.lng) * Math.cos((p.lat * Math.PI) / 180)) * 111;
+    assert.ok(km < 150, `${p.id}: il merkezine ${Math.round(km)} km`);
   }
+});
+
+test('Türkiye geneli: İzmir dışında en az 8 ilde, her birinde birden çok başlangıç noktası; id\'ler benzersiz', () => {
+  const byProvince = {};
+  for (const p of seed) byProvince[p.province] = (byProvince[p.province] ?? 0) + 1;
+  for (const il of ['İstanbul', 'Ankara', 'Antalya', 'Bursa', 'Konya', 'Adana', 'Trabzon', 'Eskişehir']) {
+    assert.ok(byProvince[il] >= 3, `${il}: ${byProvince[il] ?? 0} kayıt`);
+  }
+  assert.equal(new Set(seed.map((p) => p.id)).size, seed.length);
 });
 
 test('no rating fields present', () => {

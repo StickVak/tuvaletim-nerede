@@ -189,9 +189,12 @@ Eski sürümlerin `role = admin` hesabı (admin/admin123) açılışta silinir; 
 
 Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stats.js`](server/stats.js)).
 
-## Başlangıç verisi (İzmir)
+## Başlangıç verisi (Türkiye geneli)
 
-[`server/seed-places.json`](server/seed-places.json): **184 mekan** — 36 AVM, 38 Starbucks/kafe, 12 belediye tuvaleti, 98 diğer kamuya açık tuvalet. Tüm İzmir ilini kapsar.
+[`server/seed-places.json`](server/seed-places.json): **224 mekan**, her kayıtta il (`province`) ve listedeki ilçe (`district`).
+
+- **İzmir (184):** 36 AVM, 38 Starbucks/kafe, 12 belediye tuvaleti, 98 diğer kamuya açık tuvalet; tüm il.
+- **Diğer 8 il (40):** İstanbul 6, Ankara 6, Antalya 5, Bursa 5, Konya 5, Trabzon 5, Adana 4, Eskişehir 4 — merkezi meydanlar, AVM'ler, gar/otogarlar ve park/sahil alanları. Her konum Nominatim'den alınır ve eklenmeden önce doğrulanır: dönen il beklenen il olmalı, ilçe listede olmalı (doğrulanamayanlar — ör. Adana ve Eskişehir garları — eklenmedi).
 
 - Koordinatlar OpenStreetMap / **Nominatim**'den alınmıştır ve gerçek OSM nesnelerine aittir. Her kaydın `osm` alanında OSM kimliği yer alır.
 - Engelli erişimi, bebek bakım ve çalışma saatleri, varsa OSM etiketlerinden gelir. Puan veya oy sayısı **yoktur**.
@@ -203,10 +206,20 @@ Puan ve ücret durumu saklanmaz; her istekte oylardan hesaplanır ([`server/stat
 Veriyi yeniden üretmek için (Nominatim kullanım kuralına uygun: saniyede en fazla 1 istek, yanıtlar `scripts/.nominatim-cache.json`'da önbelleğe alınır):
 
 ```bash
-node scripts/geocode-seed.mjs > server/seed-places.json
+node scripts/geocode-seed.mjs > server/seed-places.json          # İzmir
+NODE_USE_ENV_PROXY=1 node scripts/geocode-turkey-seed.mjs        # diğer iller (id ile birleştirir; tekrar çalıştırılabilir)
 ```
 
-Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ekler; böylece seed'e eklenen yeni mekanlar mevcut kurulumlara da gelir. Yöneticinin panelden sildiği seed mekanları `seed_removed` tablosuna yazılır ve yeniden eklenmez.
+### İl / İlçe listesi
+
+[`src/data/turkiye.json`](src/data/turkiye.json): **81 il, 973 ilçe** (plaka ve il merkezi koordinatıyla). İki bağımsız kaynaktan karşılaştırılarak üretildi (PTT posta kodu verisi ve `memleketim-tr-cities`; il ve ilçe kümeleri birebir aynı). İstemci (`src/lib/turkey.ts`) ve sunucu (`server/turkey.js`) aynı dosyayı ve aynı karşılaştırma anahtarını kullanır: büyük/küçük harf, Türkçe karakter (ç/ğ/ı/İ/ö/ş/ü) ve boşluk farkları eşleşir, kayıtlar listedeki yazımla saklanır.
+
+- Yeni mekan formunda, filtrelerde ve yönetim panelinde il → ilçe seçimi (il değişince ilçe listesi o ilin ilçeleriyle güncellenir; filtrede "Tüm İller / Tüm İlçeler").
+- Sunucu il/ilçeyi listeye göre doğrular (yeni başvuruda ikisi de zorunlu; ilçe o ile ait olmalı).
+- **Geriye dönük uyum:** ili boş eski kayıtların ili her açılışta ilçe adından bulunur ve ilçe yazımı düzeltilir (aynı ad birden çok ilde varsa kaydın konumuna en yakın il). Listede olmayan serbest metin ilçeler olduğu gibi kalır; yönetici panelden il/ilçe seçerek düzeltir.
+- **Harita:** konum yokken ya da reddedilmişse Türkiye geneli açılır; konum gelince kullanıcıya odaklanır. İl/ilçe filtresi seçilince harita oraya gider.
+
+Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ekler (id ile; tekrar açılışta çift kayıt oluşmaz); böylece seed'e eklenen yeni mekanlar mevcut kurulumlara da gelir. Yöneticinin panelden sildiği seed mekanları `seed_removed` tablosuna yazılır ve yeniden eklenmez.
 
 ## API
 

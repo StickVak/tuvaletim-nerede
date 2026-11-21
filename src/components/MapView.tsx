@@ -54,7 +54,7 @@ function Controller({ fly, onReady }: { fly: FlyCommand | null; onReady?: (map: 
   return null;
 }
 
-/** İzmir genelindeki pinleri uzaklaştırınca kümeleyen katman (sarı-siyah sayı baloncukları) */
+/** Pinleri uzaklaştırınca kümeleyen katman (sarı-siyah sayı baloncukları) */
 function ClusterLayer({ places, onRouteIds, picking, onSelect, onPick }: { places: PlaceView[]; onRouteIds: Set<string>; picking: boolean; onSelect: (id: string) => void; onPick: (p: LatLng) => void }) {
   const map = useMap();
   const group = useRef<L.MarkerClusterGroup | null>(null);
@@ -117,6 +117,9 @@ function ClickHandler({ onClick }: { onClick: (p: LatLng) => void }) {
 
 interface Props {
   initialCenter: LatLng;
+  initialZoom: number;
+  /** Haritanın kaydırılabileceği alan: [[güney, batı], [kuzey, doğu]] */
+  maxBounds?: [[number, number], [number, number]];
   places: PlaceView[];
   user: LatLng | null;
   selectedId: string | null;
@@ -138,6 +141,8 @@ interface Props {
 
 export default function MapView({
   initialCenter,
+  initialZoom,
+  maxBounds,
   places,
   user,
   selectedId,
@@ -166,7 +171,10 @@ export default function MapView({
     <div className={`absolute inset-0 z-0 ${picking ? 'picking' : ''} ${route ? 'routing' : ''}`}>
       <MapContainer
         center={[initialCenter.lat, initialCenter.lng]}
-        zoom={13}
+        zoom={initialZoom}
+        minZoom={5}
+        maxBounds={maxBounds}
+        maxBoundsViscosity={0.8}
         zoomControl={false}
         attributionControl
         className="h-full w-full"

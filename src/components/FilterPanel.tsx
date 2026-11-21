@@ -1,6 +1,7 @@
 import { ArrowDownWideNarrow, Check } from 'lucide-react';
 import type { FilterChip, Filters, SortMode } from '../types';
 import { CHIP_LABELS, SORT_LABELS } from '../lib/filters';
+import LocationSelect from './LocationSelect';
 
 export function Toggle({ on, tone = 'green' }: { on: boolean; tone?: 'green' | 'ink' }) {
   return (
@@ -31,6 +32,15 @@ export default function FilterPanel({ filters, onChange, compact }: { filters: F
           ))}
         </select>
       </label>
+      <div className="mt-2">
+        <LocationSelect
+          mode="filter"
+          province={filters.province ?? ''}
+          district={filters.district ?? ''}
+          onChange={(v) => onChange({ ...filters, ...v })}
+          className="w-full cursor-pointer rounded-2xl bg-card px-3 py-2 text-sm font-bold text-ink outline-none disabled:cursor-not-allowed disabled:text-ink-muted"
+        />
+      </div>
       <div className={`mt-2 flex flex-wrap gap-1.5 ${compact ? '' : 'px-0.5'}`} role="group" aria-label="Filtreler">
         {(Object.keys(CHIP_LABELS) as FilterChip[]).map((c) => {
           const on = filters.chips.includes(c);
@@ -50,9 +60,9 @@ export default function FilterPanel({ filters, onChange, compact }: { filters: F
           );
         })}
       </div>
-      {filters.chips.length > 0 && (
-        <button type="button" onClick={() => onChange({ ...filters, chips: [] })} className="mt-2 text-xs font-bold text-ink-muted hover:text-ink">
-          Filtreleri temizle ({filters.chips.length})
+      {(filters.chips.length > 0 || filters.province) && (
+        <button type="button" onClick={() => onChange({ ...filters, chips: [], province: '', district: '' })} className="mt-2 text-xs font-bold text-ink-muted hover:text-ink">
+          Filtreleri temizle ({filters.chips.length + (filters.province ? 1 : 0) + (filters.district ? 1 : 0)})
         </button>
       )}
     </div>

@@ -3,11 +3,12 @@ import { Camera, Save, Trash2, X } from 'lucide-react';
 import type { Place, ToiletCategory, ToiletType } from '../../src/types';
 import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../../src/lib/categories';
 import { readImageAsDataUrl } from '../../src/lib/image';
-import { IZMIR_CENTER } from '../../src/lib/geo';
+import { TURKEY_CENTER, districtsOf, findProvince } from '../../src/lib/turkey';
+import LocationSelect from '../../src/components/LocationSelect';
 import MiniMap from './MiniMap';
 import { inputCls, Lightbox } from './ui';
 
-type EditFields = Pick<Place, 'name' | 'category' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging' | 'toiletType' | 'publicAccess'> & {
+type EditFields = Pick<Place, 'name' | 'category' | 'province' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging' | 'toiletType' | 'publicAccess'> & {
   /** undefined: değişmedi · null: kaldır · string: yeni fotoğraf */
   photo?: string | null;
 };
@@ -17,13 +18,13 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
   const [form, setForm] = useState<EditFields>(
     place
       ? {
-          name: place.name, category: place.category, district: place.district, address: place.address,
+          name: place.name, category: place.category, province: place.province, district: place.district, address: place.address,
           lat: place.lat, lng: place.lng, hours: place.hours,
           accessible: place.accessible, babyChanging: place.babyChanging,
           toiletType: place.toiletType, publicAccess: place.publicAccess,
         }
       : {
-          name: '', category: 'belediye', district: null, address: null, lat: IZMIR_CENTER.lat, lng: IZMIR_CENTER.lng, hours: null,
+          name: '', category: 'belediye', province: null, district: null, address: null, lat: TURKEY_CENTER.lat, lng: TURKEY_CENTER.lng, hours: null,
           accessible: false, babyChanging: false, toiletType: null, publicAccess: true, photo: null,
         },
   );
@@ -38,6 +39,7 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
     if (form.name.trim().length < 3) return setError('Mekan adı en az 3 karakter olmalı.');
     if (!Number.isFinite(form.lat) || !Number.isFinite(form.lng) || Math.abs(form.lat) > 90 || Math.abs(form.lng) > 180)
       return setError('Geçerli bir koordinat girin.');
+    if (!form.province || !form.district) return setError('İl ve ilçe seçin.');
     setSaving(true);
     await onSave({ ...form, name: form.name.trim() });
     setSaving(false);
@@ -72,10 +74,28 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
                 ))}
               </div>
             </div>
-            <label className="block">
-              <span className="mb-1 block text-xs font-bold text-ink-soft">İlçe</span>
-              <input value={form.district ?? ''} onChange={(e) => set('district', e.target.value || null)} maxLength={60} className={inputCls} />
-            </label>
+            <div>
+              <span className="mb-1 block text-xs font-bold text-ink-soft">İl / İlçe</span>
+              <LocationSelect
+                province={form.province ?? ''}
+                // Listede olmayan eski serbest metin ilçe seçili görünmez; yönetici listeden seçer
+                district={districtsOf(form.province).includes(form.district ?? '') ? (form.district ?? '') : ''}
+                className={inputCls}
+                onChange={(v) => {
+                  const il = findProvince(v.province);
+                  setForm((f) => ({
+                    ...f,
+                    province: v.province || null,
+                    district: v.district || null,
+                    // Yeni mekanda il seçilince işaret o ilin merkezine taşınır (sonra haritada tam yerine sürüklenir)
+                    ...(!place && il && v.province !== f.province ? { lat: il.lat, lng: il.lng } : {}),
+                  }));
+                }}
+              />
+              {place && place.district && !place.province && (
+                <p className="mt-1 text-xs text-ink-muted">Eski kayıt: “{place.district}” — listeden il ve ilçe seçin.</p>
+              )}
+            </div>
             <label className="block">
               <span className="mb-1 block text-xs font-bold text-ink-soft">Adres</span>
               <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || null)} maxLength={120} className={inputCls} />

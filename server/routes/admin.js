@@ -126,7 +126,7 @@ export function adminRoutes(db, { photos, avatars }) {
     );
     res.json(
       rows.map((p) => ({
-        id: p.id, name: p.name, category: p.category, district: p.district, address: p.address, lat: p.lat, lng: p.lng,
+        id: p.id, name: p.name, category: p.category, province: p.province ?? null, district: p.district, address: p.address, lat: p.lat, lng: p.lng,
         // Dış mekan fotoğrafı: yönetim anahtarıyla korunan uç (panel sunucusu üzerinden; Cloudinary'deyse oraya yönlendirir)
         photo: p.photo_file ? `/api/admin/pending/${encodeURIComponent(p.id)}/photo` : null,
         hasPhoto: Boolean(p.photo_file),
@@ -148,10 +148,10 @@ export function adminRoutes(db, { photos, avatars }) {
     const now = new Date().toISOString();
     await db.batch([
       [
-        `INSERT INTO places (id, name, category, district, address, lat, lng, photo_file, hours, accessible, baby_changing, public_access,
+        `INSERT INTO places (id, name, category, province, district, address, lat, lng, photo_file, hours, accessible, baby_changing, public_access,
            added_by, source, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`,
-        [p.id, p.name, p.category, p.district, p.address, p.lat, p.lng, p.photo_file, p.hours, p.accessible, p.baby_changing,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'user', ?, ?)`,
+        [p.id, p.name, p.category, p.province ?? null, p.district, p.address, p.lat, p.lng, p.photo_file, p.hours, p.accessible, p.baby_changing,
           p.public_access, p.user_id, now, now],
       ],
       ...(p.user_id
@@ -186,10 +186,10 @@ export function adminRoutes(db, { photos, avatars }) {
     const id = `admin-${randomUUID()}`;
     const now = new Date().toISOString();
     await db.run(
-      `INSERT INTO places (id, name, category, district, address, lat, lng, photo_file, hours, accessible, baby_changing, public_access,
+      `INSERT INTO places (id, name, category, province, district, address, lat, lng, photo_file, hours, accessible, baby_changing, public_access,
          toilet_type, source, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'admin', ?, ?)`,
-      [id, f.name, f.category, f.district, f.address, f.lat, f.lng, photoRef, f.hours, f.accessible, f.babyChanging, f.publicAccess,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'admin', ?, ?)`,
+      [id, f.name, f.category, f.province ?? null, f.district, f.address, f.lat, f.lng, photoRef, f.hours, f.accessible, f.babyChanging, f.publicAccess,
         f.toiletType ?? null, now, now],
     );
     res.status(201).json(await adminPlace(db, id));

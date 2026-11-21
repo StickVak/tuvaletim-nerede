@@ -41,6 +41,8 @@ export interface Place extends LatLng {
   id: string;
   name: string;
   category: ToiletCategory;
+  /** İl (src/data/turkiye.json yazımı); eski serbest metin ilçeli kayıtlarda null olabilir */
+  province: string | null;
   district: string | null;
   address: string | null;
   /** Fotoğraf /api/places/:id/photo adresinden yüklenir */
@@ -109,7 +111,8 @@ export interface MyProfile {
 export interface PlaceDraft extends LatLng {
   name: string;
   category: ToiletCategory;
-  district?: string;
+  province: string;
+  district: string;
   address?: string;
   /** Dış mekan (giriş / bina cephesi) fotoğrafı — zorunlu, data URL */
   photo: string;
@@ -126,6 +129,9 @@ export type FilterChip = 'free' | 'accessible' | 'baby' | 'open' | 'public' | 'a
 export interface Filters {
   sort: SortMode;
   chips: FilterChip[];
+  /** İl / ilçe filtresi (boş = hepsi). Eski kayıtlı filtrelerde yok olabilir. */
+  province?: string;
+  district?: string;
 }
 
 /** Uygulama içi yaya rotası (Acil ya da Yol Tarifi) */

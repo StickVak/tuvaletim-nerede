@@ -34,9 +34,9 @@ export default function Dashboard({ stats, places, votes, pendingCount, flaggedC
   const n = (v: number | undefined) => (v ?? 0).toLocaleString('tr-TR');
   const open = places.filter((p) => !p.closedAt);
   const userPlaces = open.filter((p) => p.source === 'user').length;
-  const districts = Object.entries(
+  const provinces = Object.entries(
     open.reduce<Record<string, number>>((acc, p) => {
-      const d = p.district || 'Belirtilmemiş';
+      const d = p.province || 'Belirtilmemiş';
       acc[d] = (acc[d] ?? 0) + 1;
       return acc;
     }, {}),
@@ -111,9 +111,9 @@ export default function Dashboard({ stats, places, votes, pendingCount, flaggedC
         </section>
 
         <section className="rounded-3xl bg-surface p-5 shadow-sm ring-1 ring-line">
-          <h2 className="font-extrabold">İlçelere göre mekanlar</h2>
+          <h2 className="font-extrabold">İllere göre mekanlar</h2>
           <ul className="no-scrollbar mt-3 max-h-80 space-y-2 overflow-y-auto">
-            {districts.map(([d, c]) => (
+            {provinces.map(([d, c]) => (
               <li key={d} className="flex items-center justify-between rounded-2xl bg-card px-3.5 py-2.5 text-sm">
                 <span className="font-semibold">{d}</span>
                 <span className="font-extrabold tabular-nums">{c}</span>

@@ -5,7 +5,8 @@ import type { Filters, LatLng, Place, PlaceDraft, PlaceView, ReportType, RouteSt
 import { api } from './api';
 import { usePlaces } from './hooks/usePlaces';
 import { useAuth } from './hooks/useAuth';
-import { distanceMeters, IZMIR_CENTER, pickEmergency, toView } from './lib/geo';
+import { distanceMeters, pickEmergency, toView } from './lib/geo';
+import { TURKEY_BOUNDS, TURKEY_CENTER, TURKEY_ZOOM, findProvince, matchesLocation } from './lib/turkey';
 import { applyFilters, SORT_LABELS, sortPlaces } from './lib/filters';
 import { placesOnRoute } from './lib/corridor';
 import { fetchWalkingRoute, WALK_SPEED_MPS } from './lib/route';
@@ -35,7 +36,7 @@ import AccountButton from './components/AccountButton';
 import ProfileModal from './components/ProfileModal';
 import UserProfileModal from './components/UserProfileModal';
 
-const DEFAULT_FILTERS: Filters = { sort: 'distance', chips: [] };
+const DEFAULT_FILTERS: Filters = { sort: 'distance', chips: [], province: '', district: '' };
 /** Masaüstü: kenar panel (16 + 400 + 16) */
 const SIDEBAR_SPACE = 432;
 const DETAIL_WIDTH = 400;
@@ -126,6 +127,21 @@ export default function App() {
     if (placesError) toast(placesError, 'error');
   }, [placesError, toast]);
 
+  // İl / ilçe filtresi seçilince haritayı oraya götür: eşleşen mekanların sınırına, yoksa il merkezine
+  const locationFilterKey = `${filters.province ?? ''}|${filters.district ?? ''}`;
+  const lastLocationFilter = useRef(locationFilterKey);
+  useEffect(() => {
+    if (lastLocationFilter.current === locationFilterKey || !places) return;
+    lastLocationFilter.current = locationFilterKey;
+    if (!filters.province) return;
+    const pts = places.filter((p) => matchesLocation(p, filters.province, filters.district));
+    const il = findProvince(filters.province);
+    const padding = desktop ? { top: 70, right: 90, bottom: 70, left: SIDEBAR_SPACE + 40 } : { top: 120, right: 48, bottom: PEEK_HEIGHT + 40, left: 48 };
+    if (pts.length > 1) setFly({ key: Date.now(), bounds: pts, padding });
+    else if (pts.length === 1) setFly({ key: Date.now(), center: pts[0], zoom: 15 });
+    else if (il) setFly({ key: Date.now(), center: il, zoom: filters.district ? 11 : 9 });
+  }, [locationFilterKey, places]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ---------- Görünüm modeli ----------
   const views: PlaceView[] = useMemo(() => (places ?? []).map((p) => toView(p, user)), [places, user]);
 
@@ -140,17 +156,17 @@ export default function App() {
 
   const listed = useMemo(() => {
     const q = normalize(query.trim());
-    let items = routeFilter(applyFilters(views, filters.chips));
-    if (q) items = items.filter((t) => normalize([t.name, t.district, t.address].filter(Boolean).join(' ')).includes(q));
+    let items = routeFilter(applyFilters(views, filters.chips)).filter((t) => matchesLocation(t, filters.province, filters.district));
+    if (q) items = items.filter((t) => normalize([t.name, t.district, t.province, t.address].filter(Boolean).join(' ')).includes(q));
     return sortPlaces(items, filters.sort);
   }, [views, filters, query, route, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const markers = useMemo(() => {
-    const base = routeFilter(applyFilters(views, filters.chips));
+    const base = routeFilter(applyFilters(views, filters.chips)).filter((t) => matchesLocation(t, filters.province, filters.district));
     const ensure = [route?.placeId, selectedId].filter(Boolean) as string[];
     const missing = ensure.filter((id) => !base.some((t) => t.id === id));
     return missing.length ? [...base, ...views.filter((t) => missing.includes(t.id))] : base;
-  }, [views, filters.chips, route, selectedId, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [views, filters.chips, filters.province, filters.district, route, selectedId, routeOnly, onRouteIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selected = selectedId ? views.find((t) => t.id === selectedId) ?? null : null;
   const routePlace = route ? views.find((t) => t.id === route.placeId) ?? null : null;
@@ -362,11 +378,14 @@ export default function App() {
   );
 
   const sortLabel = SORT_LABELS[filters.sort];
+  const filterCount = filters.chips.length + (filters.province ? 1 : 0) + (filters.district ? 1 : 0);
 
   return (
     <div ref={rootRef} className="relative h-[100dvh] w-full overflow-hidden bg-surface text-ink">
       <MapView
-        initialCenter={IZMIR_CENTER}
+        initialCenter={TURKEY_CENTER}
+        initialZoom={TURKEY_ZOOM}
+        maxBounds={TURKEY_BOUNDS}
         places={markers}
         user={user}
         selectedId={selectedId}
@@ -445,7 +464,7 @@ export default function App() {
                 <h2 className="text-lg font-extrabold leading-tight">Yakındaki Tuvaletler</h2>
                 <p className="mt-0.5 text-xs font-medium text-ink-muted">
                   {listed.length} sonuç · {sortLabel}
-                  {filters.chips.length > 0 && ` · ${filters.chips.length} filtre`}
+                  {filterCount > 0 && ` · ${filterCount} filtre`}
                 </p>
               </div>
               <span className="flex items-center gap-1 rounded-full bg-card px-2.5 py-1 text-[11px] font-bold text-ink-soft">
