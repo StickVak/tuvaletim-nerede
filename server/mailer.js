@@ -16,17 +16,24 @@ import nodemailer from 'nodemailer';
 
 const APP = 'Tuvaletim Nerede?';
 
-function verificationMessage(code) {
-  const subject = `${APP} doğrulama kodunuz: ${code}`;
-  const text = `${APP} hesabınızı oluşturmak için doğrulama kodunuz:\n\n${code}\n\nKod 10 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.`;
+/** Kodlu e-posta: purpose metni ("Hesabınızı oluşturmak için doğrulama kodunuz") ve geçerlilik süresi değişir */
+function codeMessage(code, { subjectLabel, purpose, minutes, label }) {
+  const subject = `${APP} ${subjectLabel}: ${code}`;
+  const note = `Kod ${minutes} dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.`;
+  const text = `${APP} — ${purpose}:\n\n${code}\n\n${note}`;
   const html = `<div style="font-family:Inter,Segoe UI,Arial,sans-serif;max-width:420px;margin:auto;padding:24px;color:#1A1A1A">
   <h2 style="margin:0 0 8px">${APP}</h2>
-  <p style="margin:0 0 16px">Hesabınızı oluşturmak için doğrulama kodunuz:</p>
+  <p style="margin:0 0 16px">${purpose}:</p>
   <p style="font-size:32px;font-weight:800;letter-spacing:8px;background:#FFD60A;border-radius:14px;padding:14px 0;text-align:center;margin:0 0 16px">${code}</p>
-  <p style="color:#666;font-size:13px;margin:0">Kod 10 dakika geçerlidir. Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.</p>
+  <p style="color:#666;font-size:13px;margin:0">${note}</p>
 </div>`;
-  return { subject, text, html };
+  return { subject, text, html, code, label };
 }
+
+const verificationMessage = (code) =>
+  codeMessage(code, { subjectLabel: 'doğrulama kodunuz', purpose: 'Hesabınızı oluşturmak için doğrulama kodunuz', minutes: 10, label: 'doğrulama kodu' });
+const passwordResetMessage = (code) =>
+  codeMessage(code, { subjectLabel: 'şifre sıfırlama kodunuz', purpose: 'Şifrenizi sıfırlamak için kodunuz', minutes: 15, label: 'şifre sıfırlama kodu' });
 
 /** Hata türleri: timeout | network | rate_limit | provider | config */
 export class MailError extends Error {
@@ -161,7 +168,16 @@ function smtpError(e) {
  * @param deps fetchImpl, createTransport, log (konsol modunda kod çıktısı), logger (uyarı/hata),
  *             timeoutMs (deneme başına), retryDelayMs (yeniden deneme öncesi bekleme), sleep
  */
-export function createMailer(
+export function createMailer(env = process.env, opts = {}) {
+  const m = createProvider(env, opts);
+  return {
+    ...m,
+    sendVerificationCode: (to, code) => m.send(to, verificationMessage(code)),
+    sendPasswordResetCode: (to, code) => m.send(to, passwordResetMessage(code)),
+  };
+}
+
+function createProvider(
   env = process.env,
   {
     fetchImpl = fetch,
@@ -206,13 +222,13 @@ export function createMailer(
       timeoutMs,
       configError,
       summary: sender ? `brevo (gönderen: ${sender.email})` : 'brevo (HATALI: MAIL_FROM)',
-      async sendVerificationCode(to, code) {
+      async send(to, msg) {
         if (configError) {
           const e = new MailError('config', configError, { provider: 'brevo' });
           logger.error?.(`[mail] gönderim hatası sağlayıcı=brevo tür=config deneme=0/2 alıcı=${maskEmail(to)}: ${configError}`);
           throw e;
         }
-        const { subject, text, html } = verificationMessage(code);
+        const { subject, text, html } = msg;
         const body = JSON.stringify({ sender, to: [{ email: to }], subject, htmlContent: html, textContent: text });
         await withRetry('brevo', to, async () => {
           const res = await postJson({
@@ -236,8 +252,8 @@ export function createMailer(
       kind: 'resend',
       timeoutMs,
       summary: `resend (gönderen: ${parseSender(from)?.email ?? from}; BREVO_API_KEY tanımlı değil)`,
-      async sendVerificationCode(to, code) {
-        const body = JSON.stringify({ from, to: [to], ...verificationMessage(code) });
+      async send(to, msg) {
+        const body = JSON.stringify({ from, to: [to], subject: msg.subject, text: msg.text, html: msg.html });
         await withRetry('resend', to, async () => {
           const res = await postJson({
             fetchImpl,
@@ -270,10 +286,10 @@ export function createMailer(
       kind: 'smtp',
       timeoutMs,
       summary: `smtp (${env.SMTP_HOST}:${port}; BREVO_API_KEY ve RESEND_API_KEY tanımlı değil)`,
-      async sendVerificationCode(to, code) {
+      async send(to, msg) {
         await withRetry('smtp', to, async () => {
           try {
-            await withTimeout(transport.sendMail({ from, to, ...verificationMessage(code) }), timeoutMs, 'SMTP');
+            await withTimeout(transport.sendMail({ from, to, subject: msg.subject, text: msg.text, html: msg.html }), timeoutMs, 'SMTP');
           } catch (e) {
             throw smtpError(e);
           }
@@ -286,8 +302,8 @@ export function createMailer(
     kind: 'console',
     timeoutMs,
     summary: 'console (BREVO_API_KEY, RESEND_API_KEY ve SMTP_* tanımlı değil: kodlar sunucu konsoluna yazılır)',
-    async sendVerificationCode(to, code) {
-      log(`[mail] ${to} için doğrulama kodu: ${code}  (e-posta servisi yapılandırılmadı; RESEND_API_KEY ya da SMTP_* ekleyin)`);
+    async send(to, msg) {
+      log(`[mail] ${to} için ${msg.label}: ${msg.code}  (e-posta servisi yapılandırılmadı; RESEND_API_KEY ya da SMTP_* ekleyin)`);
     },
   };
 }

@@ -14,6 +14,12 @@ export const MAX_CODE_ATTEMPTS = 5;
 export const UNCERTAIN_RESEND_MS = 15 * 1000;
 /** Olmayan hesaplar için sabit maliyetli karşılaştırma (zamanlama ile kullanıcı adı yoklamasına karşı) */
 const DUMMY_HASH = hashPassword(randomBytes(16).toString('hex'));
+/** Şifre sıfırlama kodu ömrü */
+export const RESET_TTL_MS = 15 * 60 * 1000;
+/** Hesap olsun olmasın aynı yanıt (kayıtlı e-postalar sızdırılmaz) */
+export const RESET_SENT = 'Bu e-posta adresiyle kayıtlı bir hesap varsa şifre sıfırlama kodu gönderildi. Gelen kutunuzu (ve gereksiz/spam klasörünü) kontrol edin.';
+/** Kod hatalı, süresi dolmuş, deneme hakkı bitmiş ya da hesap yok: hepsi aynı mesaj */
+export const RESET_INVALID = 'Kod hatalı ya da süresi dolmuş. Kodu kontrol edin ya da yeni kod isteyin.';
 export const TERMS_REQUIRED = "Devam etmek için Hizmet Şartları'nı ve Gizlilik Politikası'nı kabul etmelisiniz.";
 
 /**
@@ -47,12 +53,14 @@ const normEmail = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
 const pass = (_req, _res, next) => next();
 export function authRoutes(db, secret, { limits = {}, writeLimit = pass, mailer, google = null }) {
   const r = asyncRouter();
-  const L = { login: pass, register: pass, sendCode: pass, session: pass, oauth: pass, ...limits };
+  const L = { login: pass, register: pass, sendCode: pass, session: pass, oauth: pass, resetRequest: pass, resetConfirm: pass, ...limits };
   r.use('/register', L.register);
   r.use('/send-code', L.sendCode);
   r.use('/login', L.login);
   r.use(['/refresh', '/logout', '/logout-all', '/devices'], L.session);
   r.use('/google', L.oauth);
+  r.use('/password-reset/request', L.resetRequest);
+  r.use('/password-reset/confirm', L.resetConfirm);
   r.param('id', intIdParam);
   const devices = createDeviceStore(db, secret);
   /** Erişim belirteci her zaman bir oturum kaydına (did) bağlıdır: kayıt iptal edilince belirteç de geçersiz olur */
@@ -209,6 +217,77 @@ export function authRoutes(db, secret, { limits = {}, writeLimit = pass, mailer,
   });
 
   r.get('/me', requireUser, (req, res) => res.json({ user: req.user }));
+
+  // ---------------------------------------------------------------- Şifremi unuttum
+  const resetHash = (userId, code) => createHmac('sha256', secret).update(`password-reset:${userId}:${code}`).digest('hex');
+
+  /**
+   * Sıfırlama kodu iste. Yanıt, e-posta kayıtlı olsun olmasın aynıdır ve hemen döner; hesap araması ve gönderim
+   * yanıttan SONRA yapılır (yanıt süresinden de hesap varlığı anlaşılmaz). Aynı hesaba 60 sn içinde ikinci kod
+   * sessizce gönderilmez. Gönderim hatası yalnızca loglanır.
+   */
+  r.post('/password-reset/request', async (req, res) => {
+    const email = normEmail(req.body?.email);
+    if (!isEmail(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin.', field: 'email' });
+    res.json({ ok: true, message: RESET_SENT, expiresIn: RESET_TTL_MS / 1000, resendIn: RESEND_AFTER_MS / 1000 });
+    try {
+      const user = await db.get('SELECT id, email FROM users WHERE email_key = ?', [email]);
+      if (!user) return;
+      const prev = await db.get('SELECT sent_at FROM password_resets WHERE user_id = ?', [user.id]);
+      if (prev && Date.parse(prev.sent_at) + RESEND_AFTER_MS > Date.now()) return;
+      const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
+      const now = Date.now();
+      await db.run(
+        `INSERT INTO password_resets (user_id, code_hash, expires_at, attempts, sent_at) VALUES (?, ?, ?, 0, ?)
+         ON CONFLICT (user_id) DO UPDATE SET code_hash = excluded.code_hash, expires_at = excluded.expires_at, attempts = 0, sent_at = excluded.sent_at`,
+        [user.id, resetHash(user.id, code), new Date(now + RESET_TTL_MS).toISOString(), new Date(now).toISOString()],
+      );
+      await mailer.sendPasswordResetCode(user.email, code);
+    } catch (e) {
+      const kind = e instanceof MailError ? e.kind : 'bilinmeyen';
+      console.error(`[mail] şifre sıfırlama kodu gönderilemedi tür=${kind} alıcı=${maskEmail(email)}: ${e?.message}`);
+    }
+  });
+
+  /**
+   * Kod + yeni şifre. Başarıda: şifre scrypt ile güncellenir, kod silinir (tek kullanımlık; silme koşullu olduğundan
+   * aynı kodla eşzamanlı iki istekten yalnızca biri geçer), tüm oturumlar/cihazlar iptal edilir ve eski erişim
+   * belirteçleri geçersizleşir. Kullanıcı yeni şifresiyle temiz giriş yapar. Kodla e-posta sahipliği de kanıtlanmış olur.
+   */
+  r.post('/password-reset/confirm', async (req, res) => {
+    const email = normEmail(req.body?.email);
+    const code = typeof req.body?.code === 'string' ? req.body.code.trim() : '';
+    const newPassword = req.body?.newPassword;
+    if (!isEmail(email)) return res.status(400).json({ error: 'Geçerli bir e-posta adresi girin.', field: 'email' });
+    if (!/^\d{6}$/.test(code)) return res.status(400).json({ error: 'E-postanıza gelen 6 haneli kodu girin.', field: 'code' });
+    if (!validPassword(newPassword)) return res.status(400).json({ error: PASSWORD_LENGTH, field: 'password' });
+
+    const invalid = () => res.status(400).json({ error: RESET_INVALID, field: 'code' });
+    const user = await db.get('SELECT id FROM users WHERE email_key = ?', [email]);
+    const row = user && (await db.get('SELECT * FROM password_resets WHERE user_id = ?', [user.id]));
+    if (!row) return invalid();
+    if (!(Date.parse(row.expires_at) > Date.now())) {
+      await db.run('DELETE FROM password_resets WHERE user_id = ?', [user.id]);
+      return invalid();
+    }
+    const hash = resetHash(user.id, code);
+    if (!timingSafeEqual(Buffer.from(hash), Buffer.from(row.code_hash))) {
+      // Kod başına en fazla 5 hatalı deneme; sonra kod silinir
+      if (row.attempts + 1 >= MAX_CODE_ATTEMPTS) await db.run('DELETE FROM password_resets WHERE user_id = ?', [user.id]);
+      else await db.run('UPDATE password_resets SET attempts = attempts + 1 WHERE user_id = ?', [user.id]);
+      return invalid();
+    }
+    const { changes } = await db.run('DELETE FROM password_resets WHERE user_id = ? AND code_hash = ?', [user.id, hash]);
+    if (!changes) return invalid();
+    const now = new Date().toISOString();
+    await db.batch([
+      ['UPDATE users SET password_hash = ?, tokens_valid_after = ?, email_verified = 1 WHERE id = ?', [hashPassword(newPassword), now, user.id]],
+      devices.revokeAllStmt(user.id),
+    ]);
+    clearDeviceCookie(req, res);
+    console.log(`[auth] şifre sıfırlandı kullanıcı=${user.id}: tüm oturumlar kapatıldı`);
+    res.json({ ok: true, message: 'Şifreniz güncellendi. Güvenliğiniz için tüm cihazlardaki oturumlar kapatıldı; yeni şifrenizle giriş yapın.' });
+  });
 
   // ---------------------------------------------------------------- Google ile giriş
   const googleAuth = google ? createGoogleAuth(google, secret) : null;

@@ -82,6 +82,15 @@ export async function createApp({
     ),
     session: limit('session', 'Çok fazla oturum isteği.'),
     oauth: limit('oauth', 'Çok fazla Google ile giriş denemesi.'),
+    resetRequest: chain(
+      limit('resetRequest', 'Çok fazla şifre sıfırlama isteği.'),
+      // E-posta başına: kayıtlı olsun olmasın her adres aynı sayılır (sınır da hesap varlığını sızdırmaz)
+      limit('resetRequestEmail', 'Bu e-posta için çok fazla şifre sıfırlama isteği yapıldı.', { key: bodyEmail }),
+    ),
+    resetConfirm: chain(
+      limit('resetConfirm', 'Çok fazla şifre sıfırlama denemesi.'),
+      limit('resetConfirmEmail', 'Bu e-posta için çok fazla hatalı kod denemesi yapıldı.', { key: bodyEmail, countIf: (s) => s === 400 }),
+    ),
   };
   const writeLimit = chain(limit('write', 'Çok fazla işlem yapıldı.'), limit('writeUser', 'Çok fazla işlem yapıldı.', { key: userKey }));
   const uploadLimit = limit('upload', 'Çok fazla fotoğraf yüklendi.', { key: (req) => userKey(req) ?? ipKey(req) });

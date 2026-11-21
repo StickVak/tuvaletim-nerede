@@ -16,10 +16,17 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
   writeFileSync(seedFile, JSON.stringify(seed));
   /** Sahte posta kutusu: gönderilen doğrulama kodları */
   const outbox = [];
+  /** Gönderilen şifre sıfırlama kodları */
+  const resetOutbox = [];
   /** failMail(hata): sıradaki gönderim bu hatayla başarısız olur (kod yine de 'gönderilmiş' sayılabilir: deliveredAnyway) */
   const failures = [];
   const mailer = {
     kind: 'test',
+    sendPasswordResetCode: async (to, code) => {
+      const f = failures.shift();
+      if (f) throw f.error;
+      resetOutbox.push({ to, code });
+    },
     sendVerificationCode: async (to, code) => {
       const f = failures.shift();
       if (f) {
@@ -97,6 +104,16 @@ export async function startServer({ seed = [], limits = false, adminKey = ADMIN_
     req,
     register,
     outbox,
+    resetOutbox,
+    /** Son şifre sıfırlama kodu (gönderim yanıttan sonra yapıldığı için kısa süre beklenir) */
+    lastResetCode: async (email) => {
+      for (let i = 0; i < 50; i++) {
+        const m = [...resetOutbox].reverse().find((x) => x.to.toLowerCase() === email.toLowerCase());
+        if (m) return m.code;
+        await new Promise((r) => setTimeout(r, 10));
+      }
+      return undefined;
+    },
     lastCode,
     failMail: (error, { deliveredAnyway = false } = {}) => failures.push({ error, deliveredAnyway }),
     registerFull,

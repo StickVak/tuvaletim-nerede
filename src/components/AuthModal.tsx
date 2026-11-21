@@ -3,6 +3,8 @@ import { AlertTriangle, ArrowLeft, Clock3, Eye, EyeOff, Loader2, MailCheck, Rota
 import { useAuth, type AuthMode } from '../hooks/useAuth';
 import { ApiError, api } from '../api';
 import CodeInput from './CodeInput';
+import ForgotPassword from './ForgotPassword';
+import { useNow } from '../hooks/useNow';
 import { PrivacyLink, TERMS_REQUIRED, TermsLink } from '../lib/legal';
 import { failureTitle, formatWait, resendLabel, retryHint, secondsLeft, sendButton, waitSecondsFromError } from '../lib/otp';
 
@@ -24,19 +26,6 @@ function GoogleLogo() {
   );
 }
 
-/** Saniyede bir yenilenen "şu an" (geri sayımlar için) */
-function useNow(active: boolean) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (!active) return;
-    setNow(Date.now()); // etkinleşir etkinleşmez güncel zamanla başla (eski değerle ilk kare yanlış görünmesin)
-    const t = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(t);
-  }, [active]);
-  /** Yeni bir bitiş zamanı ayarlanınca saati de hemen güncelle (sayaç bir an fazladan saniye göstermesin) */
-  const sync = () => setNow(Date.now());
-  return [now, sync] as const;
-}
 
 export default function AuthModal({ onWelcome }: { onWelcome: (username: string) => void }) {
   const { authMode, openAuth, closeAuth, login, sendCode, register } = useAuth();
@@ -73,8 +62,31 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
   // Form adımındaki bekleme: rate-limit ya da gönderim hatası sonrası "ne zaman tekrar deneyebilirim"
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [now, syncNow] = useNow(step === 'code' || cooldownUntil > Date.now());
+  // "Şifremi unuttum" ekranı (giriş sekmesinden açılır)
+  const [forgot, setForgot] = useState(false);
 
   if (!authMode) return null;
+  if (forgot) {
+    return (
+      <ForgotPassword
+        initialEmail={username}
+        onBack={() => setForgot(false)}
+        onClose={() => {
+          setForgot(false);
+          closeAuth();
+        }}
+        onDone={(mail) => {
+          // Tüm oturumlar sunucuda kapatıldı: yeni şifreyle temiz giriş
+          setForgot(false);
+          setUsername(mail);
+          setPassword('');
+          setError('');
+          setNotice({ tone: 'ok', text: 'Şifreniz güncellendi. Yeni şifrenizle giriş yapın.' });
+          openAuth('login');
+        }}
+      />
+    );
+  }
   const isRegister = authMode === 'register';
   const onCodeStep = isRegister && step === 'code';
   const resendIn = secondsLeft(resendAt, now);
@@ -345,6 +357,21 @@ export default function AuthModal({ onWelcome }: { onWelcome: (username: string)
                   {show ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {!isRegister && (
+                <div className="-mt-1 flex justify-end px-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError('');
+                      setNotice(null);
+                      setForgot(true);
+                    }}
+                    className="text-sm font-semibold text-ink-soft underline-offset-2 hover:text-ink hover:underline"
+                  >
+                    Şifremi unuttum
+                  </button>
+                </div>
+              )}
               <label className="flex cursor-pointer items-start gap-2.5 px-1 text-sm text-ink">
                 <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#FFC300]" />
                 <span>

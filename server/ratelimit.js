@@ -107,6 +107,12 @@ export const DEFAULT_LIMITS = {
   register: { windowMs: 60 * 60 * 1000, max: 10 },
   /** kod doğrulama: E-POSTA başına saatte 10 başarısız deneme (kod başına 5 deneme sınırına ek) */
   verifyEmail: { windowMs: 60 * 60 * 1000, max: 10 },
+  /** şifre sıfırlama kodu isteme: IP başına 15 dakikada 10 · e-posta başına saatte 5 */
+  resetRequest: { windowMs: 15 * 60 * 1000, max: 10 },
+  resetRequestEmail: { windowMs: 60 * 60 * 1000, max: 5 },
+  /** şifre sıfırlama kodu doğrulama: IP başına 15 dakikada 20 · e-posta başına saatte 10 hatalı */
+  resetConfirm: { windowMs: 15 * 60 * 1000, max: 20 },
+  resetConfirmEmail: { windowMs: 60 * 60 * 1000, max: 10 },
   /** oturum tazeleme / çıkış / cihaz yönetimi: IP başına 5 dakikada 60 */
   session: { windowMs: 5 * 60 * 1000, max: 60 },
   /** Google ile giriş başlatma + dönüş: IP başına 10 dakikada 20 */

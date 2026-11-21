@@ -84,6 +84,15 @@ CREATE TABLE IF NOT EXISTS email_codes (
   attempts INTEGER NOT NULL DEFAULT 0,
   sent_at TEXT NOT NULL
 );
+-- Şifre sıfırlama kodları: kullanıcı başına tek kayıt; kod HMAC olarak saklanır, 15 dk geçerli, en fazla 5 hatalı deneme,
+-- başarılı kullanımda silinir (tek kullanımlık)
+CREATE TABLE IF NOT EXISTS password_resets (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  code_hash TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  attempts INTEGER NOT NULL DEFAULT 0,
+  sent_at TEXT NOT NULL
+);
 -- Güvenilir cihazlar (kalıcı oturum): ham token yalnızca istemcinin HttpOnly çerezinde, burada HMAC özeti
 CREATE TABLE IF NOT EXISTS trusted_devices (
   id INTEGER PRIMARY KEY,
@@ -245,6 +254,7 @@ export async function openDb(path, { seedFile, url, authToken } = {}) {
       ['DELETE FROM favorites WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['DELETE FROM status_reports WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['DELETE FROM trusted_devices WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
+      ['DELETE FROM password_resets WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['UPDATE places SET added_by = NULL WHERE added_by = ? AND added_by IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['UPDATE pending_places SET user_id = NULL WHERE user_id = ? AND user_id IN (SELECT id FROM users WHERE role = ?)', [id, role]],
       ['DELETE FROM users WHERE id = ? AND role = ?', [id, role]],
