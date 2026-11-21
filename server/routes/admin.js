@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { parseVote } from './places.js';
 import { PLACE_ID_RE, placeIdParam } from '../validate.js';
 import { asyncRouter } from '../async.js';
 import { parsePlaceFields } from '../validate.js';
@@ -120,21 +121,58 @@ export function adminRoutes(db, { photos, avatars }) {
   });
 
   // ---------------------------------------------------------------- başvurular
+  const PENDING_SQL = 'SELECT p.*, u.username FROM pending_places p LEFT JOIN users u ON u.id = p.user_id';
+  const pendingJson = (p) => ({
+    id: p.id, name: p.name, category: p.category, province: p.province ?? null, district: p.district, address: p.address, lat: p.lat, lng: p.lng,
+    // Dış mekan fotoğrafı: yönetim anahtarıyla korunan uç (panel sunucusu üzerinden; Cloudinary'deyse oraya yönlendirir)
+    photo: p.photo_file ? `/api/admin/pending/${encodeURIComponent(p.id)}/photo` : null,
+    hasPhoto: Boolean(p.photo_file),
+    hours: p.hours, accessible: !!p.accessible, babyChanging: !!p.baby_changing,
+    publicAccess: p.public_access == null ? null : !!p.public_access,
+    submittedAt: p.submitted_at, username: p.username ?? null,
+    vote: { cleanliness: p.cleanliness, comfort: p.comfort, isPaid: !!p.is_paid, priceAmount: p.price_amount, comment: p.comment, toiletType: p.toilet_type ?? null },
+  });
+
   r.get('/pending', async (_req, res) => {
-    const rows = await db.all(
-      `SELECT p.*, u.username FROM pending_places p LEFT JOIN users u ON u.id = p.user_id ORDER BY p.submitted_at DESC`,
+    res.json((await db.all(`${PENDING_SQL} ORDER BY p.submitted_at DESC`)).map(pendingJson));
+  });
+
+  /**
+   * Başvuruyu düzenle (onaydan önce): ad, tür, il/ilçe, adres, saatler, özellikler, konum, ücret/tuvalet tipi.
+   * Yalnızca gönderilen alanlar değişir; mekan alanlarıyla aynı doğrulama (il/ilçe listeden, konum Türkiye içinde).
+   * Başvuranın temizlik/konfor puanı ve yorumu değiştirilmez; fotoğraf buradan değiştirilmez.
+   */
+  r.patch('/pending/:id', async (req, res) => {
+    const cur = await db.get('SELECT * FROM pending_places WHERE id = ?', [req.params.id]);
+    if (!cur) return res.status(404).json({ error: 'Başvuru bulunamadı.' });
+    const { isPaid, priceAmount, photo, ...body } = req.body ?? {};
+    if (photo !== undefined) return res.status(400).json({ error: 'Başvuru fotoğrafı buradan değiştirilemez.' });
+    // İl ya da ilçeden yalnızca biri gönderildiyse diğeri mevcut değerden alınır (birlikte doğrulanır)
+    if (body.province !== undefined || body.district !== undefined) {
+      body.province = body.province !== undefined ? body.province : cur.province;
+      body.district = body.district !== undefined ? body.district : cur.district;
+    }
+    const f = parsePlaceFields(body, { partial: true });
+    if (typeof f === 'string') return res.status(400).json({ error: f });
+    const province = f.province !== undefined ? f.province : cur.province;
+    const district = f.district !== undefined ? f.district : cur.district;
+    if (!province || !district) return res.status(400).json({ error: 'İl ve ilçe seçin.' });
+    const vote = parseVote({
+      cleanliness: cur.cleanliness, comfort: cur.comfort, comment: cur.comment,
+      isPaid: isPaid !== undefined ? isPaid : !!cur.is_paid,
+      priceAmount: priceAmount !== undefined ? priceAmount : cur.price_amount,
+      toiletType: f.toiletType !== undefined ? f.toiletType : cur.toilet_type,
+    });
+    if (typeof vote === 'string') return res.status(400).json({ error: vote });
+    const pick = (k, col) => (f[k] !== undefined ? f[k] : cur[col]);
+    await db.run(
+      `UPDATE pending_places SET name = ?, category = ?, province = ?, district = ?, address = ?, lat = ?, lng = ?, hours = ?,
+         accessible = ?, baby_changing = ?, public_access = ?, toilet_type = ?, is_paid = ?, price_amount = ? WHERE id = ?`,
+      [pick('name', 'name'), pick('category', 'category'), province, district, pick('address', 'address'), pick('lat', 'lat'), pick('lng', 'lng'),
+        pick('hours', 'hours'), pick('accessible', 'accessible'), pick('babyChanging', 'baby_changing'), pick('publicAccess', 'public_access'),
+        vote.toiletType, vote.isPaid, vote.priceAmount, cur.id],
     );
-    res.json(
-      rows.map((p) => ({
-        id: p.id, name: p.name, category: p.category, province: p.province ?? null, district: p.district, address: p.address, lat: p.lat, lng: p.lng,
-        // Dış mekan fotoğrafı: yönetim anahtarıyla korunan uç (panel sunucusu üzerinden; Cloudinary'deyse oraya yönlendirir)
-        photo: p.photo_file ? `/api/admin/pending/${encodeURIComponent(p.id)}/photo` : null,
-        hasPhoto: Boolean(p.photo_file),
-        hours: p.hours, accessible: !!p.accessible, babyChanging: !!p.baby_changing,
-        submittedAt: p.submitted_at, username: p.username ?? null,
-        vote: { cleanliness: p.cleanliness, comfort: p.comfort, isPaid: !!p.is_paid, priceAmount: p.price_amount, comment: p.comment },
-      })),
-    );
+    res.json(pendingJson(await db.get(`${PENDING_SQL} WHERE p.id = ?`, [cur.id])));
   });
 
   r.get('/pending/:id/photo', async (req, res) => {

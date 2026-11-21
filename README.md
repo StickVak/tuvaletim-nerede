@@ -164,7 +164,7 @@ Yerel veritabanınızı Turso'ya taşımak isterseniz: `turso db create tuvaleti
 - **Yönetim paneli (ayrı servis, [`admin/`](admin/)):** Kullanıcı uygulamasında yönetim kodu yoktur. Panel yalnızca `ADMIN_SECRET_KEY` ile açılır:
   - **Temiz Kalp ihbarları:** Kullanıcıların “Kapalı / Kağıt-sabun yok / Çok kalabalık” bildirimleri mekan başına gruplanır; aynı sorunu **en az 2 farklı kullanıcı** bildirdiyse mekan *şüpheli* sayılır ve üstte listelenir. **Onayla** → mekan *kalıcı kapalı* işaretlenir ve haritadan gizlenir (silinmez, Mekanlar'dan yeniden açılabilir). **Reddet** → ihbarlar çözülür, mekanın canlı durumunu artık etkilemez (kullanıcının katkı sayısında kalır). Tek tek ihbar silinebilir.
   - **Mekanlar:** arama/filtre, yeni mekan ekleme (haritadan konum seçerek), düzenleme, kalıcı kapatma/yeniden açma, kalıcı silme.
-  - **Başvurular:** `+` ile gönderilen mekanları onaylama/reddetme.
+  - **Başvurular:** `+` ile gönderilen mekanları düzenleme (ad, tür, il/ilçe, adres, ücret, özellikler; haritaya tıklayarak ya da işaretçiyi sürükleyerek konum; il/ilçe seçince ya da “Adresten bul” ile harita odaklanır), onaylama/reddetme. Onaylanan başvuru düzenlenen bilgilerle ve konumda yayınlanır.
   - **Kullanıcılar:** oy, yorum, ihbar, eklenen mekan ve son etkinlik; kullanıcı ayrıntısında tek tek oy/ihbar silme ya da kullanıcıyı silme.
   - **Oylar:** oy/yorum moderasyonu (silinen oy istatistiklerden düşer).
 
@@ -264,6 +264,7 @@ Sunucu her açılışta seed dosyasındaki, veritabanında olmayan mekanları ek
 | DELETE | `/api/admin/report-items/:id` | Tek ihbarı sil |
 | GET | `/api/admin/pending` | Bekleyen başvurular (`photo`: fotoğrafın yönetim adresi) |
 | GET | `/api/admin/pending/:id/photo` | Başvurunun dış mekan fotoğrafı |
+| PATCH | `/api/admin/pending/:id` | Başvuruyu düzenle: `name, category, province, district, address, lat, lng, hours, accessible, babyChanging, publicAccess, toiletType, isPaid, priceAmount` (yalnızca gönderilenler; il/ilçe listeden, konum Türkiye sınırları içinde; başvuranın puanı/yorumu ve fotoğraf değişmez) |
 | POST / DELETE | `/api/admin/pending/:id/approve`, `/api/admin/pending/:id` | Onayla / reddet |
 | GET / POST | `/api/admin/places` | Tüm mekanlar (kapalılar dahil) / yeni mekan |
 | PATCH / DELETE | `/api/admin/places/:id` | Düzenle (`{ closed: true \| false }` dahil) / kalıcı sil |
@@ -309,11 +310,20 @@ Aşımda `429 Too Many Requests`, `Retry-After` başlığı ve `{ error, retryAf
 - E-posta biçimi ve uzunluğu, kullanıcı adı (3-30), şifre (6-128), 6 haneli kod, puanlar (1-5 tamsayı), ücret (0-1000, `12,5` kabul), konum (enlem ±90, boylam ±180), kategori/tür listeleri ve yol parametreleri (mekan kimliği, sayısal kimlikler) denetlenir. Hatalı girdi veritabanına gitmeden `400` ve ne düzeltilmesi gerektiğini söyleyen bir mesajla reddedilir.
 - JSON gövdesi nesne olmalı; bozuk JSON → `400`. Gövde sınırı 100 KB (fotoğraf taşıyan uçlarda 7 MB, profil fotoğrafında 3 MB) → aşımda `413`.
 
+### Harita karoları (`src/lib/tiles.ts`, `src/components/BaseTiles.tsx`)
+
+Harita verisi OpenStreetMap'tir; karo görüntüleri **Esri World Street Map**'ten (anahtarsız, Türkçe etiketli), çalışmazsa otomatik olarak **OpenStreetMap France** topluluk sunucusundan yüklenir.
+
+- `tile.openstreetmap.org` kullanılmaz: OSM'nin kendi karo sunucusu sınırlı kullanım içindir ve `Referer` göndermeyen (ör. yönetim panelindeki `Referrer-Policy: no-referrer`) ya da yoğun kullanan uygulamalara **"403 Access blocked"** görseli döndürür.
+- CARTO basemaps de kullanılmaz: anahtarsız isteklere her yakınlaştırmada HTTP 200 ile **"API KEY REQUIRED"** görseli döndürüyor (hata olarak algılanamaz).
+- Bir sağlayıcının ilk karolarından hiçbiri yüklenemezse sıradakine geçilir. Yüklenemeyen karonun yerine saydam görsel konur (bozuk/hata görseli görünmez). Hiçbir sağlayıcı çalışmazsa haritanın üzerinde tıklamayı engellemeyen bir bilgi kutusu ve **Tekrar dene** düğmesi çıkar; kaydırma, yakınlaştırma, işaretçiler ve konum seçimi çalışmaya devam eder.
+- Yoğun/ticari kullanımda anahtarlı bir sağlayıcı (ör. Esri ArcGIS, MapTiler, Stadia) eklemek için `TILE_PROVIDERS` listesine bir kayıt ve CSP'ye (`server/security.js`, `admin/server/app.js`) alan adı eklemek yeterlidir.
+
 ### HTTP güvenlik başlıkları (`server/security.js`)
 
-`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` + `frame-ancestors 'none'`, `Referrer-Policy: strict-origin-when-cross-origin` (OSM harita karoları Referer ister), `Permissions-Policy`, `Cross-Origin-Opener-Policy: same-origin`, üretimde `Strict-Transport-Security`; `X-Powered-By` kapalı.
+`X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` + `frame-ancestors 'none'`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, `Cross-Origin-Opener-Policy: same-origin`, üretimde `Strict-Transport-Security`; `X-Powered-By` kapalı.
 
-**Content-Security-Policy** yalnızca kullanılan kaynaklara izin verir: kendi kökeni, Google Fonts, OpenStreetMap karoları, Cloudinary ve Google profil fotoğrafları, yaya rota servisleri (`routing.openstreetmap.de`, `router.project-osrm.org`). `index.html`'deki satır içi tema betiği açılışta hesaplanan SHA-256 hash'iyle izinlidir (`unsafe-inline` / `unsafe-eval` yok). Google ile giriş tam sayfa yönlendirmeyle çalıştığı için ek izin gerekmez. JSON yanıtları `default-src 'none'` taşır.
+**Content-Security-Policy** yalnızca kullanılan kaynaklara izin verir: kendi kökeni, Google Fonts, harita karoları (Esri, yedek OpenStreetMap France), Cloudinary ve Google profil fotoğrafları, yaya rota servisleri (`routing.openstreetmap.de`, `router.project-osrm.org`). `index.html`'deki satır içi tema betiği açılışta hesaplanan SHA-256 hash'iyle izinlidir (`unsafe-inline` / `unsafe-eval` yok). Google ile giriş tam sayfa yönlendirmeyle çalıştığı için ek izin gerekmez. JSON yanıtları `default-src 'none'` taşır.
 
 ### Hata yanıtları
 

@@ -28,6 +28,7 @@ export interface AdminPending {
   hours: string | null;
   accessible: boolean;
   babyChanging: boolean;
+  publicAccess?: boolean | null;
   submittedAt: string;
   username: string | null;
   vote: Vote;

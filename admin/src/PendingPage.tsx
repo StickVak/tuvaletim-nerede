@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Accessibility, Baby, Check, Clock3, Inbox, MapPin, X } from 'lucide-react';
+import { Accessibility, Baby, Check, Clock3, Inbox, MapPin, Pencil, X } from 'lucide-react';
 import { api } from './api';
 import type { AdminPending } from './types';
 import { CATEGORIES } from '../../src/lib/categories';
 import StarRating from '../../src/components/StarRating';
 import MiniMap from './MiniMap';
+import PendingEditModal from './PendingEditModal';
 import { ConfirmDialog, EmptyState, OutdoorPhoto, PageHeader, relTime } from './ui';
 
 type Act = (fn: () => Promise<unknown>, success: string) => Promise<boolean>;
 
 export default function PendingPage({ pending, act }: { pending: AdminPending[]; act: Act }) {
   const [rejecting, setRejecting] = useState<AdminPending | null>(null);
+  const [editing, setEditing] = useState<AdminPending | null>(null);
   const sorted = pending;
 
   return (
@@ -64,7 +66,14 @@ export default function PendingPage({ pending, act }: { pending: AdminPending[];
                     </div>
                   </dl>
                 </div>
-                <div className="grid grid-cols-2 border-t border-line">
+                <div className="grid grid-cols-3 border-t border-line">
+                  <button
+                    type="button"
+                    onClick={() => setEditing(s)}
+                    className="flex items-center justify-center gap-1.5 py-3.5 text-sm font-bold text-ink hover:bg-card"
+                  >
+                    <Pencil size={16} /> Düzenle
+                  </button>
                   <button
                     type="button"
                     onClick={() => setRejecting(s)}
@@ -84,6 +93,16 @@ export default function PendingPage({ pending, act }: { pending: AdminPending[];
             );
           })}
         </div>
+      )}
+
+      {editing && (
+        <PendingEditModal
+          pending={editing}
+          onClose={() => setEditing(null)}
+          onSave={(changes) =>
+            act(() => api(`/admin/pending/${encodeURIComponent(editing.id)}`, { method: 'PATCH', body: changes }), 'Başvuru güncellendi.').then((ok) => ok && setEditing(null))
+          }
+        />
       )}
 
       {rejecting && (

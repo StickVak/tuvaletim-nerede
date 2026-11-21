@@ -42,7 +42,3 @@ export const userIcon = L.divIcon({
   iconAnchor: [12, 12],
 });
 
-export const OSM_TILE = {
-  url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> katkıcıları',
-};

@@ -43,7 +43,7 @@ test('başlıklar: nosniff, çerçeve yasağı, Referrer-Policy, CSP; x-powered-
   }
 });
 
-test('CSP: uygulamanın kullandığı kaynaklar izinli (Google Fonts, OSM, Cloudinary, Google avatar, rota servisleri), satır içi betik yalnızca hash ile', () => {
+test('CSP: uygulamanın kullandığı kaynaklar izinli (Google Fonts, Esri/OSM France karoları, Cloudinary, Google avatar, rota servisleri), satır içi betik yalnızca hash ile', () => {
   const html = '<head><script>try{document.documentElement.classList.add("dark")}catch(e){}</script><script type="module" src="/assets/x.js"></script></head>';
   const hashes = inlineScriptHashes(html);
   const expected = createHash('sha256').update('try{document.documentElement.classList.add("dark")}catch(e){}').digest('base64');
@@ -54,8 +54,10 @@ test('CSP: uygulamanın kullandığı kaynaklar izinli (Google Fonts, OSM, Cloud
   assert.doesNotMatch(dir('script-src'), /unsafe-inline|unsafe-eval|\*/);
   assert.match(dir('style-src'), /https:\/\/fonts\.googleapis\.com/);
   assert.match(dir('font-src'), /https:\/\/fonts\.gstatic\.com/);
-  for (const h of ['https://tile.openstreetmap.org', 'https://res.cloudinary.com', 'https://*.googleusercontent.com', 'data:', 'blob:']) assert.ok(dir('img-src').includes(h), h);
-  for (const h of ['https://routing.openstreetmap.de', 'https://router.project-osrm.org', 'https://tile.openstreetmap.org']) assert.ok(dir('connect-src').includes(h), h);
+  // Harita karoları: Esri (birincil) + OSM France (yedek); OSM'nin kısıtlı karo sunucusu ve anahtar isteyen CARTO kullanılmaz
+  for (const h of ['https://server.arcgisonline.com', 'https://*.tile.openstreetmap.fr', 'https://res.cloudinary.com', 'https://*.googleusercontent.com', 'data:', 'blob:']) assert.ok(dir('img-src').includes(h), h);
+  for (const h of ['https://routing.openstreetmap.de', 'https://router.project-osrm.org', 'https://server.arcgisonline.com', 'https://*.tile.openstreetmap.fr']) assert.ok(dir('connect-src').includes(h), h);
+  assert.ok(!csp.includes('tile.openstreetmap.org') && !csp.includes('cartocdn'));
   assert.equal(dir('object-src'), "object-src 'none'");
 });
 

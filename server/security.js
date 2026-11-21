@@ -3,7 +3,7 @@
  *
  * Content-Security-Policy, uygulamanın gerçekten kullandığı dış kaynaklara göre dar tutulur:
  * - Google Fonts (stil + yazı tipi dosyaları)
- * - OpenStreetMap harita karoları (görsel; servis çalışanı önbelleğe alırken fetch → connect-src)
+ * - Harita karoları: Esri / OpenStreetMap France (görsel; servis çalışanı önbelleğe alırken fetch → connect-src)
  * - Cloudinary (kalıcı mekan/profil fotoğrafları; /api/... uçları oraya yönlendirir)
  * - Google profil fotoğrafları (Google ile girişte avatar_url = *.googleusercontent.com)
  * - Yaya rota servisleri (routing.openstreetmap.de, router.project-osrm.org)
@@ -12,7 +12,8 @@
  */
 import { createHash } from 'node:crypto';
 
-const TILE_HOSTS = ['https://tile.openstreetmap.org', 'https://*.tile.openstreetmap.org'];
+// Harita karoları: Esri (birincil) ve OpenStreetMap France (yedek) — src/lib/tiles.ts
+const TILE_HOSTS = ['https://server.arcgisonline.com', 'https://*.tile.openstreetmap.fr'];
 const ROUTE_HOSTS = ['https://routing.openstreetmap.de', 'https://router.project-osrm.org'];
 const IMAGE_HOSTS = ['https://res.cloudinary.com', 'https://*.googleusercontent.com'];
 
@@ -58,7 +59,7 @@ export function securityHeaders({ scriptHashes = [], production = false } = {}) 
     res.set({
       'X-Content-Type-Options': 'nosniff',
       'X-Frame-Options': 'DENY',
-      // OSM karo kullanım politikası Referer ister: başka sitelere yalnızca köken gönderilir
+      // Başka sitelere yalnızca köken gönderilir (tam adres/sorgu sızmaz)
       'Referrer-Policy': 'strict-origin-when-cross-origin',
       'Permissions-Policy': 'geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), interest-cohort=()',
       'Cross-Origin-Opener-Policy': 'same-origin',

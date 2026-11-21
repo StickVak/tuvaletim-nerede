@@ -3,9 +3,8 @@ import { Camera, Save, Trash2, X } from 'lucide-react';
 import type { Place, ToiletCategory, ToiletType } from '../../src/types';
 import { CATEGORIES, CATEGORY_ORDER, placePhoto } from '../../src/lib/categories';
 import { readImageAsDataUrl } from '../../src/lib/image';
-import { TURKEY_CENTER, districtsOf, findProvince } from '../../src/lib/turkey';
-import LocationSelect from '../../src/components/LocationSelect';
-import MiniMap from './MiniMap';
+import { TURKEY_CENTER } from '../../src/lib/turkey';
+import LocationEditor from './LocationEditor';
 import { inputCls, Lightbox } from './ui';
 
 type EditFields = Pick<Place, 'name' | 'category' | 'province' | 'district' | 'address' | 'lat' | 'lng' | 'hours' | 'accessible' | 'babyChanging' | 'toiletType' | 'publicAccess'> & {
@@ -74,32 +73,6 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
                 ))}
               </div>
             </div>
-            <div>
-              <span className="mb-1 block text-xs font-bold text-ink-soft">İl / İlçe</span>
-              <LocationSelect
-                province={form.province ?? ''}
-                // Listede olmayan eski serbest metin ilçe seçili görünmez; yönetici listeden seçer
-                district={districtsOf(form.province).includes(form.district ?? '') ? (form.district ?? '') : ''}
-                className={inputCls}
-                onChange={(v) => {
-                  const il = findProvince(v.province);
-                  setForm((f) => ({
-                    ...f,
-                    province: v.province || null,
-                    district: v.district || null,
-                    // Yeni mekanda il seçilince işaret o ilin merkezine taşınır (sonra haritada tam yerine sürüklenir)
-                    ...(!place && il && v.province !== f.province ? { lat: il.lat, lng: il.lng } : {}),
-                  }));
-                }}
-              />
-              {place && place.district && !place.province && (
-                <p className="mt-1 text-xs text-ink-muted">Eski kayıt: “{place.district}” — listeden il ve ilçe seçin.</p>
-              )}
-            </div>
-            <label className="block">
-              <span className="mb-1 block text-xs font-bold text-ink-soft">Adres</span>
-              <input value={form.address ?? ''} onChange={(e) => set('address', e.target.value || null)} maxLength={120} className={inputCls} />
-            </label>
             <p className="rounded-xl bg-card px-3 py-2 text-xs text-ink-muted">Ücret durumu ve puanlar kullanıcı oylarıyla belirlenir; buradan düzenlenmez.</p>
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
@@ -130,14 +103,14 @@ export default function PlaceEditModal({ place, onClose, onSave }: { place?: Pla
           </div>
 
           <div className="space-y-3">
-            <div>
-              <span className="mb-1 block text-xs font-bold text-ink-soft">Konum (haritaya tıklayarak değiştirin)</span>
-              <MiniMap center={form} category={form.category} className="h-56" onPick={(p) => setForm((f) => ({ ...f, ...p }))} />
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <input type="number" step="0.00001" value={form.lat} onChange={(e) => set('lat', parseFloat(e.target.value))} className={`${inputCls} font-mono`} aria-label="Enlem" />
-                <input type="number" step="0.00001" value={form.lng} onChange={(e) => set('lng', parseFloat(e.target.value))} className={`${inputCls} font-mono`} aria-label="Boylam" />
-              </div>
-            </div>
+
+            <LocationEditor
+              value={form}
+              category={form.category}
+              moveOnProvince={!place}
+              legacyDistrict={place && !place.province ? place.district : null}
+              onChange={(patch) => setForm((f) => ({ ...f, ...patch }))}
+            />
             <div>
               <span className="mb-1 block text-xs font-bold text-ink-soft">Dış mekan fotoğrafı (giriş / bina cephesi)</span>
               <div className="relative overflow-hidden rounded-2xl">

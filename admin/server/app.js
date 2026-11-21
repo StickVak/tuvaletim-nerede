@@ -35,7 +35,7 @@ function parseCookies(header = '') {
  * mainApiUrl: ana sunucu kökü, ör. https://tuvaletim.onrender.com
  * production: oturum çerezi her zaman Secure + HSTS. clientIpHeader: gerçek istemci IP başlığı (Render: cf-connecting-ip).
  */
-export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainApiUrl, limits = {}, production = false, clientIpHeader = null }) {
+export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainApiUrl, limits = {}, production = false, clientIpHeader = null, geocodeFetch = fetch }) {
   const app = express();
   app.disable('x-powered-by');
   app.use(clientIp({ header: clientIpHeader }));
@@ -82,7 +82,7 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
         "font-src 'self' https://fonts.gstatic.com",
         // Cloudinary: kalıcı mekan/profil fotoğrafları (ana sunucu oraya yönlendirir)
-        "img-src 'self' data: blob: https://tile.openstreetmap.org https://*.tile.openstreetmap.org https://res.cloudinary.com",
+        "img-src 'self' data: blob: https://server.arcgisonline.com https://*.tile.openstreetmap.fr https://res.cloudinary.com",
         "connect-src 'self'",
         "object-src 'none'",
         "frame-ancestors 'none'",
@@ -184,6 +184,35 @@ export function createAdminServer({ getKey, mainApiUrl, distDir, appUrl = mainAp
   app.get('/api/places/:id/photo', requireSession, (req, res) =>
     forward(req, res, `/api/places/${encodeURIComponent(req.params.id)}/photo`, { withKey: false }),
   );
+  /**
+   * Adres / "ilçe, il" → konum (başvuru ve mekan düzenlemede haritayı odaklamak için). OpenStreetMap Nominatim;
+   * yalnızca panel oturumuyla, Türkiye ile sınırlı, saniyede en fazla 1 istek (Nominatim kullanım kuralı),
+   * sonuçlar 10 dk bellekte tutulur. Servis yanıt vermezse anlaşılır 502.
+   */
+  const geoCache = new Map();
+  let geoLast = 0;
+  app.get('/api/geocode', requireSession, async (req, res) => {
+    const q = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    if (q.length < 2 || q.length > 200) return res.status(400).json({ error: 'Aranacak adres 2-200 karakter olmalı.' });
+    const hit = geoCache.get(q.toLocaleLowerCase('tr'));
+    if (hit && hit.exp > Date.now()) return res.json({ result: hit.result });
+    const wait = geoLast + 1000 - Date.now();
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    geoLast = Date.now();
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?${new URLSearchParams({ q, format: 'jsonv2', countrycodes: 'tr', limit: '1', 'accept-language': 'tr' })}`;
+      const r = await geocodeFetch(url, { headers: { 'User-Agent': 'tuvaletim-nerede-admin/1.0' }, signal: AbortSignal.timeout(8000) });
+      if (!r.ok) throw new Error(`Nominatim ${r.status}`);
+      const [first] = await r.json();
+      const result = first ? { lat: Number(first.lat), lng: Number(first.lon), label: String(first.display_name ?? '') } : null;
+      geoCache.set(q.toLocaleLowerCase('tr'), { result, exp: Date.now() + 10 * 60 * 1000 });
+      res.json({ result });
+    } catch (e) {
+      console.warn(`[geocode] başarısız: ${e?.message}`);
+      res.status(502).json({ error: 'Konum servisine şu an ulaşılamıyor. Konumu haritaya tıklayarak seçebilirsiniz.' });
+    }
+  });
+
   app.use('/api', (_req, res) => res.status(404).json({ error: 'Bulunamadı.' }));
 
   if (distDir && existsSync(distDir)) {

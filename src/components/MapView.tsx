@@ -3,9 +3,10 @@ import L from 'leaflet';
 import '../lib/leafletGlobal';
 import 'leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
-import { MapContainer, Marker, Polyline, TileLayer, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Marker, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import type { LatLng, PlaceView } from '../types';
-import { OSM_TILE, toiletIcon, userIcon } from '../lib/mapIcons';
+import { toiletIcon, userIcon } from '../lib/mapIcons';
+import BaseTiles from './BaseTiles';
 
 export interface FlyCommand {
   key: number;
@@ -179,7 +180,7 @@ export default function MapView({
         attributionControl
         className="h-full w-full"
       >
-        <TileLayer url={OSM_TILE.url} attribution={OSM_TILE.attribution} maxZoom={19} />
+        <BaseTiles />
         <Controller fly={fly} onReady={onReady} />
         <ClickHandler onClick={onMapClick} />
 

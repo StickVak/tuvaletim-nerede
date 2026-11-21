@@ -10,7 +10,7 @@
     "preview": "vite preview --host",
     "start": "node server/index.js",
     "start:admin": "node admin/server/index.js",
-    "test": "node --test \"server/test/*.test.js\" \"admin/test/*.test.js\" && node --experimental-strip-types --test src/lib/geo.test.ts src/lib/route.test.ts src/lib/filters.test.ts src/lib/corridor.test.ts src/lib/otp.test.ts src/lib/themeColors.test.ts src/lib/authReturn.test.ts src/lib/turkey.test.ts"
+    "test": "node --test \"server/test/*.test.js\" \"admin/test/*.test.js\" && node --experimental-strip-types --test src/lib/geo.test.ts src/lib/route.test.ts src/lib/filters.test.ts src/lib/corridor.test.ts src/lib/otp.test.ts src/lib/themeColors.test.ts src/lib/authReturn.test.ts src/lib/turkey.test.ts src/lib/tiles.test.ts"
   },
   "dependencies": {
     "@libsql/client": "0.18.0",

@@ -185,3 +185,63 @@ test('hatalı anahtar denemeleri sınırlanır (429)', async () => {
   assert.ok(codes.includes(429), codes.join(','));
   assert.equal(codes.at(-1), 429);
 });
+
+test('adres arama (/api/geocode): oturum gerekir; Nominatim sonucu {lat,lng,label}; Türkiye ile sınırlı; hata anlaşılır 502', async () => {
+  const calls = [];
+  let fail = false;
+  const geocodeFetch = async (u, opts) => {
+    calls.push({ url: new URL(u), ua: opts?.headers?.['User-Agent'] });
+    if (fail) return new Response('busy', { status: 503 });
+    return Response.json([{ lat: '41.0378', lon: '28.9850', display_name: 'Taksim Meydanı, Beyoğlu, İstanbul' }]);
+  };
+  const app = createAdminServer({ getKey: () => key, mainApiUrl: main.url, distDir: null, geocodeFetch });
+  const s = await listen(app);
+  const base = `http://127.0.0.1:${s.address().port}`;
+  try {
+    const anon = await fetch(`${base}/api/geocode?q=Taksim`);
+    assert.equal(anon.status, 401, 'oturumsuz');
+    assert.equal(calls.length, 0);
+    const lr = await fetch(`${base}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-TN-Admin': '1' }, body: JSON.stringify({ key }) });
+    const cookie = (lr.headers.get('set-cookie') ?? '').split(';')[0];
+    const get = (q) => fetch(`${base}/api/geocode?q=${encodeURIComponent(q)}`, { headers: { Cookie: cookie } });
+    const r = await get('Taksim Meydanı, Beyoğlu, İstanbul');
+    assert.equal(r.status, 200);
+    assert.deepEqual(await r.json(), { result: { lat: 41.0378, lng: 28.985, label: 'Taksim Meydanı, Beyoğlu, İstanbul' } });
+    assert.equal(calls[0].url.hostname, 'nominatim.openstreetmap.org');
+    assert.equal(calls[0].url.searchParams.get('countrycodes'), 'tr');
+    assert.match(calls[0].ua, /tuvaletim-nerede-admin/);
+    await get('Taksim Meydanı, Beyoğlu, İstanbul');
+    assert.equal(calls.length, 1, 'aynı sorgu önbellekten');
+    assert.equal((await get('x')).status, 400, 'çok kısa sorgu');
+    fail = true;
+    const bad = await get('Başka bir adres');
+    assert.equal(bad.status, 502);
+    assert.match((await bad.json()).error, /Konum servisine şu an ulaşılamıyor/);
+  } finally {
+    s.close();
+  }
+});
+
+test('başvuru düzenleme vekil üzerinden: oturum ve CSRF başlığı olmadan değiştirilemez', async () => {
+  const user = await main.register('vekilbasvuru');
+  const JPEG = 'data:image/jpeg;base64,' + Buffer.from([0xff, 0xd8, 0xff, 0xd9]).toString('base64');
+  const sub = await main.req('POST', '/api/pending', { name: 'Vekil WC', category: 'park', lat: 38.44, lng: 27.14, province: 'İzmir', district: 'Konak', vote: { cleanliness: 3, comfort: 3, isPaid: false }, photo: JPEG }, user);
+  // Kendi panel sunucusu: önceki testler giriş deneme sınırını doldurmuş olabilir
+  const s2 = await listen(createAdminServer({ getKey: () => key, mainApiUrl: main.url, distDir: null }));
+  const base = `http://127.0.0.1:${s2.address().port}`;
+  const patch = (body, headers) => fetch(`${base}/api/admin/pending/${sub.body.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body) });
+  try {
+    assert.equal((await patch({ name: 'Ele Geçirildi' }, { 'X-TN-Admin': '1' })).status, 401, 'oturumsuz');
+    const lr = await fetch(`${base}/auth/login`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-TN-Admin': '1' }, body: JSON.stringify({ key }) });
+    assert.equal(lr.status, 200);
+    const Cookie = (lr.headers.get('set-cookie') ?? '').split(';')[0];
+    assert.equal((await patch({ name: 'CSRF Deneme' }, { Cookie })).status, 403, 'CSRF başlığı yok');
+    const ok = await patch({ name: 'Vekil WC (düzeltildi)', lat: 38.4321, lng: 27.1432 }, { Cookie, 'X-TN-Admin': '1' });
+    assert.equal(ok.status, 200);
+    const body = await ok.json();
+    assert.equal(body.name, 'Vekil WC (düzeltildi)');
+    assert.equal(body.lat, 38.4321);
+  } finally {
+    s2.close();
+  }
+});

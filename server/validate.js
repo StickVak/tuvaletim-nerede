@@ -50,6 +50,9 @@ export const intIdParam = (_req, res, next, v) => (isPositiveInt(v) ? next() : r
 
 import { resolveLocation } from './turkey.js';
 
+/** Türkiye + kıyı/kara sınırı payı (enlem/boylam) */
+export const TURKEY_BOX = { south: 35.5, north: 42.5, west: 25.5, east: 45.0 };
+
 export const CATEGORIES = ['avm', 'kafe', 'belediye', 'park', 'diger'];
 const MAX_PHOTO_CHARS = 7_000_000; // ~5 MB base64
 /** Yalnızca raster görseller: SVG aynı kökenden sunulunca betik çalıştırabilir */
@@ -78,10 +81,12 @@ export function parsePlaceFields(body, { partial = false } = {}) {
       if (!CATEGORIES.includes(b.category)) throw 'Geçersiz mekan türü.';
       out.category = b.category;
     }
-    for (const [k, lim] of [['lat', 90], ['lng', 180]]) {
+    // Konum: sayı olmalı ve Türkiye sınırları (+ kıyı payı) içinde olmalı
+    for (const [k, min, max] of [['lat', TURKEY_BOX.south, TURKEY_BOX.north], ['lng', TURKEY_BOX.west, TURKEY_BOX.east]]) {
       if (!has(k)) continue;
       const n = typeof b[k] === 'number' ? b[k] : NaN;
-      if (!Number.isFinite(n) || Math.abs(n) > lim) throw 'Geçerli bir konum seçin.';
+      if (!Number.isFinite(n)) throw 'Geçerli bir konum seçin.';
+      if (n < min || n > max) throw 'Konum Türkiye sınırları içinde olmalı.';
       out[k] = n;
     }
     // İl / ilçe: listeden (src/data/turkiye.json); büyük/küçük harf ve Türkçe karakter farkı tolere edilir, listedeki yazıma çevrilir
